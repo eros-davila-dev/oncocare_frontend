@@ -3,10 +3,14 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build",
-    "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "start": "ng serve portal",
+    "start:portal": "ng serve portal",
+    "start:intranet": "ng serve intranet",
+    "build": "ng build portal && ng build intranet",
+    "build:portal": "ng build portal",
+    "build:intranet": "ng build intranet",
+    "watch": "ng build intranet --watch --configuration development",
+    "test": "ng test intranet"
   },
   "prettier": {
     "printWidth": 100,

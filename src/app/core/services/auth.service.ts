@@ -12,12 +12,14 @@ import {
 } from '../models/auth.model';
 import { Rol, UsuarioResumen } from '../models/usuario.model';
 import { TokenStorageService } from './token-storage.service';
+import { AUDIENCIA } from '../config/audiencia';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly tokenStorage = inject(TokenStorageService);
   private readonly router = inject(Router);
+  private readonly audiencia = inject(AUDIENCIA, { optional: true }) ?? 'intranet';
 
   private readonly usuarioActual = signal<UsuarioResumen | null>(this.tokenStorage.obtenerUsuario());
 
@@ -74,10 +76,24 @@ export class AuthService {
   }
 
   /** Destino inicial tras login o al rebotar de una seccion sin permiso. */
+  /**
+   * Un paciente usa el portal; el personal, la intranet. Cada aplicacion
+   * solo mantiene sesiones de su propia audiencia.
+   */
+  perteneceAEstaAplicacion(): boolean {
+    const esPaciente = this.tieneAlgunRol('PACIENTE');
+    return this.audiencia === 'portal' ? esPaciente : this.estaAutenticado() && !esPaciente;
+  }
+
+  /** URL de la aplicacion correcta para la cuenta actual (cuando entro a la otra). */
+  urlDeSuAplicacion(): string {
+    return this.tieneAlgunRol('PACIENTE') ? environment.portalUrl : environment.intranetUrl;
+  }
+
   /** Cada rol aterriza en la pantalla donde trabaja a diario. */
   rutaInicio(): string {
-    if (this.tieneAlgunRol('PACIENTE')) {
-      return '/mis-citas';
+    if (this.audiencia === 'portal') {
+      return this.estaAutenticado() ? '/mis-citas' : '/';
     }
     if (this.tieneAlgunRol('RECEPCIONISTA')) {
       return '/agenda';

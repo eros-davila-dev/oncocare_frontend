@@ -26,7 +26,7 @@ export const INDICADORES_TESIS: readonly DefinicionIndicador[] = [
     sentido: 'bajar',
     formula: 'TPR = Σ TRC / NCR',
     valor: (i) => i.tiempoPromedioRegistroMinutos,
-    base: (i) => `${i.registros} ${i.registros === 1 ? 'registro' : 'registros'}`,
+    base: (i) => `${i.registros} ${plural(i.registros, 'registro', 'registros')}`,
   },
   {
     clave: 'tns',
@@ -37,7 +37,7 @@ export const INDICADORES_TESIS: readonly DefinicionIndicador[] = [
     sentido: 'bajar',
     formula: 'TNS = NI / (NI + NCC) × 100',
     valor: (i) => i.tasaAusentismo,
-    base: (i) => `${i.inasistencias} de ${i.citasConDesenlace} citas con desenlace`,
+    base: (i) => `${i.inasistencias} de ${i.citasConDesenlace} ${plural(i.citasConDesenlace, 'cita', 'citas')} con desenlace`,
   },
   {
     clave: 'nca',
@@ -48,9 +48,14 @@ export const INDICADORES_TESIS: readonly DefinicionIndicador[] = [
     sentido: 'subir',
     formula: 'NCA = CA / TCR × 100',
     valor: (i) => i.nivelConsultasAtendidas,
-    base: (i) => `${i.consultasResueltas} de ${i.consultasCerradas} consultas (${i.consultasResueltasBot} por el chatbot)`,
+    base: (i) =>
+      `${i.consultasResueltas} de ${i.consultasCerradas} ${plural(i.consultasCerradas, 'consulta', 'consultas')} (${i.consultasResueltasBot} por el chatbot)`,
   },
 ];
+
+function plural(n: number, singular: string, varios: string): string {
+  return n === 1 ? singular : varios;
+}
 
 /** null es "sin datos" (denominador cero), que no es lo mismo que 0. */
 export function formatoValor(valor: number | null, unidad: 'min' | '%'): string {

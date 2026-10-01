@@ -17,7 +17,7 @@
       </div>
 
       <nav class="flex-1 space-y-5 overflow-y-auto">
-        @for (grupo of grupos(); track grupo.titulo) {
+        @for (grupo of grupos; track grupo.titulo) {
           @if (grupoVisible(grupo)) {
           <div>
             @if (grupo.titulo && !sidebarColapsado()) {
@@ -128,4 +128,3 @@
   </div>
 </div>
 
-<app-chatbot-widget />

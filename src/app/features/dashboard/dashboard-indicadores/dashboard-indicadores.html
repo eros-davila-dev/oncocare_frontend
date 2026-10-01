@@ -38,7 +38,7 @@
           <app-indicador-card [definicion]="definicion" [indicadores]="datos.indicadores" />
         }
       </div>
-      @if (datos.cumplimientoTratamientoPorcentaje !== null) {
+      @if (datos.cumplimientoTratamientoPorcentaje != null) {
         <p class="mt-3 text-sm text-muted-foreground">
           Contexto clínico: avance promedio de los esquemas de tratamiento
           {{ datos.cumplimientoTratamientoPorcentaje.toFixed(1) }} %.

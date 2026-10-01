@@ -46,6 +46,7 @@ describe('indicadores de la tesis', () => {
     const [tpr, tns, nca] = INDICADORES_TESIS;
     expect(tpr.base({ ...vacios, registros: 1 })).toBe('1 registro');
     expect(tns.base({ ...vacios, inasistencias: 3, citasConDesenlace: 9 })).toBe('3 de 9 citas con desenlace');
+    expect(tns.base({ ...vacios, inasistencias: 0, citasConDesenlace: 1 })).toBe('0 de 1 cita con desenlace');
     expect(nca.base({ ...vacios, consultasResueltas: 2, consultasCerradas: 3, consultasResueltasBot: 1 })).toContain(
       '1 por el chatbot',
     );

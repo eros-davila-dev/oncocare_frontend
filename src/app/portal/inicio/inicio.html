@@ -1,0 +1,83 @@
+<section class="relative overflow-hidden rounded-2xl bg-welcome px-6 py-10 sm:px-10 sm:py-14">
+  <div class="relative z-10 max-w-2xl">
+    <p class="font-semibold text-primary">Portal del paciente</p>
+    <h1 class="mt-2 font-display text-4xl font-bold leading-tight sm:text-5xl">Tu atención, más cerca y sin olvidos</h1>
+    <p class="mt-4 text-lg text-muted-foreground">
+      Consulta y confirma tus citas, recibe recordatorios en Telegram y resuelve tus dudas con el asistente virtual.
+    </p>
+    <div class="mt-8 flex flex-wrap gap-3">
+      @if (authService.estaAutenticado()) {
+        <a
+          routerLink="/mis-citas"
+          class="inline-flex min-h-12 items-center rounded-lg bg-primary px-6 text-lg font-semibold text-primary-foreground hover:bg-primary-hover"
+          >Ver mis citas</a
+        >
+      } @else {
+        <a
+          routerLink="/auth/login"
+          class="inline-flex min-h-12 items-center rounded-lg bg-primary px-6 text-lg font-semibold text-primary-foreground hover:bg-primary-hover"
+          >Ingresar</a
+        >
+        <a
+          routerLink="/auth/registro"
+          class="inline-flex min-h-12 items-center rounded-lg border border-border bg-background px-6 text-lg font-semibold hover:bg-muted"
+          >Crear cuenta</a
+        >
+      }
+    </div>
+  </div>
+  <ui-icon
+    name="heart-pulse"
+    [size]="260"
+    clase="pointer-events-none absolute -bottom-16 -right-10 text-primary/10"
+  />
+</section>
+
+<section class="mt-12" aria-labelledby="titulo-beneficios">
+  <h2 id="titulo-beneficios" class="sr-only">Qué puedes hacer en el portal</h2>
+  <ul class="grid grid-cols-1 gap-4 md:grid-cols-3">
+    @for (b of beneficios; track b.titulo) {
+      <li class="rounded-xl border border-border bg-card p-6 shadow-card">
+        <span class="grid size-12 place-items-center rounded-lg bg-primary-soft text-primary">
+          <ui-icon [name]="b.icono" [size]="24" />
+        </span>
+        <h3 class="mt-4 font-display text-xl font-bold">{{ b.titulo }}</h3>
+        <p class="mt-2 text-muted-foreground">{{ b.texto }}</p>
+      </li>
+    }
+  </ul>
+</section>
+
+<section class="mt-12 grid grid-cols-1 gap-8 lg:grid-cols-2" aria-labelledby="titulo-pasos">
+  <div>
+    <h2 id="titulo-pasos" class="font-display text-2xl font-bold">Cómo empezar</h2>
+    <ol class="mt-4 space-y-4">
+      @for (paso of pasos; track $index) {
+        <li class="flex gap-4">
+          <span class="grid size-9 shrink-0 place-items-center rounded-full bg-primary font-bold text-primary-foreground">{{
+            $index + 1
+          }}</span>
+          <p class="pt-1">{{ paso }}</p>
+        </li>
+      }
+    </ol>
+  </div>
+
+  @if (preguntas().length > 0) {
+    <div>
+      <h2 class="font-display text-2xl font-bold">Preguntas frecuentes</h2>
+      <div class="mt-4 divide-y divide-border rounded-xl border border-border bg-card">
+        @for (p of preguntas(); track p.id) {
+          <details class="group p-4 [&_summary::-webkit-details-marker]:hidden">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold">
+              {{ p.pregunta }}
+              <span class="text-muted-foreground transition-transform group-open:rotate-45" aria-hidden="true">+</span>
+            </summary>
+            <p class="mt-2 text-muted-foreground">{{ p.respuesta }}</p>
+          </details>
+        }
+      </div>
+      <a routerLink="/preguntas-frecuentes" class="mt-3 inline-block font-semibold text-primary hover:underline">Ver todas</a>
+    </div>
+  }
+</section>

@@ -4,7 +4,6 @@ import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router
 import { filter, map } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { ThemeService } from '../../core/services/theme.service';
-import { ChatbotWidgetComponent } from '../../features/chatbot/chatbot-widget/chatbot-widget';
 import { BrandLogoComponent } from '../../shared/ui/brand-logo/brand-logo';
 import { AvatarComponent } from '../../shared/ui/avatar/avatar';
 import { IconComponent } from '../../shared/ui/icon/icon';
@@ -22,9 +21,7 @@ type IconoNavegacion =
   | 'auditoria'
   | 'usuarios'
   | 'dispositivos'
-  | 'estudio'
-  | 'mis-citas'
-  | 'mi-perfil';
+  | 'estudio';
 
 const ICONO_POR_SECCION: Record<IconoNavegacion, NombreIcono> = {
   dashboard: 'layout-dashboard',
@@ -38,8 +35,6 @@ const ICONO_POR_SECCION: Record<IconoNavegacion, NombreIcono> = {
   usuarios: 'user-cog',
   dispositivos: 'cpu',
   estudio: 'flask-conical',
-  'mis-citas': 'calendar-days',
-  'mi-perfil': 'user-cog',
 };
 
 interface ItemDeNavegacion {
@@ -55,7 +50,8 @@ interface GrupoDeNavegacion {
   items: ItemDeNavegacion[];
 }
 
-const GRUPOS_DE_NAVEGACION_STAFF: GrupoDeNavegacion[] = [
+/** Navegacion de la intranet; las pantallas del paciente viven en el portal. */
+const GRUPOS_DE_NAVEGACION: GrupoDeNavegacion[] = [
   {
     titulo: '',
     items: [{ ruta: '/dashboard', etiqueta: 'Dashboard', icono: 'dashboard' }],
@@ -85,23 +81,11 @@ const GRUPOS_DE_NAVEGACION_STAFF: GrupoDeNavegacion[] = [
   },
 ];
 
-/** Navegacion del portal de autoservicio de pacientes (seccion 12). */
-const GRUPOS_DE_NAVEGACION_PACIENTE: GrupoDeNavegacion[] = [
-  {
-    titulo: '',
-    items: [
-      { ruta: '/mis-citas', etiqueta: 'Mis citas', icono: 'mis-citas' },
-      { ruta: '/mi-perfil', etiqueta: 'Mi perfil', icono: 'mi-perfil' },
-    ],
-  },
-];
-
 @Component({
   selector: 'app-shell',
   imports: [
     RouterOutlet,
     RouterLink,
-    ChatbotWidgetComponent,
     BrandLogoComponent,
     AvatarComponent,
     IconComponent,
@@ -113,9 +97,7 @@ export class ShellComponent {
   protected readonly themeService = inject(ThemeService);
   private readonly router = inject(Router);
 
-  protected readonly grupos = computed<GrupoDeNavegacion[]>(() =>
-    this.authService.tieneAlgunRol('PACIENTE') ? GRUPOS_DE_NAVEGACION_PACIENTE : GRUPOS_DE_NAVEGACION_STAFF,
-  );
+  protected readonly grupos = GRUPOS_DE_NAVEGACION;
   protected readonly sidebarAbierto = signal(false);
   protected readonly sidebarColapsado = signal(false);
   protected readonly menuPerfilAbierto = signal(false);
@@ -130,7 +112,7 @@ export class ShellComponent {
 
   protected readonly seccionActiva = computed(() => {
     const url = this.urlActual();
-    for (const grupo of this.grupos()) {
+    for (const grupo of this.grupos) {
       const item = grupo.items.find((item) => url.startsWith(item.ruta));
       if (item) {
         return item.etiqueta;
