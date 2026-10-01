@@ -1,0 +1,79 @@
+<ui-page-header
+  eyebrow="Atención"
+  titulo="Bandeja de consultas"
+  descripcion="Consultas que el asistente virtual derivó al personal. Respóndalas por teléfono o Telegram y registre el resultado."
+/>
+
+@if (cargando()) {
+  <ui-loading-spinner class="mt-6 block" />
+} @else {
+  <ul class="mt-6 space-y-3">
+    @for (consulta of pagina().content; track consulta.id) {
+      <li>
+        <button
+          type="button"
+          class="w-full rounded-xl border border-border bg-card p-4 text-left shadow-card transition-colors hover:bg-muted/40"
+          (click)="abrir(consulta)"
+        >
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <p class="font-semibold">{{ consulta.resumen || 'Consulta sin texto' }}</p>
+            <ui-badge color="warning">Esperando al personal</ui-badge>
+          </div>
+          <p class="mt-1 text-sm text-muted-foreground">
+            {{ canal(consulta) }} · abierta {{ fecha(consulta.abiertaEn) }} ·
+            {{ consulta.pacienteId ? 'Paciente #' + consulta.pacienteId : 'Visitante sin identificar' }}
+            @if (consulta.valoracion === -1) {
+              · valoró mal la respuesta del asistente
+            }
+          </p>
+        </button>
+      </li>
+    } @empty {
+      <li class="rounded-xl border border-dashed border-border p-8 text-center text-muted-foreground">
+        No hay consultas pendientes. El asistente está resolviendo todo lo que recibe.
+      </li>
+    }
+  </ul>
+  <ui-pagination
+    [totalElements]="pagina().totalElements"
+    [totalPages]="pagina().totalPages"
+    [pageNumber]="pagina().pageNumber"
+    [pageSize]="pagina().pageSize"
+    (cambiarPagina)="cargar($event)"
+  />
+}
+
+<ui-modal
+  titulo="Consulta derivada"
+  [descripcion]="seleccionada() ? canal(seleccionada()!) + ' · ' + fecha(seleccionada()!.abiertaEn) : ''"
+  ancho="lg"
+  [abierto]="seleccionada() !== null"
+  (cerrar)="seleccionada.set(null)"
+>
+  <div class="max-h-72 space-y-3 overflow-y-auto rounded-lg bg-muted/50 p-3">
+    @for (turno of conversacion(); track $index) {
+      <div class="flex justify-end">
+        <p class="max-w-[85%] rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground">{{ turno.mensajeUsuario }}</p>
+      </div>
+      @if (turno.respuestaBot) {
+        <div class="flex justify-start">
+          <p class="max-w-[85%] rounded-lg bg-background px-3 py-2 text-sm">{{ turno.respuestaBot }}</p>
+        </div>
+      }
+    } @empty {
+      <p class="text-sm text-muted-foreground">La consulta se derivó sin conversación previa.</p>
+    }
+  </div>
+
+  <div class="mt-4">
+    <ui-input
+      label="Nota de atención (opcional)"
+      placeholder="Ej.: se le llamó y se le explicó el horario de radioterapia"
+      [control]="nota"
+    />
+  </div>
+  <div class="mt-4 flex flex-wrap justify-end gap-2">
+    <ui-button variante="outline" [cargando]="enviando()" (click)="resolver(false)">No se pudo resolver</ui-button>
+    <ui-button variante="success" [cargando]="enviando()" (click)="resolver(true)">Resuelta</ui-button>
+  </div>
+</ui-modal>

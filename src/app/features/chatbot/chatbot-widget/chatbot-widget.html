@@ -1,23 +1,58 @@
 <div class="fixed bottom-4 left-4 z-50">
   @if (abierto()) {
-    <div class="flex h-96 w-80 flex-col rounded-xl border border-border bg-background shadow-modal">
-      <div class="flex items-center justify-between rounded-t-xl bg-primary px-4 py-3 text-primary-foreground">
+    <section
+      class="flex h-[28rem] w-[min(22rem,calc(100vw-2rem))] flex-col rounded-xl border border-border bg-background shadow-modal"
+      aria-label="Asistente virtual"
+    >
+      <header class="flex items-center justify-between rounded-t-xl bg-primary px-4 py-3 text-primary-foreground">
         <span class="text-sm font-semibold">Asistente virtual</span>
-        <button type="button" class="text-primary-foreground/80 hover:text-primary-foreground" (click)="alternar()">&times;</button>
-      </div>
+        <button
+          type="button"
+          class="grid size-8 place-items-center rounded-md text-primary-foreground/80 hover:text-primary-foreground"
+          (click)="alternar()"
+        >
+          <ui-icon name="x" [size]="18" />
+          <span class="sr-only">Cerrar chat</span>
+        </button>
+      </header>
 
-      <div class="flex-1 space-y-2 overflow-y-auto p-3">
-        @for (mensaje of mensajes(); track $index) {
-          <div [class]="mensaje.autor === 'usuario' ? 'flex justify-end' : 'flex justify-start'">
+      <div class="flex-1 space-y-2 overflow-y-auto p-3" aria-live="polite">
+        @for (mensaje of mensajes(); track $index; let i = $index) {
+          <div [class]="mensaje.autor === 'usuario' ? 'flex justify-end' : 'flex flex-col items-start'">
             <p
               [class]="
                 mensaje.autor === 'usuario'
-                  ? 'max-w-[80%] rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground'
-                  : 'max-w-[80%] rounded-lg bg-muted px-3 py-2 text-sm text-foreground'
+                  ? 'max-w-[85%] rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground'
+                  : 'max-w-[85%] rounded-lg bg-muted px-3 py-2 text-sm text-foreground'
               "
             >
               {{ mensaje.texto }}
             </p>
+            @if (mensaje.autor === 'bot' && mensaje.valorable) {
+              <div class="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                @if (mensaje.valoracion) {
+                  <span>{{ mensaje.valoracion === 1 ? 'Gracias por tu respuesta' : 'Lo revisará una persona' }}</span>
+                } @else {
+                  <span>¿Te ayudó?</span>
+                  <button
+                    type="button"
+                    class="grid size-7 place-items-center rounded-md hover:bg-muted hover:text-success"
+                    (click)="valorar(i, 1)"
+                  >
+                    <ui-icon name="thumbs-up" [size]="14" />
+                    <span class="sr-only">Sí, me ayudó</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="grid size-7 place-items-center rounded-md hover:bg-muted hover:text-destructive"
+                    (click)="valorar(i, -1)"
+                  >
+                    <ui-icon name="thumbs-down" [size]="14" />
+                    <span class="sr-only">No me ayudó</span>
+                  </button>
+                }
+              </div>
+            }
           </div>
         }
         @if (enviando()) {
@@ -25,29 +60,45 @@
         }
       </div>
 
-      <form class="flex gap-2 border-t border-border p-2" (ngSubmit)="enviar()">
+      <div class="border-t border-border px-3 pt-2">
+        <button
+          type="button"
+          class="text-xs font-semibold text-primary hover:underline disabled:opacity-50"
+          [disabled]="enviando()"
+          (click)="hablarConUnaPersona()"
+        >
+          Hablar con una persona
+        </button>
+      </div>
+      <form class="flex gap-2 p-2" (ngSubmit)="enviar()">
         <input
           id="chatbot-mensaje"
           aria-label="Mensaje para el asistente virtual"
-          class="field flex-1 min-h-9 py-1.5"
+          class="field min-h-10 flex-1 py-1.5"
           placeholder="Escribe tu mensaje..."
+          autocomplete="off"
           [ngModel]="mensajeActual()"
           (ngModelChange)="mensajeActual.set($event)"
           name="mensaje"
         />
-        <button type="submit" class="rounded-lg bg-primary px-3 py-1.5 text-sm text-primary-foreground hover:bg-primary-hover">
-          Enviar
+        <button
+          type="submit"
+          class="grid min-h-10 place-items-center rounded-lg bg-primary px-3 text-primary-foreground hover:bg-primary-hover disabled:opacity-60"
+          [disabled]="enviando()"
+        >
+          <ui-icon name="send" [size]="16" />
+          <span class="sr-only">Enviar</span>
         </button>
       </form>
-    </div>
+    </section>
   } @else {
     <button
       type="button"
       class="flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-button hover:bg-primary-hover"
       (click)="alternar()"
-      aria-label="Abrir chat"
     >
-      Chat
+      <ui-icon name="message-circle" [size]="24" />
+      <span class="sr-only">Abrir chat con el asistente virtual</span>
     </button>
   }
 </div>

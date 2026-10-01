@@ -14,6 +14,8 @@ import type { Rol } from '../../core/models/usuario.model';
 type IconoNavegacion =
   | 'dashboard'
   | 'agenda'
+  | 'consultas'
+  | 'preguntas'
   | 'pacientes'
   | 'citas'
   | 'tratamientos'
@@ -27,6 +29,8 @@ type IconoNavegacion =
 const ICONO_POR_SECCION: Record<IconoNavegacion, NombreIcono> = {
   dashboard: 'layout-dashboard',
   agenda: 'clock',
+  consultas: 'inbox',
+  preguntas: 'message-circle',
   pacientes: 'users',
   citas: 'calendar-days',
   tratamientos: 'stethoscope',
@@ -60,6 +64,7 @@ const GRUPOS_DE_NAVEGACION_STAFF: GrupoDeNavegacion[] = [
     titulo: 'GESTIÓN',
     items: [
       { ruta: '/agenda', etiqueta: 'Agenda del día', icono: 'agenda', roles: ['ADMIN', 'MEDICO', 'RECEPCIONISTA'] },
+      { ruta: '/consultas', etiqueta: 'Bandeja de consultas', icono: 'consultas', roles: ['ADMIN', 'MEDICO', 'RECEPCIONISTA'] },
       { ruta: '/pacientes', etiqueta: 'Pacientes', icono: 'pacientes', roles: ['ADMIN', 'MEDICO', 'RECEPCIONISTA'] },
       { ruta: '/citas', etiqueta: 'Citas', icono: 'citas', roles: ['ADMIN', 'MEDICO', 'RECEPCIONISTA'] },
       { ruta: '/tratamientos', etiqueta: 'Tratamientos', icono: 'tratamientos', roles: ['ADMIN', 'MEDICO', 'RECEPCIONISTA'] },
@@ -72,6 +77,7 @@ const GRUPOS_DE_NAVEGACION_STAFF: GrupoDeNavegacion[] = [
   {
     titulo: 'CONFIGURACIÓN',
     items: [
+      { ruta: '/preguntas-frecuentes', etiqueta: 'Preguntas frecuentes', icono: 'preguntas', roles: ['ADMIN', 'RECEPCIONISTA'] },
       { ruta: '/auditoria', etiqueta: 'Auditoría', icono: 'auditoria', roles: ['ADMIN'] },
       { ruta: '/usuarios', etiqueta: 'Usuarios', icono: 'usuarios', roles: ['ADMIN'] },
       { ruta: '/dispositivos', etiqueta: 'Dispositivos', icono: 'dispositivos', roles: ['ADMIN'] },

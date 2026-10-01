@@ -45,6 +45,18 @@ export const routes: Routes = [
         loadComponent: () => import('./features/agenda/agenda-dia/agenda-dia').then((m) => m.AgendaDiaComponent),
       },
       {
+        path: 'consultas',
+        canActivate: [roleGuard('ADMIN', 'MEDICO', 'RECEPCIONISTA')],
+        loadComponent: () =>
+          import('./features/consultas/bandeja-consultas/bandeja-consultas').then((m) => m.BandejaConsultasComponent),
+      },
+      {
+        path: 'preguntas-frecuentes',
+        canActivate: [roleGuard('ADMIN', 'RECEPCIONISTA')],
+        loadComponent: () =>
+          import('./features/consultas/preguntas-frecuentes/preguntas-frecuentes').then((m) => m.PreguntasFrecuentesComponent),
+      },
+      {
         path: 'pacientes',
         canActivate: [roleGuard('ADMIN', 'MEDICO', 'RECEPCIONISTA')],
         loadComponent: () => import('./features/pacientes/pacientes-list/pacientes-list').then((m) => m.PacientesListComponent),
