@@ -1,0 +1,149 @@
+<ui-page-header
+  eyebrow="Recepción"
+  titulo="Agenda del día"
+  descripcion="Registre si cada paciente llegó. Es el dato con el que se mide el ausentismo."
+/>
+
+@if (pendientes().length > 0) {
+  <section class="mt-6 rounded-xl border border-warning/40 bg-warning-soft p-4" aria-labelledby="titulo-pendientes">
+    <div class="flex items-start gap-3">
+      <ui-icon name="triangle-alert" [size]="20" clase="mt-0.5 shrink-0 text-warning" />
+      <div class="min-w-0 flex-1">
+        <h2 id="titulo-pendientes" class="font-semibold">
+          {{ pendientes().length }} {{ pendientes().length === 1 ? 'cita pasada sin registrar' : 'citas pasadas sin registrar' }}
+        </h2>
+        <p class="text-sm text-muted-foreground">
+          Si no se registran, el sistema las marcará como «no asistió» a las 48 horas.
+        </p>
+        <ul class="mt-3 space-y-2">
+          @for (item of pendientes(); track item.cita.id) {
+            <li class="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-background p-3">
+              <div class="min-w-0">
+                <p class="font-semibold">{{ item.pacienteNombre }}</p>
+                <p class="text-xs text-muted-foreground">
+                  {{ item.cita.fecha }} · {{ item.cita.hora.substring(0, 5) }} · {{ item.cita.tipoConsulta }}
+                </p>
+              </div>
+              <div class="flex gap-2">
+                <ui-button variante="success" [cargando]="procesando() === item.cita.id" (click)="registrarLlegada(item)">
+                  Llegó
+                </ui-button>
+                <ui-button variante="outline" [cargando]="procesando() === item.cita.id" (click)="registrarInasistencia(item)">
+                  No asistió
+                </ui-button>
+              </div>
+            </li>
+          }
+        </ul>
+      </div>
+    </div>
+  </section>
+}
+
+<section class="mt-6" aria-labelledby="titulo-dia">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h2 id="titulo-dia" class="font-display text-lg font-bold first-letter:uppercase">{{ fechaLegible() }}</h2>
+      <p class="text-sm text-muted-foreground">
+        {{ resumen().total }} citas · {{ resumen().atendidas }} atendidas · {{ resumen().noAsistio }} no asistieron ·
+        {{ resumen().porRegistrar }} por registrar
+      </p>
+    </div>
+    <div class="flex items-center gap-1">
+      <ui-button variante="ghost" [soloIcono]="true" (click)="moverDia(-1)">
+        <ui-icon name="chevron-left" [size]="18" /><span class="sr-only">Día anterior</span>
+      </ui-button>
+      <ui-button variante="outline" [disabled]="fecha() === hoy" (click)="irAHoy()">Hoy</ui-button>
+      <ui-button variante="ghost" [soloIcono]="true" (click)="moverDia(1)">
+        <ui-icon name="chevron-right" [size]="18" /><span class="sr-only">Día siguiente</span>
+      </ui-button>
+    </div>
+  </div>
+
+  @if (cargando()) {
+    <ui-loading-spinner class="mt-6 block" />
+  } @else {
+    <ul class="mt-4 space-y-3">
+      @for (item of agenda(); track item.cita.id) {
+        <li class="rounded-xl border border-border bg-card p-4 shadow-card">
+          <div class="flex flex-wrap items-center gap-4">
+            <p class="w-16 shrink-0 font-display text-2xl font-bold tabular-nums">{{ item.cita.hora.substring(0, 5) }}</p>
+            <div class="min-w-0 flex-1">
+              <p class="text-base font-semibold">{{ item.pacienteNombre }}</p>
+              <p class="text-sm text-muted-foreground">
+                DNI {{ item.pacienteDocumento }} · {{ item.cita.tipoConsulta }}
+                @if (item.medicoNombre) {
+                  · {{ item.medicoNombre }}
+                }
+              </p>
+              <div class="mt-1 flex flex-wrap gap-1">
+                <ui-badge [color]="colorEstado[item.cita.estado]">{{ etiquetaEstado[item.cita.estado] }}</ui-badge>
+                @if (item.cita.cierreAutomatico) {
+                  <ui-badge color="warning">cierre automático</ui-badge>
+                }
+                @if (item.cita.vecesReprogramada > 0) {
+                  <ui-badge color="neutral" [conPunto]="false">reprogramada ×{{ item.cita.vecesReprogramada }}</ui-badge>
+                }
+              </div>
+            </div>
+            <div class="flex w-full gap-2 sm:w-auto">
+              @if (puedeRegistrar(item)) {
+                <ui-button
+                  class="flex-1 sm:flex-none"
+                  variante="success"
+                  [anchoCompleto]="true"
+                  [cargando]="procesando() === item.cita.id"
+                  (click)="registrarLlegada(item)"
+                >
+                  Llegó
+                </ui-button>
+                <ui-button
+                  class="flex-1 sm:flex-none"
+                  variante="outline"
+                  [anchoCompleto]="true"
+                  [cargando]="procesando() === item.cita.id"
+                  (click)="registrarInasistencia(item)"
+                >
+                  No asistió
+                </ui-button>
+              } @else if (puedeCorregir(item)) {
+                <ui-button variante="ghost" (click)="abrirCorreccion(item)">Corregir</ui-button>
+              }
+            </div>
+          </div>
+        </li>
+      } @empty {
+        <li class="rounded-xl border border-dashed border-border p-8 text-center text-muted-foreground">
+          No hay citas para este día.
+        </li>
+      }
+    </ul>
+  }
+</section>
+
+<ui-modal
+  titulo="Corregir desenlace"
+  descripcion="El cambio queda auditado con su motivo y actualiza la tasa de ausentismo."
+  ancho="sm"
+  [abierto]="citaACorregir() !== null"
+  (cerrar)="citaACorregir.set(null)"
+>
+  <form class="grid gap-4" (ngSubmit)="corregir()">
+    <ui-select
+      label="Desenlace correcto"
+      [control]="formCorreccion.controls.estado"
+      [opciones]="opcionesDesenlace"
+      [requerido]="true"
+    />
+    <ui-input
+      label="Motivo"
+      placeholder="Ej.: el paciente llegó tarde y se registró por error"
+      [control]="formCorreccion.controls.motivo"
+      [requerido]="true"
+    />
+    <div class="flex justify-end gap-2">
+      <ui-button variante="outline" (click)="citaACorregir.set(null)">Cancelar</ui-button>
+      <ui-button type="submit">Guardar corrección</ui-button>
+    </div>
+  </form>
+</ui-modal>

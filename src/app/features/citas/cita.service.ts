@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Cita, CitaRequest, EstadoCita, ReprogramarCitaRequest } from '../../core/models/cita.model';
+import { Cita, CitaAgenda, CitaRequest, EstadoCita, ReprogramarCitaRequest } from '../../core/models/cita.model';
 import { Pagina } from '../../core/models/pagina.model';
 import { TAMANO_PAGINA_POR_DEFECTO } from '../../shared/constants/paginacion';
 
@@ -70,5 +70,19 @@ export class CitaService {
 
   marcarNoAsistio(id: number): Observable<Cita> {
     return this.http.patch<Cita>(`${this.baseUrl}/${id}/no-asistio`, {});
+  }
+
+  /** Agenda del dia para recepcion (un medico solo recibe sus citas). */
+  agenda(fecha: string): Observable<CitaAgenda[]> {
+    return this.http.get<CitaAgenda[]>(`${this.baseUrl}/agenda`, { params: { fecha } });
+  }
+
+  /** Citas de dias anteriores que siguen sin desenlace (indicador TNS). */
+  pendientesDeCierre(): Observable<CitaAgenda[]> {
+    return this.http.get<CitaAgenda[]>(`${this.baseUrl}/pendientes-cierre`);
+  }
+
+  corregirDesenlace(id: number, estado: 'ATENDIDA' | 'NO_ASISTIO', motivo: string): Observable<Cita> {
+    return this.http.patch<Cita>(`${this.baseUrl}/${id}/corregir-desenlace`, { estado, motivo });
   }
 }

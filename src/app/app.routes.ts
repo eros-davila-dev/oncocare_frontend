@@ -1,4 +1,6 @@
+import { inject } from '@angular/core';
 import { Routes } from '@angular/router';
+import { AuthService } from './core/services/auth.service';
 import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
 import { perfilCompletoGuard, perfilPendienteGuard } from './core/guards/paciente-perfil.guard';
@@ -30,12 +32,17 @@ export const routes: Routes = [
     loadComponent: () => import('./layout/shell/shell').then((m) => m.ShellComponent),
     canActivate: [authGuard],
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      { path: '', pathMatch: 'full', redirectTo: () => inject(AuthService).rutaInicio() },
       {
         path: 'dashboard',
         canActivate: [roleGuard('ADMIN', 'MEDICO', 'RECEPCIONISTA', 'INVESTIGADOR')],
         loadComponent: () =>
           import('./features/dashboard/dashboard-indicadores/dashboard-indicadores').then((m) => m.DashboardIndicadoresComponent),
+      },
+      {
+        path: 'agenda',
+        canActivate: [roleGuard('ADMIN', 'MEDICO', 'RECEPCIONISTA')],
+        loadComponent: () => import('./features/agenda/agenda-dia/agenda-dia').then((m) => m.AgendaDiaComponent),
       },
       {
         path: 'pacientes',

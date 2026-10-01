@@ -74,8 +74,18 @@ export class AuthService {
   }
 
   /** Destino inicial tras login o al rebotar de una seccion sin permiso. */
+  /** Cada rol aterriza en la pantalla donde trabaja a diario. */
   rutaInicio(): string {
-    return this.tieneAlgunRol('PACIENTE') ? '/mis-citas' : '/dashboard';
+    if (this.tieneAlgunRol('PACIENTE')) {
+      return '/mis-citas';
+    }
+    if (this.tieneAlgunRol('RECEPCIONISTA')) {
+      return '/agenda';
+    }
+    if (this.tieneAlgunRol('INVESTIGADOR')) {
+      return '/estudio';
+    }
+    return '/dashboard';
   }
 
   private guardarSesion(respuesta: LoginResponse, persistente?: boolean): void {

@@ -36,3 +36,12 @@ export interface ReprogramarCitaRequest {
   fecha: string;
   hora: string;
 }
+
+/** Cita en la agenda de recepcion, con los datos minimos para identificar al paciente. */
+export interface CitaAgenda {
+  cita: Cita;
+  pacienteNombre: string;
+  pacienteDocumento: string;
+  pacienteTelefono: string | null;
+  medicoNombre: string | null;
+}

@@ -13,6 +13,7 @@ import type { Rol } from '../../core/models/usuario.model';
 
 type IconoNavegacion =
   | 'dashboard'
+  | 'agenda'
   | 'pacientes'
   | 'citas'
   | 'tratamientos'
@@ -25,6 +26,7 @@ type IconoNavegacion =
 
 const ICONO_POR_SECCION: Record<IconoNavegacion, NombreIcono> = {
   dashboard: 'layout-dashboard',
+  agenda: 'clock',
   pacientes: 'users',
   citas: 'calendar-days',
   tratamientos: 'stethoscope',
@@ -57,6 +59,7 @@ const GRUPOS_DE_NAVEGACION_STAFF: GrupoDeNavegacion[] = [
   {
     titulo: 'GESTIÓN',
     items: [
+      { ruta: '/agenda', etiqueta: 'Agenda del día', icono: 'agenda', roles: ['ADMIN', 'MEDICO', 'RECEPCIONISTA'] },
       { ruta: '/pacientes', etiqueta: 'Pacientes', icono: 'pacientes', roles: ['ADMIN', 'MEDICO', 'RECEPCIONISTA'] },
       { ruta: '/citas', etiqueta: 'Citas', icono: 'citas', roles: ['ADMIN', 'MEDICO', 'RECEPCIONISTA'] },
       { ruta: '/tratamientos', etiqueta: 'Tratamientos', icono: 'tratamientos', roles: ['ADMIN', 'MEDICO', 'RECEPCIONISTA'] },
