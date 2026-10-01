@@ -32,6 +32,9 @@
               <dd class="mt-0.5 text-sm">{{ p.fechaRegistro | date: 'dd/MM/yyyy' }}</dd>
             </div>
           </dl>
+          @if (authService.tieneAlgunRol('ADMIN', 'RECEPCIONISTA')) {
+            <app-vinculo-telegram class="mt-5 block" [pacienteId]="p.id" />
+          }
         }
         @case ('Datos clinicos') {
           <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">

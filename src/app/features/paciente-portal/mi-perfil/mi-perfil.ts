@@ -1,4 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
+import { VinculoTelegramComponent } from '../../telegram/vinculo-telegram/vinculo-telegram';
 import { DatePipe } from '@angular/common';
 import { PacienteService } from '../../pacientes/paciente.service';
 import { Paciente } from '../../../core/models/paciente.model';
@@ -9,7 +10,7 @@ import { LoadingSpinnerComponent } from '../../../shared/components/loading-spin
 /** Ficha clinica de solo lectura del paciente autenticado (seccion 31). */
 @Component({
   selector: 'app-mi-perfil',
-  imports: [DatePipe, PageHeaderComponent, CardComponent, LoadingSpinnerComponent],
+  imports: [DatePipe, PageHeaderComponent, CardComponent, LoadingSpinnerComponent, VinculoTelegramComponent],
   templateUrl: './mi-perfil.html',
 })
 export class MiPerfilComponent {

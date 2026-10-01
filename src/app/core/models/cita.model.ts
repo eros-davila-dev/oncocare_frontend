@@ -44,4 +44,17 @@ export interface CitaAgenda {
   pacienteDocumento: string;
   pacienteTelefono: string | null;
   medicoNombre: string | null;
+  /** Sin Telegram, el recordatorio lo hace recepcion por llamada. */
+  pacienteConTelegram: boolean;
+}
+
+/** Recordatorio por llamada pendiente (pacientes sin Telegram). */
+export interface LlamadaPendiente {
+  recordatorioId: number;
+  citaId: number;
+  pacienteNombre: string;
+  telefono: string | null;
+  fecha: string;
+  hora: string;
+  intentosPrevios: number;
 }

@@ -40,6 +40,39 @@
   </section>
 }
 
+@if (llamadas().length > 0) {
+  <section class="mt-6 rounded-xl border border-info/40 bg-info-soft p-4" aria-labelledby="titulo-llamadas">
+    <h2 id="titulo-llamadas" class="font-semibold">
+      Llamadas de recordatorio ({{ llamadas().length }})
+    </h2>
+    <p class="text-sm text-muted-foreground">Pacientes sin Telegram con cita en las próximas 24 horas.</p>
+    <ul class="mt-3 space-y-2">
+      @for (llamada of llamadas(); track llamada.recordatorioId) {
+        <li class="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-background p-3">
+          <div class="min-w-0">
+            <p class="font-semibold">{{ llamada.pacienteNombre }}</p>
+            <p class="text-sm text-muted-foreground">
+              @if (llamada.telefono) {
+                <a class="font-semibold text-primary hover:underline" [href]="'tel:' + llamada.telefono">{{ llamada.telefono }}</a>
+              } @else {
+                Sin teléfono registrado
+              }
+              · cita {{ llamada.fecha }} {{ llamada.hora }}
+              @if (llamada.intentosPrevios > 0) {
+                · {{ llamada.intentosPrevios }} {{ llamada.intentosPrevios === 1 ? 'intento previo' : 'intentos previos' }}
+              }
+            </p>
+          </div>
+          <div class="flex gap-2">
+            <ui-button variante="success" (click)="registrarLlamada(llamada, true)">Recordado</ui-button>
+            <ui-button variante="outline" (click)="registrarLlamada(llamada, false)">No contestó</ui-button>
+          </div>
+        </li>
+      }
+    </ul>
+  </section>
+}
+
 <section class="mt-6" aria-labelledby="titulo-dia">
   <div class="flex flex-wrap items-center justify-between gap-3">
     <div>
@@ -80,6 +113,9 @@
                 <ui-badge [color]="colorEstado[item.cita.estado]">{{ etiquetaEstado[item.cita.estado] }}</ui-badge>
                 @if (item.cita.cierreAutomatico) {
                   <ui-badge color="warning">cierre automático</ui-badge>
+                }
+                @if (!item.pacienteConTelegram && sinDesenlace(item)) {
+                  <ui-badge color="info" [conPunto]="false">sin Telegram</ui-badge>
                 }
                 @if (item.cita.vecesReprogramada > 0) {
                   <ui-badge color="neutral" [conPunto]="false">reprogramada ×{{ item.cita.vecesReprogramada }}</ui-badge>

@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CitaService } from '../../citas/cita.service';
-import { CitaAgenda, EstadoCita } from '../../../core/models/cita.model';
+import { CitaAgenda, EstadoCita, LlamadaPendiente } from '../../../core/models/cita.model';
 import { ErrorResponse } from '../../../core/models/error.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header';
@@ -67,6 +67,7 @@ export class AgendaDiaComponent {
   protected readonly agenda = signal<CitaAgenda[]>([]);
   protected readonly pendientes = signal<CitaAgenda[]>([]);
   protected readonly procesando = signal<number | null>(null);
+  protected readonly llamadas = signal<LlamadaPendiente[]>([]);
 
   protected readonly resumen = computed(() => {
     const citas = this.agenda().map((a) => a.cita);
@@ -98,6 +99,24 @@ export class AgendaDiaComponent {
   constructor() {
     this.cargar();
     this.cargarPendientes();
+    this.cargarLlamadas();
+  }
+
+  protected registrarLlamada(llamada: LlamadaPendiente, contesto: boolean): void {
+    this.citaService.registrarLlamada(llamada.recordatorioId, contesto).subscribe({
+      next: () => {
+        this.toast.exito(contesto ? `Recordatorio a ${llamada.pacienteNombre} registrado` : 'Se volverá a intentar más tarde');
+        this.cargarLlamadas();
+      },
+      error: (e: HttpErrorResponse) => this.toast.error(this.mensaje(e)),
+    });
+  }
+
+  private cargarLlamadas(): void {
+    if (!this.authService.tieneAlgunRol('ADMIN', 'RECEPCIONISTA')) {
+      return;
+    }
+    this.citaService.llamadasPendientes().subscribe((llamadas) => this.llamadas.set(llamadas));
   }
 
   protected moverDia(dias: number): void {

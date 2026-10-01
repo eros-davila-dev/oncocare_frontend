@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Cita, CitaAgenda, CitaRequest, EstadoCita, ReprogramarCitaRequest } from '../../core/models/cita.model';
+import { Cita, CitaAgenda, CitaRequest, EstadoCita, LlamadaPendiente, ReprogramarCitaRequest } from '../../core/models/cita.model';
 import { Pagina } from '../../core/models/pagina.model';
 import { TAMANO_PAGINA_POR_DEFECTO } from '../../shared/constants/paginacion';
 
@@ -80,6 +80,15 @@ export class CitaService {
   /** Citas de dias anteriores que siguen sin desenlace (indicador TNS). */
   pendientesDeCierre(): Observable<CitaAgenda[]> {
     return this.http.get<CitaAgenda[]>(`${this.baseUrl}/pendientes-cierre`);
+  }
+
+  /** Pacientes sin Telegram a los que recepcion debe llamar para recordarles su cita. */
+  llamadasPendientes(): Observable<LlamadaPendiente[]> {
+    return this.http.get<LlamadaPendiente[]>(`${environment.apiUrl}/recordatorios/llamadas`);
+  }
+
+  registrarLlamada(recordatorioId: number, contesto: boolean): Observable<void> {
+    return this.http.patch<void>(`${environment.apiUrl}/recordatorios/${recordatorioId}/llamada`, { contesto });
   }
 
   corregirDesenlace(id: number, estado: 'ATENDIDA' | 'NO_ASISTIO', motivo: string): Observable<Cita> {

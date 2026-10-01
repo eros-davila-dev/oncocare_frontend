@@ -1,4 +1,6 @@
 import { Component, effect, inject, input, output, signal } from '@angular/core';
+import { AuthService } from '../../../core/services/auth.service';
+import { VinculoTelegramComponent } from '../../telegram/vinculo-telegram/vinculo-telegram';
 import { DatePipe } from '@angular/common';
 import { Paciente } from '../../../core/models/paciente.model';
 import { Cita } from '../../../core/models/cita.model';
@@ -22,12 +24,23 @@ type Tab = (typeof TABS)[number];
  */
 @Component({
   selector: 'app-paciente-detalle',
-  imports: [ModalComponent, TabsComponent, BadgeComponent, AvatarComponent, EstadoColorPipe, EtiquetaEnumPipe, DatePipe],
+  imports: [
+    ModalComponent,
+    TabsComponent,
+    BadgeComponent,
+    AvatarComponent,
+    EstadoColorPipe,
+    EtiquetaEnumPipe,
+    DatePipe,
+    VinculoTelegramComponent,
+  ],
   templateUrl: './paciente-detalle.html',
 })
 export class PacienteDetalleComponent {
   private readonly citaService = inject(CitaService);
   private readonly tratamientoService = inject(TratamientoService);
+
+  protected readonly authService = inject(AuthService);
 
   paciente = input<Paciente | null>(null);
   abierto = input(false);
