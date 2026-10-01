@@ -40,7 +40,11 @@ export interface PacienteRequest {
   convenioSeguro: ConvenioSeguro;
   contactoEmergenciaNombre: string;
   contactoEmergenciaTelefono: string;
-  tiempoRegistroSegundos?: number | null;
+  /**
+   * Sesion de medicion del TPR abierta al mostrar el formulario
+   * (MedicionRegistroService). El tiempo lo mide el servidor, nunca el navegador.
+   */
+  medicionId?: number | null;
 }
 
 /** Proyeccion de lectura enriquecida: estado derivado de tratamiento, medico y ultima/proxima cita. */

@@ -1,0 +1,157 @@
+<section aria-labelledby="titulo-fases">
+  <h2 id="titulo-fases" class="font-display text-lg font-bold">Fases del estudio</h2>
+  <p class="text-sm text-muted-foreground">
+    Cada evento pertenece a la fase cuyas fechas lo contienen. El pretest debe terminar antes de que empiece el postest.
+  </p>
+  <div class="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2">
+    @for (item of formulariosFase; track item.fase) {
+      <ui-card class="block">
+        <div class="flex items-center justify-between gap-2">
+          <h3 class="font-display text-base font-bold">{{ item.fase === 'PRETEST' ? 'Pretest' : 'Postest' }}</h3>
+          @if (estadoDe(item.fase); as estado) {
+            <ui-badge [color]="estado.estado === 'CERRADA' ? 'neutral' : 'success'">
+              {{ estado.estado === 'CERRADA' ? 'Cerrada' : 'Abierta' }}
+            </ui-badge>
+          } @else {
+            <ui-badge color="warning">Sin configurar</ui-badge>
+          }
+        </div>
+        <p class="mt-1 text-xs text-muted-foreground">
+          {{ item.fase === 'PRETEST' ? 'Proceso manual previo al sistema (hojas de cálculo).' : 'Con el sistema web, el chatbot y los recordatorios.' }}
+        </p>
+        <form class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2" (ngSubmit)="guardarFase(item)">
+          <ui-input label="Inicio" type="date" [control]="item.form.controls.fechaInicio" [requerido]="true" />
+          <ui-input label="Fin" type="date" [control]="item.form.controls.fechaFin" [requerido]="true" />
+          @if (estadoDe(item.fase)?.estado !== 'CERRADA') {
+            <div class="flex flex-wrap gap-2 sm:col-span-2">
+              <ui-button type="submit">Guardar fechas</ui-button>
+              @if (estadoDe(item.fase)) {
+                <ui-button variante="outline" (click)="faseACerrar.set(item.fase)">Cerrar fase</ui-button>
+              }
+            </div>
+          }
+        </form>
+      </ui-card>
+    }
+  </div>
+</section>
+
+<section class="mt-8" aria-labelledby="titulo-muestra">
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <h2 id="titulo-muestra" class="font-display text-lg font-bold">Muestra</h2>
+      <p class="text-sm text-muted-foreground">
+        {{ incluidos() }} participantes incluidos (la tesis plantea 30 de 32 pacientes activos). Solo ellos cuentan en
+        el alcance «muestra» y en la tabla pareada.
+      </p>
+    </div>
+    <ui-button (click)="abrirIncluir()">Incluir paciente</ui-button>
+  </div>
+
+  <div class="mt-3 overflow-x-auto rounded-xl border border-border bg-card shadow-card">
+    <table class="w-full border-collapse text-left text-sm">
+      <thead class="bg-muted/70 text-xs text-muted-foreground">
+        <tr>
+          <th class="px-3 py-3 font-semibold">Código</th>
+          <th class="px-3 py-3 font-semibold">Paciente</th>
+          <th class="px-3 py-3 font-semibold">Consentimiento</th>
+          <th class="px-3 py-3 font-semibold">Estado</th>
+          <th class="px-3 py-3"><span class="sr-only">Acciones</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of participantes(); track p.id) {
+          <tr class="border-t border-border">
+            <td class="px-3 py-3 font-semibold">{{ p.codigo }}</td>
+            <td class="px-3 py-3">
+              <p>{{ p.nombreCompleto }}</p>
+              <p class="text-xs text-muted-foreground">{{ p.documentoIdentidad }}</p>
+            </td>
+            <td class="px-3 py-3">{{ fechaCorta(p.fechaConsentimiento) }}</td>
+            <td class="px-3 py-3">
+              @if (p.incluido) {
+                <ui-badge color="success">Incluido</ui-badge>
+              } @else {
+                <ui-badge color="danger">Excluido</ui-badge>
+                <p class="mt-1 text-xs text-muted-foreground">{{ etiquetaMotivo(p.motivoExclusion) }}</p>
+              }
+            </td>
+            <td class="px-3 py-3 text-right">
+              @if (p.incluido) {
+                <ui-button variante="ghost" (click)="abrirExcluir(p)">Excluir</ui-button>
+              } @else {
+                <ui-button variante="ghost" (click)="reincorporar(p)">Reincorporar</ui-button>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5" class="px-3 py-8 text-center text-muted-foreground">
+              Aún no hay participantes. Incluya a los pacientes que firmaron el consentimiento informado.
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<ui-modal
+  titulo="Incluir paciente en la muestra"
+  descripcion="Requiere el consentimiento informado firmado (Anexo de la tesis)."
+  [abierto]="modalIncluir()"
+  (cerrar)="modalIncluir.set(false)"
+>
+  <form class="grid gap-4" (ngSubmit)="incluir()">
+    <ui-select
+      label="Paciente"
+      placeholder="Seleccione un paciente"
+      [control]="formIncluir.controls.pacienteId"
+      [opciones]="opcionesPacientes()"
+      [requerido]="true"
+    />
+    <ui-input
+      label="Fecha del consentimiento"
+      type="date"
+      [control]="formIncluir.controls.fechaConsentimiento"
+      [requerido]="true"
+    />
+    <ui-input label="Observación" [control]="formIncluir.controls.observacion" />
+    <div class="flex justify-end gap-2">
+      <ui-button variante="outline" (click)="modalIncluir.set(false)">Cancelar</ui-button>
+      <ui-button type="submit" [cargando]="enviando()">Incluir</ui-button>
+    </div>
+  </form>
+</ui-modal>
+
+<ui-modal
+  titulo="Excluir del estudio"
+  descripcion="Sus datos no se borran: solo dejan de contar en la muestra y en la tabla pareada."
+  [abierto]="participanteAExcluir() !== null"
+  (cerrar)="participanteAExcluir.set(null)"
+>
+  <form class="grid gap-4" (ngSubmit)="excluir()">
+    <ui-select
+      label="Motivo (criterios de exclusión de la tesis)"
+      placeholder="Seleccione el motivo"
+      [control]="formExcluir.controls.motivo"
+      [opciones]="motivosExclusion"
+      [requerido]="true"
+    />
+    <ui-input label="Observación" [control]="formExcluir.controls.observacion" />
+    <div class="flex justify-end gap-2">
+      <ui-button variante="outline" (click)="participanteAExcluir.set(null)">Cancelar</ui-button>
+      <ui-button type="submit" variante="danger">Excluir</ui-button>
+    </div>
+  </form>
+</ui-modal>
+
+<ui-confirm-dialog
+  variante="warning"
+  titulo="¿Cerrar la fase?"
+  mensaje="Sus fechas quedarán congeladas y ya no se podrán capturar fichas en esa fase. Los resultados de la fase dejan de cambiar."
+  textoConfirmar="Cerrar fase"
+  [abierto]="faseACerrar() !== null"
+  (confirmar)="cerrarFase()"
+  (cancelar)="faseACerrar.set(null)"
+/>

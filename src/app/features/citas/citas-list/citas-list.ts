@@ -2,6 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CitaService } from '../cita.service';
+import { MedicionRegistroService } from '../../../core/services/medicion-registro.service';
 import { PacienteService } from '../../pacientes/paciente.service';
 import { UsuarioService } from '../../usuarios/usuario.service';
 import { Cita, EstadoCita } from '../../../core/models/cita.model';
@@ -66,6 +67,7 @@ export class CitasListComponent {
   private readonly pacienteService = inject(PacienteService);
   private readonly usuarioService = inject(UsuarioService);
   private readonly toastService = inject(ToastService);
+  private readonly medicionRegistroService = inject(MedicionRegistroService);
 
   protected readonly vista = signal<VistaCitas>('tabla');
   protected readonly cargando = signal(false);
@@ -78,6 +80,8 @@ export class CitasListComponent {
 
   protected readonly opcionesEspecialidad = OPCIONES_ESPECIALIDAD;
   protected readonly modalAgendarAbierto = signal(false);
+  /** Sesion de medicion del TPR (registro de cita) abierta al mostrar el formulario. */
+  private readonly medicionId = signal<number | null>(null);
   protected readonly enviandoAgendar = signal(false);
   protected readonly pacientes = signal<OpcionSelect[]>([]);
   protected readonly medicos = signal<UsuarioResumen[]>([]);
@@ -103,7 +107,7 @@ export class CitasListComponent {
     { encabezado: 'Hora', valor: (c) => c.hora },
     { encabezado: 'Tipo de consulta', valor: (c) => c.tipoConsulta },
     { encabezado: 'Paciente', valor: (c) => this.nombresPacientes().get(c.pacienteId) ?? `Paciente #${c.pacienteId}` },
-    { encabezado: 'Medico', valor: (c) => `Médico #${c.medicoId}` },
+    { encabezado: 'Medico', valor: (c) => (c.medicoId ? `Médico #${c.medicoId}` : '—') },
   ];
 
   constructor() {
@@ -132,6 +136,8 @@ export class CitasListComponent {
     if (this.pacientes().length === 0) {
       this.cargarPacientes();
     }
+    this.medicionId.set(null);
+    this.medicionRegistroService.iniciar('REGISTRO_CITA').subscribe((id) => this.medicionId.set(id));
     this.modalAgendarAbierto.set(true);
   }
 
@@ -152,6 +158,7 @@ export class CitasListComponent {
         hora: valores.hora,
         tipoConsulta: valores.tipoConsulta,
         observaciones: valores.observaciones || null,
+        medicionId: this.medicionId(),
       })
       .subscribe({
         next: () => {

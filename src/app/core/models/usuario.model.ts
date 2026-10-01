@@ -1,4 +1,8 @@
-export type Rol = 'ADMIN' | 'MEDICO' | 'RECEPCIONISTA' | 'PACIENTE';
+/**
+ * INVESTIGADOR: responsable del estudio de tesis (fases, muestra, fichas del
+ * pretest, exportacion). SERVICIO: cuenta tecnica de n8n, nunca una persona.
+ */
+export type Rol = 'ADMIN' | 'MEDICO' | 'RECEPCIONISTA' | 'PACIENTE' | 'INVESTIGADOR' | 'SERVICIO';
 
 export type Especialidad =
   | 'ONCOLOGIA_CLINICA'

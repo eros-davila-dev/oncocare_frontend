@@ -17,6 +17,8 @@ const OPCIONES_ROL: OpcionSelect[] = [
   { value: 'ADMIN', label: 'Administrador' },
   { value: 'MEDICO', label: 'Medico' },
   { value: 'RECEPCIONISTA', label: 'Recepcionista' },
+  { value: 'INVESTIGADOR', label: 'Investigador (estudio)' },
+  { value: 'SERVICIO', label: 'Servicio (integraciones)' },
 ];
 
 const OPCIONES_ESPECIALIDAD: OpcionSelect[] = [

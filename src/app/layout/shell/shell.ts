@@ -9,6 +9,7 @@ import { BrandLogoComponent } from '../../shared/ui/brand-logo/brand-logo';
 import { AvatarComponent } from '../../shared/ui/avatar/avatar';
 import { IconComponent } from '../../shared/ui/icon/icon';
 import type { NombreIcono } from '../../shared/ui/icon/icon-data';
+import type { Rol } from '../../core/models/usuario.model';
 
 type IconoNavegacion =
   | 'dashboard'
@@ -18,6 +19,7 @@ type IconoNavegacion =
   | 'auditoria'
   | 'usuarios'
   | 'dispositivos'
+  | 'estudio'
   | 'mis-citas'
   | 'mi-perfil';
 
@@ -29,6 +31,7 @@ const ICONO_POR_SECCION: Record<IconoNavegacion, NombreIcono> = {
   auditoria: 'shield-check',
   usuarios: 'user-cog',
   dispositivos: 'cpu',
+  estudio: 'flask-conical',
   'mis-citas': 'calendar-days',
   'mi-perfil': 'user-cog',
 };
@@ -37,7 +40,8 @@ interface ItemDeNavegacion {
   ruta: string;
   etiqueta: string;
   icono: IconoNavegacion;
-  soloAdmin?: boolean;
+  /** Si se define, solo estos roles ven el item (el backend aplica la restriccion real). */
+  roles?: Rol[];
 }
 
 interface GrupoDeNavegacion {
@@ -53,17 +57,21 @@ const GRUPOS_DE_NAVEGACION_STAFF: GrupoDeNavegacion[] = [
   {
     titulo: 'GESTIÓN',
     items: [
-      { ruta: '/pacientes', etiqueta: 'Pacientes', icono: 'pacientes' },
-      { ruta: '/citas', etiqueta: 'Citas', icono: 'citas' },
-      { ruta: '/tratamientos', etiqueta: 'Tratamientos', icono: 'tratamientos' },
+      { ruta: '/pacientes', etiqueta: 'Pacientes', icono: 'pacientes', roles: ['ADMIN', 'MEDICO', 'RECEPCIONISTA'] },
+      { ruta: '/citas', etiqueta: 'Citas', icono: 'citas', roles: ['ADMIN', 'MEDICO', 'RECEPCIONISTA'] },
+      { ruta: '/tratamientos', etiqueta: 'Tratamientos', icono: 'tratamientos', roles: ['ADMIN', 'MEDICO', 'RECEPCIONISTA'] },
     ],
+  },
+  {
+    titulo: 'INVESTIGACIÓN',
+    items: [{ ruta: '/estudio', etiqueta: 'Estudio de tesis', icono: 'estudio', roles: ['ADMIN', 'INVESTIGADOR'] }],
   },
   {
     titulo: 'CONFIGURACIÓN',
     items: [
-      { ruta: '/auditoria', etiqueta: 'Auditoría', icono: 'auditoria', soloAdmin: true },
-      { ruta: '/usuarios', etiqueta: 'Usuarios', icono: 'usuarios', soloAdmin: true },
-      { ruta: '/dispositivos', etiqueta: 'Dispositivos', icono: 'dispositivos', soloAdmin: true },
+      { ruta: '/auditoria', etiqueta: 'Auditoría', icono: 'auditoria', roles: ['ADMIN'] },
+      { ruta: '/usuarios', etiqueta: 'Usuarios', icono: 'usuarios', roles: ['ADMIN'] },
+      { ruta: '/dispositivos', etiqueta: 'Dispositivos', icono: 'dispositivos', roles: ['ADMIN'] },
     ],
   },
 ];
@@ -122,8 +130,12 @@ export class ShellComponent {
     return 'Inicio';
   });
 
+  protected grupoVisible(grupo: GrupoDeNavegacion): boolean {
+    return grupo.items.some((item) => this.itemVisible(item));
+  }
+
   protected itemVisible(item: ItemDeNavegacion): boolean {
-    return !item.soloAdmin || this.authService.tieneAlgunRol('ADMIN');
+    return !item.roles || this.authService.tieneAlgunRol(...item.roles);
   }
 
   protected esActivo(item: ItemDeNavegacion): boolean {

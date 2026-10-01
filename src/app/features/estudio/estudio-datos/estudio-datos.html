@@ -1,0 +1,87 @@
+<div class="flex flex-wrap items-end justify-between gap-3">
+  <ui-tabs [tabs]="pestanas" [activa]="pestana()" (cambiarTab)="cambiarPestana($event)" />
+  <label class="flex items-center gap-2 text-sm">
+    <span class="text-muted-foreground">Fase</span>
+    <select
+      class="min-h-10 rounded-lg border border-input bg-background px-3 text-sm"
+      (change)="cambiarFase($any($event.target).value)"
+    >
+      <option value="">Todas</option>
+      <option value="PRETEST">Pretest</option>
+      <option value="POSTEST">Postest</option>
+    </select>
+  </label>
+</div>
+
+<p class="mt-3 text-sm text-muted-foreground">
+  Los datos nunca se editan ni se borran. Si uno es erróneo, anúlelo con un motivo: deja de contar en el indicador y
+  queda el rastro en la auditoría.
+</p>
+
+<div class="mt-4">
+  @if (pestana() === 'Mediciones de registro') {
+    <ui-data-table
+      [items]="mediciones().content"
+      [columnas]="columnasMediciones"
+      [cargando]="cargando()"
+      mensajeVacio="No hay mediciones en este filtro"
+      [totalElements]="mediciones().totalElements"
+      [totalPages]="mediciones().totalPages"
+      [pageNumber]="mediciones().pageNumber"
+      [pageSize]="mediciones().pageSize"
+      (cambiarPagina)="cargar($event)"
+    >
+      <ng-template uiCellTemplate="estadoMedicion" let-fila>
+        <ui-badge [color]="colorEstado(fila.estado)">{{ fila.estado }}</ui-badge>
+        @if (fila.sospechosa) {
+          <ui-badge class="ml-1" color="warning">revisar</ui-badge>
+        }
+      </ng-template>
+      <ng-template #accionesFila let-fila>
+        @if (fila.estado === 'COMPLETADA') {
+          <ui-button variante="ghost" (click)="abrirAnular('medicion', fila.id)">Anular</ui-button>
+        }
+      </ng-template>
+    </ui-data-table>
+  } @else {
+    <ui-data-table
+      [items]="consultas().content"
+      [columnas]="columnasConsultas"
+      [cargando]="cargando()"
+      mensajeVacio="No hay consultas en este filtro"
+      [totalElements]="consultas().totalElements"
+      [totalPages]="consultas().totalPages"
+      [pageNumber]="consultas().pageNumber"
+      [pageSize]="consultas().pageSize"
+      (cambiarPagina)="cargar($event)"
+    >
+      <ng-template uiCellTemplate="resultadoConsulta" let-fila>
+        <ui-badge [color]="colorEstado(fila.resultado ?? 'ABIERTA')">{{ fila.resultado ?? 'ABIERTA' }}</ui-badge>
+        @if (fila.capturaManual) {
+          <ui-badge class="ml-1" color="lavender" [conPunto]="false">ficha</ui-badge>
+        }
+      </ng-template>
+      <ng-template #accionesFila let-fila>
+        @if (fila.resultado && fila.resultado !== 'ANULADA') {
+          <ui-button variante="ghost" (click)="abrirAnular('consulta', fila.id)">Anular</ui-button>
+        }
+      </ng-template>
+    </ui-data-table>
+  }
+</div>
+
+<ui-modal
+  titulo="Anular dato"
+  descripcion="El dato deja de contar en el indicador. Esta acción queda auditada."
+  ancho="sm"
+  [abierto]="aAnular() !== null"
+  (cerrar)="aAnular.set(null)"
+>
+  <form class="grid gap-4" (ngSubmit)="anular()">
+    <ui-input label="Motivo" placeholder="Ej.: registro duplicado por error" [control]="motivo" [requerido]="true" />
+    <div class="flex justify-end gap-2">
+      <ui-button variante="outline" (click)="aAnular.set(null)">Cancelar</ui-button>
+      <ui-button type="submit" variante="danger">Anular</ui-button>
+    </div>
+  </form>
+</ui-modal>

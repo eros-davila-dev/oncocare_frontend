@@ -1,0 +1,55 @@
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { PageHeaderComponent } from '../../../shared/components/page-header/page-header';
+import { IconComponent } from '../../../shared/ui/icon/icon';
+import type { NombreIcono } from '../../../shared/ui/icon/icon-data';
+
+interface SeccionEstudio {
+  ruta: string;
+  etiqueta: string;
+  icono: NombreIcono;
+}
+
+const SECCIONES: SeccionEstudio[] = [
+  { ruta: 'resumen', etiqueta: 'Resultados', icono: 'chart-column' },
+  { ruta: 'muestra', etiqueta: 'Fases y muestra', icono: 'users' },
+  { ruta: 'fichas', etiqueta: 'Fichas de recolección', icono: 'file-spreadsheet' },
+  { ruta: 'datos', etiqueta: 'Revisión de datos', icono: 'search' },
+];
+
+/**
+ * Modulo del estudio de tesis (rol INVESTIGADOR / ADMIN): resultados
+ * pretest vs postest, configuracion de fases y muestra, fichas del Anexo 2 y
+ * revision de los datos crudos.
+ */
+@Component({
+  selector: 'app-estudio-layout',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, PageHeaderComponent, IconComponent],
+  template: `
+    <ui-page-header
+      eyebrow="Investigación"
+      titulo="Estudio de tesis"
+      descripcion="Medición pretest y postest de TPR, TNS y NCA con la muestra del estudio."
+    />
+    <nav class="mt-6 flex gap-1 overflow-x-auto border-b border-border" aria-label="Secciones del estudio">
+      @for (seccion of secciones; track seccion.ruta) {
+        <a
+          [routerLink]="seccion.ruta"
+          routerLinkActive="border-primary text-primary"
+          [routerLinkActiveOptions]="{ exact: false }"
+          class="flex min-h-12 shrink-0 items-center gap-2 border-b-2 border-transparent px-3 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ui-icon [name]="seccion.icono" [size]="16" />
+          {{ seccion.etiqueta }}
+        </a>
+      }
+    </nav>
+    <div class="mt-6">
+      <router-outlet />
+    </div>
+  `,
+})
+export class EstudioLayoutComponent {
+  protected readonly secciones = SECCIONES;
+}

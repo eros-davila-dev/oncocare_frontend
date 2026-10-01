@@ -1,0 +1,121 @@
+<section aria-labelledby="titulo-comparativo">
+  <h2 id="titulo-comparativo" class="font-display text-lg font-bold">Pretest vs. postest</h2>
+  @if (comparativo(); as datos) {
+    <app-comparativo-indicadores class="mt-3" [comparativo]="datos" />
+    <p class="mt-2 text-xs text-muted-foreground">
+      Lectura descriptiva. La significancia estadística se determina con Shapiro-Wilk y Wilcoxon para muestras
+      relacionadas (α = 0,05) sobre la tabla pareada.
+    </p>
+  } @else if (avisoComparativo()) {
+    <ui-card class="mt-3 block">
+      <p class="text-sm text-muted-foreground">{{ avisoComparativo() }}</p>
+    </ui-card>
+  }
+</section>
+
+<section class="mt-8" aria-labelledby="titulo-fase">
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <h2 id="titulo-fase" class="font-display text-lg font-bold">Indicadores por fase</h2>
+      @if (resultadoFase(); as r) {
+        <p class="text-sm text-muted-foreground">Del {{ fechaCorta(r.desde) }} al {{ fechaCorta(r.hasta) }}</p>
+      }
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <div class="flex gap-1 rounded-lg bg-muted p-1" role="group" aria-label="Fase">
+        @for (opcion of ['PRETEST', 'POSTEST']; track opcion) {
+          <button
+            type="button"
+            class="min-h-9 rounded-md px-3 text-sm font-semibold"
+            [class]="fase() === opcion ? 'bg-background text-foreground shadow-card' : 'text-muted-foreground hover:text-foreground'"
+            [attr.aria-pressed]="fase() === opcion"
+            (click)="cambiarFase($any(opcion))"
+          >
+            {{ opcion === 'PRETEST' ? 'Pretest' : 'Postest' }}
+          </button>
+        }
+      </div>
+      <div class="flex gap-1 rounded-lg bg-muted p-1" role="group" aria-label="Alcance">
+        @for (opcion of ['MUESTRA', 'GLOBAL']; track opcion) {
+          <button
+            type="button"
+            class="min-h-9 rounded-md px-3 text-sm font-semibold"
+            [class]="alcance() === opcion ? 'bg-background text-foreground shadow-card' : 'text-muted-foreground hover:text-foreground'"
+            [attr.aria-pressed]="alcance() === opcion"
+            (click)="cambiarAlcance($any(opcion))"
+          >
+            {{ opcion === 'MUESTRA' ? 'Muestra' : 'Todo el sistema' }}
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+
+  @if (cargandoFase()) {
+    <ui-loading-spinner class="mt-4 block" />
+  } @else if (resultadoFase(); as r) {
+    <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+      @for (definicion of definiciones; track definicion.clave) {
+        <app-indicador-card [definicion]="definicion" [indicadores]="r.indicadores" />
+      }
+    </div>
+  } @else if (avisoFase()) {
+    <ui-card class="mt-4 block">
+      <p class="text-sm text-muted-foreground">{{ avisoFase() }}</p>
+    </ui-card>
+  }
+</section>
+
+@if (pareado().length > 0) {
+  <section class="mt-8" aria-labelledby="titulo-pareado">
+    <h2 id="titulo-pareado" class="font-display text-lg font-bold">Tabla pareada por participante</h2>
+    <p class="text-sm text-muted-foreground">
+      Pares completos (n efectivo para Wilcoxon):
+      @for (p of paresCompletos(); track p.sigla; let ultimo = $last) {
+        <strong>{{ p.sigla }} {{ p.pares }}</strong>{{ ultimo ? '' : ' · ' }}
+      }
+    </p>
+    <div class="mt-3 overflow-x-auto rounded-xl border border-border bg-card shadow-card">
+      <table class="w-full border-collapse text-left text-sm">
+        <thead class="bg-muted/70 text-xs text-muted-foreground">
+          <tr>
+            <th class="px-3 py-3 font-semibold" rowspan="2">Participante</th>
+            @for (d of definiciones; track d.clave) {
+              <th class="px-3 pt-3 text-center font-semibold" colspan="2">{{ d.sigla }} ({{ d.unidad }})</th>
+            }
+          </tr>
+          <tr>
+            @for (d of definiciones; track d.clave) {
+              <th class="px-3 pb-3 text-right font-medium">Pre</th>
+              <th class="px-3 pb-3 text-right font-medium">Post</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (fila of pareado(); track fila.codigo) {
+            <tr class="border-t border-border">
+              <td class="px-3 py-2 font-semibold">{{ fila.codigo }}</td>
+              @for (d of definiciones; track d.clave) {
+                <td
+                  class="px-3 py-2 text-right tabular-nums"
+                  [class.text-muted-foreground]="d.valor(fila.pretest) === null"
+                >
+                  {{ d.valor(fila.pretest) === null ? '—' : d.valor(fila.pretest)!.toFixed(1) }}
+                </td>
+                <td
+                  class="px-3 py-2 text-right tabular-nums"
+                  [class.text-muted-foreground]="d.valor(fila.postest) === null"
+                >
+                  {{ d.valor(fila.postest) === null ? '—' : d.valor(fila.postest)!.toFixed(1) }}
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <p class="mt-2 text-xs text-muted-foreground">
+      «—» indica que el participante aún no tiene datos en esa fase. Complete las fichas antes de cerrar la fase.
+    </p>
+  </section>
+}

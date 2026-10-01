@@ -4,6 +4,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router } from '@angular/router';
 import { map } from 'rxjs';
 import { PacienteService } from '../../pacientes/paciente.service';
+import { MedicionRegistroService } from '../../../core/services/medicion-registro.service';
 import { ConvenioSeguro } from '../../../core/models/paciente.model';
 import { ErrorResponse } from '../../../core/models/error.model';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header';
@@ -37,10 +38,12 @@ export class CompletarPerfilComponent {
   private readonly pacienteService = inject(PacienteService);
   private readonly toastService = inject(ToastService);
   private readonly router = inject(Router);
+  private readonly medicionRegistroService = inject(MedicionRegistroService);
 
   protected readonly opcionesConvenio = OPCIONES_CONVENIO;
   protected readonly enviando = signal(false);
-  private readonly inicioFormulario = Date.now();
+  /** Sesion de medicion (canal PORTAL) que el servidor cierra al guardar el perfil. */
+  private readonly medicionId = signal<number | null>(null);
 
   protected readonly form = new FormGroup({
     nombres: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(100)] }),
@@ -67,6 +70,10 @@ export class CompletarPerfilComponent {
     }),
   });
 
+  constructor() {
+    this.medicionRegistroService.iniciar('REGISTRO_PACIENTE').subscribe((id) => this.medicionId.set(id));
+  }
+
   protected guardar(): void {
     if (this.form.invalid || this.form.pending) {
       this.form.markAllAsTouched();
@@ -86,7 +93,7 @@ export class CompletarPerfilComponent {
         tipoCancer: valores.tipoCancer || null,
         estadioClinico: valores.estadioClinico || null,
         medicoTratanteId: null,
-        tiempoRegistroSegundos: Math.round((Date.now() - this.inicioFormulario) / 1000),
+        medicionId: this.medicionId(),
       })
       .subscribe({
         next: () => {

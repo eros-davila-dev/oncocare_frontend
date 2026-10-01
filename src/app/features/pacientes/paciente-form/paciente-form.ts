@@ -3,6 +3,7 @@ import { Component, effect, inject, input, output, signal } from '@angular/core'
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { map } from 'rxjs';
 import { PacienteService } from '../paciente.service';
+import { MedicionRegistroService } from '../../../core/services/medicion-registro.service';
 import { ConvenioSeguro } from '../../../core/models/paciente.model';
 import { ErrorResponse } from '../../../core/models/error.model';
 import { InputComponent } from '../../../shared/ui/input/input';
@@ -40,6 +41,7 @@ type Tab = (typeof TABS)[number];
 export class PacienteFormComponent {
   private readonly pacienteService = inject(PacienteService);
   private readonly toastService = inject(ToastService);
+  private readonly medicionRegistroService = inject(MedicionRegistroService);
 
   pacienteId = input<number | null>(null);
   abierto = input(false);
@@ -50,7 +52,8 @@ export class PacienteFormComponent {
   protected readonly tabs = TABS;
   protected readonly tabActiva = signal<Tab>('Datos personales');
   protected readonly enviando = signal(false);
-  private inicioFormulario = Date.now();
+  /** Sesion de medicion del TPR abierta al mostrar el formulario (la cierra el servidor al guardar). */
+  private readonly medicionId = signal<number | null>(null);
 
   private readonly camposPorTab: Record<Tab, string[]> = {
     'Datos personales': ['nombres', 'apellidos', 'documentoIdentidad', 'fechaNacimiento', 'telefono', 'email', 'direccion', 'convenioSeguro'],
@@ -93,11 +96,14 @@ export class PacienteFormComponent {
       if (!this.abierto()) {
         return;
       }
-      this.inicioFormulario = Date.now();
       this.enviando.set(false);
       this.tabActiva.set('Datos personales');
 
       const id = this.pacienteId();
+      this.medicionId.set(null);
+      this.medicionRegistroService
+        .iniciar(id ? 'ACTUALIZACION_PACIENTE' : 'REGISTRO_PACIENTE')
+        .subscribe((medicionId) => this.medicionId.set(medicionId));
       if (id) {
         this.pacienteService.porId(id).subscribe((paciente) => {
           this.form.patchValue({
@@ -120,7 +126,6 @@ export class PacienteFormComponent {
 
     this.enviando.set(true);
     const valores = this.form.getRawValue();
-    const tiempoRegistroSegundos = this.pacienteId() ? undefined : Math.round((Date.now() - this.inicioFormulario) / 1000);
 
     const datos = {
       ...valores,
@@ -130,7 +135,7 @@ export class PacienteFormComponent {
       direccion: valores.direccion || null,
       tipoCancer: valores.tipoCancer || null,
       estadioClinico: valores.estadioClinico || null,
-      tiempoRegistroSegundos,
+      medicionId: this.medicionId(),
     };
 
     const id = this.pacienteId();

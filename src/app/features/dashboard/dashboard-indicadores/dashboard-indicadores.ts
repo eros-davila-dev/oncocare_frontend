@@ -1,59 +1,96 @@
-import { Component, inject, signal } from '@angular/core';
-import {
-  ApexAxisChartSeries,
-  ApexChart,
-  ApexDataLabels,
-  ApexPlotOptions,
-  ApexXAxis,
-  NgApexchartsModule,
-} from 'ng-apexcharts';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { RouterLink } from '@angular/router';
 import { DashboardService } from '../dashboard.service';
-import { Indicadores } from '../../../core/models/dashboard.model';
+import { EstudioService } from '../../estudio/estudio.service';
+import { IndicadoresDashboard } from '../../../core/models/dashboard.model';
+import { ComparativoIndicadores } from '../../../core/models/estudio.model';
+import { ErrorResponse } from '../../../core/models/error.model';
+import { AuthService } from '../../../core/services/auth.service';
 import { CardComponent } from '../../../shared/ui/card/card';
-import { IconComponent } from '../../../shared/ui/icon/icon';
-import { StatCardComponent } from '../../../shared/components/stat-card/stat-card';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header';
 import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner';
+import { IndicadorCardComponent } from '../../estudio/componentes/indicador-card/indicador-card';
+import { ComparativoIndicadoresComponent } from '../../estudio/componentes/comparativo-indicadores/comparativo-indicadores';
+import { INDICADORES_TESIS, fechaCorta } from '../../estudio/indicadores.util';
 
+const PERIODOS = [
+  { dias: 7, etiqueta: '7 días' },
+  { dias: 30, etiqueta: '30 días' },
+  { dias: 90, etiqueta: '90 días' },
+] as const;
+
+/**
+ * Panel de gestion diaria: los tres indicadores de la tesis sobre todo el
+ * sistema en el periodo elegido y, si las fases del estudio estan
+ * configuradas, el comparativo pretest vs postest de la muestra.
+ */
 @Component({
   selector: 'app-dashboard-indicadores',
-  imports: [NgApexchartsModule, CardComponent, IconComponent, StatCardComponent, PageHeaderComponent, LoadingSpinnerComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
+    RouterLink,
+    CardComponent,
+    PageHeaderComponent,
+    LoadingSpinnerComponent,
+    IndicadorCardComponent,
+    ComparativoIndicadoresComponent,
+  ],
   templateUrl: './dashboard-indicadores.html',
 })
 export class DashboardIndicadoresComponent {
   private readonly dashboardService = inject(DashboardService);
+  private readonly estudioService = inject(EstudioService);
+  protected readonly authService = inject(AuthService);
 
+  protected readonly definiciones = INDICADORES_TESIS;
+  protected readonly periodos = PERIODOS;
+  protected readonly fechaCorta = fechaCorta;
+
+  protected readonly diasPeriodo = signal<number>(30);
   protected readonly cargando = signal(true);
-  protected readonly indicadores = signal<Indicadores | null>(null);
-
-  protected readonly chartSeries = signal<ApexAxisChartSeries>([]);
-  protected readonly chartOptions: {
-    chart: ApexChart;
-    xaxis: ApexXAxis;
-    plotOptions: ApexPlotOptions;
-    dataLabels: ApexDataLabels;
-    colors: string[];
-  } = {
-    chart: { type: 'bar', height: 280, toolbar: { show: false } },
-    xaxis: { categories: ['Tasa de ausentismo', 'Cumplimiento de tratamiento'] },
-    plotOptions: { bar: { borderRadius: 6, columnWidth: '45%' } },
-    dataLabels: { enabled: true, formatter: (valor) => `${Number(valor).toFixed(0)}%` },
-    colors: ['#2f6fed'],
-  };
+  protected readonly resumen = signal<IndicadoresDashboard | null>(null);
+  protected readonly comparativo = signal<ComparativoIndicadores | null>(null);
+  protected readonly motivoSinComparativo = signal<string | null>(null);
 
   constructor() {
-    this.dashboardService.indicadores().subscribe((indicadores) => {
-      this.indicadores.set(indicadores);
-      this.chartSeries.set([
-        {
-          name: 'Porcentaje',
-          data: [
-            Number(indicadores.tasaAusentismoPorcentaje.toFixed(1)),
-            Number(indicadores.cumplimientoTratamientoPorcentaje.toFixed(1)),
-          ],
-        },
-      ]);
-      this.cargando.set(false);
+    this.cargarResumen();
+    this.cargarComparativo();
+  }
+
+  protected cambiarPeriodo(dias: number): void {
+    this.diasPeriodo.set(dias);
+    this.cargarResumen();
+  }
+
+  private cargarResumen(): void {
+    this.cargando.set(true);
+    const hasta = new Date();
+    const desde = new Date();
+    desde.setDate(hasta.getDate() - this.diasPeriodo());
+    this.dashboardService.indicadores(this.isoLocal(desde), this.isoLocal(hasta)).subscribe({
+      next: (resumen) => {
+        this.resumen.set(resumen);
+        this.cargando.set(false);
+      },
+      error: () => this.cargando.set(false),
     });
+  }
+
+  private cargarComparativo(): void {
+    this.estudioService.comparativo('MUESTRA').subscribe({
+      next: (comparativo) => this.comparativo.set(comparativo),
+      error: (error: HttpErrorResponse) => {
+        const cuerpo = error.error as ErrorResponse | undefined;
+        this.motivoSinComparativo.set(cuerpo?.message ?? 'El comparativo del estudio no esta disponible.');
+      },
+    });
+  }
+
+  /** Fecha AAAA-MM-DD en hora local (toISOString usaria UTC y podria saltar un dia). */
+  private isoLocal(fecha: Date): string {
+    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    const dia = String(fecha.getDate()).padStart(2, '0');
+    return `${fecha.getFullYear()}-${mes}-${dia}`;
   }
 }

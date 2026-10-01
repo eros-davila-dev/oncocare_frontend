@@ -1,0 +1,145 @@
+<ui-tabs [tabs]="pestanas" [activa]="pestana()" (cambiarTab)="cambiarPestana($event)" />
+
+<p class="mt-4 text-sm text-muted-foreground">{{ descripcion() }}</p>
+
+<div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+  <ui-card class="block" titulo="Registrar una ficha">
+    @switch (ficha()) {
+      @case ('tiempos') {
+        <form class="grid grid-cols-1 gap-3 sm:grid-cols-2" (ngSubmit)="guardarTiempo()">
+          <div class="sm:col-span-2">
+            <ui-select
+              label="Participante"
+              placeholder="Seleccione"
+              [control]="formTiempo.controls.pacienteId"
+              [opciones]="participantes()"
+              [requerido]="true"
+            />
+          </div>
+          <div class="sm:col-span-2">
+            <ui-select label="Tipo de registro" [control]="formTiempo.controls.tipo" [opciones]="opcionesTipo" />
+          </div>
+          <ui-input label="Fecha" type="date" [control]="formTiempo.controls.fecha" [requerido]="true" />
+          <div></div>
+          <ui-input label="Hora de inicio" type="time" [control]="formTiempo.controls.horaInicio" [requerido]="true" />
+          <ui-input label="Hora de fin" type="time" [control]="formTiempo.controls.horaFin" [requerido]="true" />
+          <div class="sm:col-span-2">
+            <ui-input label="Observación" [control]="formTiempo.controls.observacion" />
+          </div>
+          <div class="sm:col-span-2">
+            <ui-button type="submit" [cargando]="enviando()">Guardar tiempo</ui-button>
+          </div>
+        </form>
+      }
+      @case ('asistencias') {
+        <form class="grid grid-cols-1 gap-3 sm:grid-cols-2" (ngSubmit)="guardarAsistencia()">
+          <div class="sm:col-span-2">
+            <ui-select
+              label="Participante"
+              placeholder="Seleccione"
+              [control]="formAsistencia.controls.pacienteId"
+              [opciones]="participantes()"
+              [requerido]="true"
+            />
+          </div>
+          <ui-input label="Fecha de la cita" type="date" [control]="formAsistencia.controls.fecha" [requerido]="true" />
+          <ui-input label="Hora" type="time" [control]="formAsistencia.controls.hora" />
+          <ui-input label="Tipo de consulta" [control]="formAsistencia.controls.tipoConsulta" />
+          <ui-select
+            label="¿Asistió?"
+            placeholder="Seleccione"
+            [control]="formAsistencia.controls.asistio"
+            [opciones]="siNo"
+            [requerido]="true"
+          />
+          <div class="sm:col-span-2">
+            <ui-button type="submit" [cargando]="enviando()">Guardar cita</ui-button>
+          </div>
+        </form>
+      }
+      @case ('consultas') {
+        <form class="grid grid-cols-1 gap-3 sm:grid-cols-2" (ngSubmit)="guardarConsulta()">
+          <ui-input label="Fecha" type="date" [control]="formConsulta.controls.fecha" [requerido]="true" />
+          <ui-input label="Hora" type="time" [control]="formConsulta.controls.hora" />
+          <ui-select
+            label="Medio"
+            placeholder="Seleccione"
+            [control]="formConsulta.controls.canal"
+            [opciones]="opcionesMedio"
+            [requerido]="true"
+          />
+          <ui-select
+            label="Participante (si se identificó)"
+            placeholder="Sin identificar"
+            [control]="formConsulta.controls.pacienteId"
+            [opciones]="participantes()"
+          />
+          <div class="sm:col-span-2">
+            <ui-input
+              label="Consulta recibida"
+              placeholder="Ej.: información de cita, horario de atención"
+              [control]="formConsulta.controls.resumen"
+              [requerido]="true"
+            />
+          </div>
+          <ui-select
+            label="¿Se resolvió?"
+            placeholder="Seleccione"
+            [control]="formConsulta.controls.resuelta"
+            [opciones]="siNo"
+            [requerido]="true"
+          />
+          <ui-input label="Observación" [control]="formConsulta.controls.observacion" />
+          <div class="sm:col-span-2">
+            <ui-button type="submit" [cargando]="enviando()">Guardar consulta</ui-button>
+          </div>
+        </form>
+      }
+    }
+  </ui-card>
+
+  <ui-card class="block" titulo="Importar desde hoja de cálculo">
+    <p class="text-sm text-muted-foreground">
+      Acepta .xlsx o .csv. Valide primero: la importación es todo o nada y no guarda ninguna fila si alguna tiene
+      errores.
+    </p>
+    <div class="mt-4 flex flex-wrap items-center gap-2">
+      <label
+        class="flex min-h-10 cursor-pointer items-center gap-2 rounded-lg border border-dashed border-border px-3 text-sm font-semibold hover:bg-muted"
+      >
+        <ui-icon name="upload" [size]="16" />
+        <span>{{ archivo()?.name ?? 'Elegir archivo' }}</span>
+        <input type="file" class="sr-only" accept=".xlsx,.csv" (change)="seleccionarArchivo($event)" />
+      </label>
+      <ui-button variante="ghost" (click)="descargarPlantilla()">
+        <ui-icon name="download" [size]="16" /> Plantilla
+      </ui-button>
+    </div>
+    <div class="mt-3 flex flex-wrap gap-2">
+      <ui-button variante="outline" [disabled]="!archivo()" [cargando]="importando()" (click)="importar(false)">
+        Validar
+      </ui-button>
+      <ui-button [disabled]="!archivo()" [cargando]="importando()" (click)="importar(true)">Importar</ui-button>
+    </div>
+
+    @if (resultadoImportacion(); as r) {
+      <div class="mt-4 rounded-lg p-3 text-sm" [class]="r.errores.length ? 'bg-destructive-soft' : 'bg-success-soft'">
+        <p class="font-semibold">
+          {{ r.filasLeidas }} filas leídas · {{ r.filasValidas }} válidas
+          @if (r.aplicado) {
+            · importadas
+          } @else if (!r.errores.length) {
+            · listas para importar
+          }
+        </p>
+        @if (r.errores.length) {
+          <ul class="mt-2 max-h-48 list-disc overflow-y-auto pl-5">
+            @for (error of r.errores; track error.fila) {
+              <li>Fila {{ error.fila }}: {{ error.mensaje }}</li>
+            }
+          </ul>
+        }
+      </div>
+    }
+  </ui-card>
+</div>
