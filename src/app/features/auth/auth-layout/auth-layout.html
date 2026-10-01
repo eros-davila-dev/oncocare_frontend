@@ -1,0 +1,43 @@
+<div class="grid min-h-screen grid-cols-1 lg:grid-cols-2">
+  <div class="relative hidden flex-col overflow-hidden bg-login-hero p-10 text-primary-foreground lg:flex">
+    <div class="absolute -right-24 -top-24 size-72 rounded-full bg-white/10"></div>
+    <div class="absolute -bottom-32 -left-16 size-80 rounded-full bg-white/10"></div>
+    <ui-icon name="heart-pulse" [size]="320" clase="pointer-events-none absolute -right-16 bottom-0 text-white/[0.07]" />
+
+    <div class="relative z-10 flex flex-1 flex-col items-center justify-center gap-6">
+      <div class="flex size-[640px] items-center justify-center rounded-full border border-white/10">
+        <ui-brand-logo tamano="hero" />
+      </div>
+      <span class="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold">
+        <ui-icon name="heart-pulse" [size]="14" />
+        Fundación Oncológica Three Partners
+      </span>
+    </div>
+
+    <div class="relative z-10 flex flex-wrap justify-center gap-x-6 gap-y-2 pt-8 text-xs text-primary-foreground/70">
+      <span class="flex items-center gap-1.5"><ui-icon name="shield" [size]="14" /> Atención segura</span>
+      <span class="flex items-center gap-1.5"><ui-icon name="users" [size]="14" /> Seguimiento continuo</span>
+      <span class="flex items-center gap-1.5"><ui-icon name="heart" [size]="14" /> Mejor calidad de vida</span>
+    </div>
+  </div>
+
+  <div class="flex flex-col items-center justify-center bg-canvas px-6 py-12 sm:px-10">
+    <div class="w-full max-w-sm">
+      <div class="mb-8 flex justify-center lg:hidden">
+        <ui-brand-logo tamano="grande" />
+      </div>
+
+      <div class="rounded-2xl border border-border bg-card p-8 shadow-card sm:p-10">
+        <h2 class="font-display text-2xl font-bold">{{ titulo() }}</h2>
+        @if (descripcion()) {
+          <p class="mt-1 text-sm text-muted-foreground">{{ descripcion() }}</p>
+        }
+        <div class="mt-8">
+          <ng-content />
+        </div>
+      </div>
+
+      <p class="mt-6 text-center text-xs text-muted-foreground">OncoCare v1.0.0 &middot; Cuidando hoy un mejor mañana</p>
+    </div>
+  </div>
+</div>

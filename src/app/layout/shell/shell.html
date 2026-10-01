@@ -1,0 +1,129 @@
+<div class="min-h-dvh bg-canvas">
+  @if (sidebarAbierto()) {
+    <button class="fixed inset-0 z-30 bg-overlay lg:hidden" aria-label="Cerrar navegación" (click)="sidebarAbierto.set(false)"></button>
+  }
+
+  <aside
+    class="fixed inset-y-0 left-0 z-40 flex border-r border-sidebar-border bg-sidebar transition-[width,transform] duration-200 lg:translate-x-0"
+    [class]="(sidebarAbierto() ? 'translate-x-0' : '-translate-x-full') + ' ' + (sidebarColapsado() ? 'w-20' : 'w-64')"
+    aria-label="Navegación principal"
+  >
+    <div class="flex w-full flex-col overflow-hidden p-3">
+      <div class="mb-5 flex h-16 items-center justify-between px-2">
+        <ui-brand-logo [tamano]="sidebarColapsado() ? 'compacto' : 'normal'" />
+        <button type="button" class="flex min-h-9 min-w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted lg:hidden" aria-label="Cerrar menú" (click)="sidebarAbierto.set(false)">
+          <ui-icon name="x" [size]="20" />
+        </button>
+      </div>
+
+      <nav class="flex-1 space-y-5 overflow-y-auto">
+        @for (grupo of grupos(); track grupo.titulo) {
+          <div>
+            @if (grupo.titulo && !sidebarColapsado()) {
+              <p class="mb-1.5 px-3 text-[10px] font-bold tracking-[0.08em] text-muted-foreground">{{ grupo.titulo }}</p>
+            }
+            <ul class="space-y-1">
+              @for (item of grupo.items; track item.ruta) {
+                @if (itemVisible(item)) {
+                  <li>
+                    <a
+                      [routerLink]="item.ruta"
+                      [title]="sidebarColapsado() ? item.etiqueta : undefined"
+                      class="menu-item group"
+                      [class]="(esActivo(item) ? 'menu-item-active' : 'menu-item-inactive') + (sidebarColapsado() ? ' justify-center px-0' : '')"
+                      [attr.aria-current]="esActivo(item) ? 'page' : null"
+                      (click)="alNavegarEnMobile()"
+                    >
+                      <ui-icon
+                        [name]="iconoDe(item)"
+                        [size]="19"
+                        [clase]="'shrink-0 ' + (esActivo(item) ? 'menu-item-icon-active' : 'menu-item-icon-inactive')"
+                      />
+                      @if (!sidebarColapsado()) {
+                        <span>{{ item.etiqueta }}</span>
+                      }
+                    </a>
+                  </li>
+                }
+              }
+            </ul>
+          </div>
+        }
+      </nav>
+
+      @if (!sidebarColapsado()) {
+        <div class="mt-4 rounded-lg bg-sidebar-accent p-4">
+          <p class="font-display text-sm font-semibold italic text-primary">"Juntos por más historias de vida."</p>
+        </div>
+      }
+
+      <button
+        type="button"
+        class="mt-2 ml-auto hidden min-h-9 min-w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted lg:flex"
+        [attr.aria-label]="sidebarColapsado() ? 'Expandir menú' : 'Contraer menú'"
+        (click)="alternarColapso()"
+      >
+        <ui-icon name="chevron-left" [size]="18" [clase]="sidebarColapsado() ? 'rotate-180 transition-transform' : 'transition-transform'" />
+      </button>
+    </div>
+  </aside>
+
+  <div [class]="sidebarColapsado() ? 'lg:pl-20' : 'lg:pl-64'">
+    <header class="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border bg-background/95 px-4 backdrop-blur sm:px-6">
+      <button type="button" class="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted lg:hidden" aria-label="Abrir menú" (click)="sidebarAbierto.set(true)">
+        <ui-icon name="menu" [size]="21" />
+      </button>
+
+      <div class="flex min-w-0 shrink-0 items-center gap-2 text-sm">
+        <span class="hidden text-muted-foreground sm:inline">Inicio</span>
+        <ui-icon name="chevron-right" [size]="14" clase="hidden text-muted-foreground sm:block" />
+        <span class="truncate font-semibold">{{ seccionActiva() }}</span>
+      </div>
+
+      <label class="relative mx-auto hidden w-full max-w-sm md:block">
+        <ui-icon name="search" [size]="17" clase="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <input class="field h-10 pl-10" placeholder="Buscar en todo el sistema..." aria-label="Buscar en todo el sistema" />
+      </label>
+
+      <div class="ml-auto flex shrink-0 items-center gap-1 sm:gap-3">
+        <button type="button" class="relative flex min-h-11 min-w-11 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted" aria-label="Notificaciones">
+          <ui-icon name="bell" [size]="20" />
+          <span class="absolute top-2.5 right-2.5 size-2 rounded-full bg-destructive"></span>
+        </button>
+        <button type="button" class="flex min-h-11 min-w-11 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted" (click)="themeService.alternar()" aria-label="Cambiar tema">
+          <ui-icon [name]="themeService.tema() === 'oscuro' ? 'sun' : 'moon'" [size]="18" />
+        </button>
+        <div class="hidden h-8 w-px bg-border sm:block"></div>
+        <div class="relative">
+          <button type="button" class="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-muted" (click)="alternarMenuPerfil($event)">
+            <ui-avatar [nombre]="authService.usuario()?.nombres ?? '?'" tamano="sm" />
+            <span class="hidden text-left lg:block">
+              <span class="block text-sm font-semibold whitespace-nowrap">{{ authService.usuario()?.nombres }}</span>
+              <span class="block text-xs text-muted-foreground">{{ authService.usuario()?.rol }}</span>
+            </span>
+            <ui-icon name="chevron-down" [size]="15" clase="hidden text-muted-foreground lg:block" />
+          </button>
+
+          @if (menuPerfilAbierto()) {
+            <div class="absolute right-0 z-10 mt-2 w-48 rounded-lg border border-border bg-background p-1 shadow-modal" (click)="$event.stopPropagation()">
+              <button
+                type="button"
+                class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-destructive transition-colors hover:bg-destructive-soft"
+                (click)="cerrarSesion()"
+              >
+                <ui-icon name="log-out" [size]="16" />
+                Cerrar sesión
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    </header>
+
+    <main class="p-4 sm:p-6 lg:p-8">
+      <router-outlet />
+    </main>
+  </div>
+</div>
+
+<app-chatbot-widget />

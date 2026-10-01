@@ -1,0 +1,33 @@
+<div>
+  <ui-page-header titulo="Panel de indicadores" descripcion="Vision general del ultimo periodo (30 dias)." />
+
+  @if (cargando()) {
+    <ui-loading-spinner class="mt-6 block" />
+  } @else if (indicadores(); as datos) {
+    <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <ui-stat-card etiqueta="Tiempo promedio de registro" [valor]="datos.tiempoPromedioRegistroSegundos.toFixed(0) + 's'">
+        <ui-icon icono name="calendar-days" [size]="20" />
+      </ui-stat-card>
+      <ui-stat-card etiqueta="Tasa de ausentismo" [valor]="datos.tasaAusentismoPorcentaje.toFixed(1) + '%'">
+        <ui-icon icono name="triangle-alert" [size]="20" />
+      </ui-stat-card>
+      <ui-stat-card etiqueta="Consultas atendidas" [valor]="datos.consultasAtendidas">
+        <ui-icon icono name="stethoscope" [size]="20" />
+      </ui-stat-card>
+      <ui-stat-card etiqueta="Cumplimiento de tratamiento" [valor]="datos.cumplimientoTratamientoPorcentaje.toFixed(1) + '%'">
+        <ui-icon icono name="circle-check-big" [size]="20" />
+      </ui-stat-card>
+    </div>
+
+    <ui-card class="mt-6" titulo="Ausentismo vs. cumplimiento de tratamiento">
+      <apx-chart
+        [series]="chartSeries()"
+        [chart]="chartOptions.chart"
+        [xaxis]="chartOptions.xaxis"
+        [plotOptions]="chartOptions.plotOptions"
+        [dataLabels]="chartOptions.dataLabels"
+        [colors]="chartOptions.colors"
+      />
+    </ui-card>
+  }
+</div>

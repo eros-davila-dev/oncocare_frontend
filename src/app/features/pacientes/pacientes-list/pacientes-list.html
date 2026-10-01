@@ -1,0 +1,99 @@
+<div>
+  <ui-page-header titulo="Pacientes" descripcion="Gestiona la información y el seguimiento de los pacientes oncológicos." eyebrow="GESTIÓN CLÍNICA">
+    @if (estadisticas(); as stats) {
+      <div metricas class="mt-7 grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <ui-stat-card etiqueta="Pacientes registrados" [valor]="formatoNumero(stats.pacientesRegistrados)" [variacion]="stats.variacionPacientesRegistradosPorcentaje">
+          <ui-icon icono name="users" [size]="20" />
+        </ui-stat-card>
+        <ui-stat-card etiqueta="En tratamiento" [valor]="formatoNumero(stats.pacientesEnTratamiento)" [variacion]="stats.variacionPacientesEnTratamientoPorcentaje">
+          <ui-icon icono name="stethoscope" [size]="20" />
+        </ui-stat-card>
+        <ui-stat-card etiqueta="Citas esta semana" [valor]="formatoNumero(stats.citasEstaSemana)" [variacion]="stats.variacionCitasPorcentaje">
+          <ui-icon icono name="calendar-days" [size]="20" />
+        </ui-stat-card>
+        <ui-stat-card etiqueta="Asistencia a citas" [valor]="stats.asistenciaCitasPorcentaje.toFixed(0) + '%'" [variacion]="stats.variacionAsistenciaPorcentaje">
+          <ui-icon icono name="shield-check" [size]="20" />
+        </ui-stat-card>
+      </div>
+    }
+  </ui-page-header>
+
+  <div class="mt-6 overflow-visible rounded-xl border border-border bg-background shadow-card">
+    <div class="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 border-b border-border px-4 pt-2 sm:px-6">
+      <ui-tabs [tabs]="tabs" [activa]="tabActiva()" [conBorde]="false" (cambiarTab)="cambiarTab($event)" />
+      <ui-button class="mb-2" (click)="abrirCrear()">
+        <ui-icon name="plus" [size]="18" />
+        <span class="hidden sm:inline">Nuevo paciente</span>
+      </ui-button>
+    </div>
+
+    <ui-data-table-toolbar [envolver]="false" [buscarControl]="busqueda" placeholderBusqueda="Nombre, DNI o historia clínica...">
+      <ui-button variante="outline" acciones (click)="busqueda.setValue('')">
+        <ui-icon name="refresh-cw" [size]="17" />
+        Limpiar
+      </ui-button>
+    </ui-data-table-toolbar>
+
+    <ui-data-table
+      [envolver]="false"
+      [items]="pagina().content"
+      [columnas]="columnas"
+      [cargando]="cargando()"
+      [totalElements]="pagina().totalElements"
+      [totalPages]="pagina().totalPages"
+      [pageNumber]="pagina().pageNumber"
+      [pageSize]="pagina().pageSize"
+      (cambiarPagina)="cargar($event)"
+      mensajeVacio="No hay pacientes registrados"
+    >
+      <ng-template uiCellTemplate="paciente" let-fila>
+        <div class="flex items-center gap-3">
+          <ui-avatar [nombre]="fila.nombres + ' ' + fila.apellidos" tamano="sm" />
+          <div>
+            <p class="font-semibold">{{ fila.nombres }} {{ fila.apellidos }}</p>
+            <p class="text-xs text-muted-foreground">{{ fila.edad }} años</p>
+          </div>
+        </div>
+      </ng-template>
+
+      <ng-template uiCellTemplate="estado" let-fila>
+        <ui-badge [color]="fila.estadoTratamiento | estadoColor">
+          {{ fila.estadoTratamiento | etiquetaEnum }}
+        </ui-badge>
+      </ng-template>
+
+      <ng-template uiCellTemplate="medico" let-fila>
+        @if (fila.medicoTratanteNombre) {
+          <div>
+            <p class="font-medium">{{ fila.medicoTratanteNombre }}</p>
+            @if (fila.medicoTratanteEspecialidad) {
+              <p class="text-xs text-muted-foreground">{{ fila.medicoTratanteEspecialidad | etiquetaEnum }}</p>
+            }
+          </div>
+        } @else {
+          <span class="text-muted-foreground">Sin asignar</span>
+        }
+      </ng-template>
+
+      <ng-template #accionesFila let-fila>
+        <ui-row-actions>
+          <button uiRowActionItem (click)="verDetalle(fila)">Ver detalle</button>
+          <button uiRowActionItem (click)="editarPaciente(fila)">Editar</button>
+        </ui-row-actions>
+      </ng-template>
+    </ui-data-table>
+  </div>
+</div>
+
+<app-paciente-detalle
+  [paciente]="pacienteSeleccionado()"
+  [abierto]="pacienteSeleccionado() !== null"
+  (cerrar)="pacienteSeleccionado.set(null)"
+/>
+
+<app-paciente-form
+  [pacienteId]="pacienteIdEnEdicion()"
+  [abierto]="formAbierto()"
+  (cerrar)="formAbierto.set(false)"
+  (guardado)="alGuardarPaciente()"
+/>

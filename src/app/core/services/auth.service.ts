@@ -1,0 +1,92 @@
+import { HttpClient } from '@angular/common/http';
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
+import { Observable, tap } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import {
+  LoginRequest,
+  LoginResponse,
+  RecuperarPasswordRequest,
+  RegistroCuentaRequest,
+  RestablecerPasswordRequest,
+} from '../models/auth.model';
+import { Rol, UsuarioResumen } from '../models/usuario.model';
+import { TokenStorageService } from './token-storage.service';
+
+@Injectable({ providedIn: 'root' })
+export class AuthService {
+  private readonly http = inject(HttpClient);
+  private readonly tokenStorage = inject(TokenStorageService);
+  private readonly router = inject(Router);
+
+  private readonly usuarioActual = signal<UsuarioResumen | null>(this.tokenStorage.obtenerUsuario());
+
+  readonly usuario = this.usuarioActual.asReadonly();
+  readonly estaAutenticado = computed(() => this.usuarioActual() !== null);
+
+  login(credenciales: LoginRequest, persistente = true): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(`${environment.apiUrl}/auth/login`, credenciales).pipe(
+      tap((respuesta) => this.guardarSesion(respuesta, persistente)),
+    );
+  }
+
+  refrescarToken(): Observable<LoginResponse> {
+    const refreshToken = this.tokenStorage.obtenerRefreshToken();
+    return this.http.post<LoginResponse>(`${environment.apiUrl}/auth/refresh`, { refreshToken }).pipe(
+      tap((respuesta) => this.guardarSesion(respuesta)),
+    );
+  }
+
+  /**
+   * Autoservicio de pacientes (seccion 7). La respuesta del backend es
+   * siempre la misma exista o no ya el correo (seccion 9): no hay nada que
+   * distinguir aqui, el componente muestra el mismo mensaje de exito.
+   */
+  registrar(datos: RegistroCuentaRequest): Observable<{ mensaje: string }> {
+    return this.http.post<{ mensaje: string }>(`${environment.apiUrl}/auth/registro`, datos);
+  }
+
+  verificarEmail(token: string): Observable<void> {
+    return this.http.post<void>(`${environment.apiUrl}/auth/verificar-email`, { token });
+  }
+
+  recuperarPassword(datos: RecuperarPasswordRequest): Observable<{ mensaje: string }> {
+    return this.http.post<{ mensaje: string }>(`${environment.apiUrl}/auth/recuperar-password`, datos);
+  }
+
+  restablecerPassword(datos: RestablecerPasswordRequest): Observable<void> {
+    return this.http.post<void>(`${environment.apiUrl}/auth/restablecer-password`, datos);
+  }
+
+  logout(): void {
+    const refreshToken = this.tokenStorage.obtenerRefreshToken();
+    this.limpiarSesionLocal();
+    if (refreshToken) {
+      // Revocacion best-effort (seccion 12): la sesion local ya quedo cerrada
+      // aunque esta llamada falle (token ya vencido, sin red, etc.).
+      this.http.post(`${environment.apiUrl}/auth/logout`, { refreshToken }).subscribe({ error: () => undefined });
+    }
+  }
+
+  tieneAlgunRol(...roles: Rol[]): boolean {
+    const actual = this.usuarioActual();
+    return actual !== null && roles.includes(actual.rol);
+  }
+
+  /** Destino inicial tras login o al rebotar de una seccion sin permiso. */
+  rutaInicio(): string {
+    return this.tieneAlgunRol('PACIENTE') ? '/mis-citas' : '/dashboard';
+  }
+
+  private guardarSesion(respuesta: LoginResponse, persistente?: boolean): void {
+    this.tokenStorage.guardarTokens(respuesta.accessToken, respuesta.refreshToken, persistente);
+    this.tokenStorage.guardarUsuario(respuesta.usuario);
+    this.usuarioActual.set(respuesta.usuario);
+  }
+
+  private limpiarSesionLocal(): void {
+    this.tokenStorage.limpiar();
+    this.usuarioActual.set(null);
+    this.router.navigate(['/auth/login']);
+  }
+}

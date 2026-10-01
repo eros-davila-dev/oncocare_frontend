@@ -1,0 +1,53 @@
+<div class="fixed bottom-4 left-4 z-50">
+  @if (abierto()) {
+    <div class="flex h-96 w-80 flex-col rounded-xl border border-border bg-background shadow-modal">
+      <div class="flex items-center justify-between rounded-t-xl bg-primary px-4 py-3 text-primary-foreground">
+        <span class="text-sm font-semibold">Asistente virtual</span>
+        <button type="button" class="text-primary-foreground/80 hover:text-primary-foreground" (click)="alternar()">&times;</button>
+      </div>
+
+      <div class="flex-1 space-y-2 overflow-y-auto p-3">
+        @for (mensaje of mensajes(); track $index) {
+          <div [class]="mensaje.autor === 'usuario' ? 'flex justify-end' : 'flex justify-start'">
+            <p
+              [class]="
+                mensaje.autor === 'usuario'
+                  ? 'max-w-[80%] rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground'
+                  : 'max-w-[80%] rounded-lg bg-muted px-3 py-2 text-sm text-foreground'
+              "
+            >
+              {{ mensaje.texto }}
+            </p>
+          </div>
+        }
+        @if (enviando()) {
+          <p class="text-xs text-muted-foreground">Escribiendo...</p>
+        }
+      </div>
+
+      <form class="flex gap-2 border-t border-border p-2" (ngSubmit)="enviar()">
+        <input
+          id="chatbot-mensaje"
+          aria-label="Mensaje para el asistente virtual"
+          class="field flex-1 min-h-9 py-1.5"
+          placeholder="Escribe tu mensaje..."
+          [ngModel]="mensajeActual()"
+          (ngModelChange)="mensajeActual.set($event)"
+          name="mensaje"
+        />
+        <button type="submit" class="rounded-lg bg-primary px-3 py-1.5 text-sm text-primary-foreground hover:bg-primary-hover">
+          Enviar
+        </button>
+      </form>
+    </div>
+  } @else {
+    <button
+      type="button"
+      class="flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-button hover:bg-primary-hover"
+      (click)="alternar()"
+      aria-label="Abrir chat"
+    >
+      Chat
+    </button>
+  }
+</div>

@@ -1,0 +1,54 @@
+<div>
+  <ui-page-header
+    titulo="Dispositivos del consultorio"
+    descripcion="Monitores de signos vitales, basculas y bombas de infusion (seccion 14 del sistema)."
+  >
+    <ui-button (click)="abrirModal()">+ Registrar dispositivo</ui-button>
+  </ui-page-header>
+
+  <ui-data-table
+    class="mt-6"
+    [items]="dispositivos()"
+    [columnas]="columnas"
+    [cargando]="cargando()"
+    [totalElements]="dispositivos().length"
+    [totalPages]="1"
+    [pageNumber]="0"
+    mensajeVacio="Aun no hay dispositivos registrados"
+  />
+</div>
+
+<ui-modal titulo="Registrar dispositivo" [abierto]="modalAbierto()" (cerrar)="modalAbierto.set(false)">
+  @if (credencialGenerada()) {
+    <div class="mb-4 rounded-lg border border-warning/30 bg-warning-soft p-3 text-sm">
+      <p class="font-medium text-warning">Copia esta credencial ahora</p>
+      <p class="mt-1 text-warning">
+        Solo se muestra una vez: el sistema guarda su hash, no el valor en texto plano. Configúrala en el
+        dispositivo o en el puente MQTT/serial correspondiente.
+      </p>
+      <code class="mt-2 block break-all rounded bg-background px-2 py-1 text-foreground">
+        {{ credencialGenerada() }}
+      </code>
+    </div>
+  }
+
+  <form class="space-y-3" [formGroup]="form" (ngSubmit)="registrar()">
+    <ui-input label="Nombre del dispositivo" [control]="form.controls.nombre" [requerido]="true" />
+    <ui-select label="Tipo de dispositivo" [control]="form.controls.tipo" [opciones]="opcionesTipo" [requerido]="true" />
+    <ui-select label="Protocolo de comunicacion" [control]="form.controls.protocolo" [opciones]="opcionesProtocolo" [requerido]="true" />
+
+    <div>
+      <div class="flex items-end gap-2">
+        <div class="flex-1">
+          <ui-input label="Credencial (minimo 16 caracteres)" [control]="form.controls.credencial" [requerido]="true" />
+        </div>
+        <ui-button type="button" variante="secondary" (click)="generarCredencial()">Generar</ui-button>
+      </div>
+    </div>
+
+    <div class="flex justify-end gap-2 pt-2">
+      <ui-button variante="outline" type="button" (click)="modalAbierto.set(false)">Cerrar</ui-button>
+      <ui-button type="submit" [cargando]="enviando()">Registrar</ui-button>
+    </div>
+  </form>
+</ui-modal>

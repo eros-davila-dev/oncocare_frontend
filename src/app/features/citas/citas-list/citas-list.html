@@ -1,0 +1,107 @@
+<div>
+  <ui-page-header titulo="Citas" descripcion="Agenda, confirma y da seguimiento a las citas medicas."></ui-page-header>
+
+  <div class="mt-6 overflow-visible rounded-xl border border-border bg-background shadow-card">
+    <div class="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 border-b border-border px-4 pt-2 sm:px-6">
+      <ui-tabs [tabs]="tabs" [activa]="tabActiva()" [conBorde]="false" (cambiarTab)="cambiarTab($event)" />
+      <div class="mb-2 flex items-center gap-2">
+        <ui-button variante="outline" (click)="vista.set(vista() === 'tabla' ? 'calendario' : 'tabla')">
+          {{ vista() === 'tabla' ? 'Ver como calendario' : 'Ver como tabla' }}
+        </ui-button>
+        <ui-button (click)="abrirModalAgendar()">
+          <ui-icon name="plus" [size]="18" />
+          <span class="hidden sm:inline">Agendar cita</span>
+        </ui-button>
+      </div>
+    </div>
+
+    @if (vista() === 'tabla') {
+      <ui-data-table
+        [envolver]="false"
+        [items]="pagina().content"
+        [columnas]="columnas"
+        [cargando]="cargando()"
+        [totalElements]="pagina().totalElements"
+        [totalPages]="pagina().totalPages"
+        [pageNumber]="pagina().pageNumber"
+        [pageSize]="pagina().pageSize"
+        (cambiarPagina)="cargar($event)"
+        mensajeVacio="No se encontraron citas"
+      >
+        <ng-template #accionesFila let-cita>
+          <ui-row-actions>
+            @if (cita.estado === 'PROGRAMADA') {
+              <button uiRowActionItem (click)="confirmar(cita)">Confirmar</button>
+            }
+            @if (cita.estado === 'PROGRAMADA' || cita.estado === 'CONFIRMADA') {
+              <button uiRowActionItem (click)="atender(cita)">Marcar atendida</button>
+              <button uiRowActionItem (click)="marcarNoAsistio(cita)">Marcar no asistio</button>
+              <button uiRowActionItem variante="danger" (click)="abrirCancelar(cita)">Cancelar</button>
+            }
+          </ui-row-actions>
+        </ng-template>
+      </ui-data-table>
+    } @else {
+      <div class="p-4">
+        <ui-appointment-calendar [citas]="pagina().content" />
+      </div>
+    }
+  </div>
+</div>
+
+<ui-modal titulo="Cancelar cita" [abierto]="citaACancelar() !== null" ancho="sm" (cerrar)="citaACancelar.set(null)">
+  <form class="space-y-3" (ngSubmit)="confirmarCancelacion()">
+    <div>
+      <label for="motivo-cancelacion" class="form-label mb-1.5 block">
+        Motivo de cancelación <span class="text-destructive">*</span>
+      </label>
+      <textarea id="motivo-cancelacion" rows="3" [formControl]="motivoCancelacion" class="field"></textarea>
+      @if (motivoCancelacion.invalid && motivoCancelacion.touched) {
+        <p class="mt-1 text-xs text-destructive">El motivo es obligatorio</p>
+      }
+    </div>
+    <div class="flex justify-end gap-2 pt-2">
+      <ui-button variante="outline" type="button" (click)="citaACancelar.set(null)">Volver</ui-button>
+      <ui-button variante="danger" type="submit">Cancelar cita</ui-button>
+    </div>
+  </form>
+</ui-modal>
+
+<ui-modal
+  titulo="Agendar cita"
+  descripcion="Programa una nueva consulta para un paciente registrado."
+  [abierto]="modalAgendarAbierto()"
+  ancho="lg"
+  (cerrar)="modalAgendarAbierto.set(false)"
+>
+  <form class="space-y-3" [formGroup]="formAgendar" (ngSubmit)="guardarCita()">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <ui-select label="Paciente" placeholder="Seleccione un paciente" [control]="formAgendar.controls.pacienteId" [opciones]="pacientes()" [requerido]="true" />
+
+      <ui-select
+        label="Especialidad"
+        placeholder="Seleccione una especialidad"
+        [control]="especialidadSeleccionada"
+        [opciones]="opcionesEspecialidad"
+      />
+
+      <ui-select
+        label="Medico"
+        placeholder="Seleccione un medico"
+        [control]="formAgendar.controls.medicoId"
+        [opciones]="opcionesMedico()"
+        [requerido]="true"
+      />
+
+      <ui-input label="Fecha" type="date" [control]="formAgendar.controls.fecha" [requerido]="true" />
+      <ui-input label="Hora" type="time" [control]="formAgendar.controls.hora" [requerido]="true" />
+      <ui-input label="Tipo de consulta" [control]="formAgendar.controls.tipoConsulta" [requerido]="true" />
+      <ui-input label="Observaciones" [control]="formAgendar.controls.observaciones" />
+    </div>
+
+    <div class="flex justify-end gap-2 pt-2">
+      <ui-button variante="outline" type="button" (click)="modalAgendarAbierto.set(false)">Cancelar</ui-button>
+      <ui-button type="submit" [cargando]="enviandoAgendar()">Agendar</ui-button>
+    </div>
+  </form>
+</ui-modal>

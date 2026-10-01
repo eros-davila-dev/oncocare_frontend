@@ -1,0 +1,33 @@
+<app-auth-layout titulo="Bienvenido de nuevo" descripcion="Inicia sesión para continuar con tu jornada">
+  <form class="space-y-5" [formGroup]="form" (ngSubmit)="iniciarSesion()">
+    <ui-input label="Correo electrónico" type="email" icono="mail" placeholder="tu@correo.com" [control]="form.controls.email" [requerido]="true" />
+    <ui-input label="Contraseña" type="password" icono="lock" placeholder="Tu contraseña" [control]="form.controls.password" [requerido]="true" />
+
+    <div class="flex items-center justify-between text-sm">
+      <label class="flex items-center gap-2 text-foreground">
+        <input type="checkbox" [formControl]="form.controls.recordarme" class="rounded border-input" />
+        Recordarme
+      </label>
+      <a routerLink="/auth/recuperar-password" class="font-medium text-primary hover:underline">
+        ¿Olvidaste tu contraseña?
+      </a>
+    </div>
+
+    @if (errorGeneral()) {
+      <p class="flex items-center gap-2 rounded-lg bg-destructive-soft px-3 py-2 text-sm text-destructive">
+        <ui-icon name="circle-alert" [size]="16" clase="shrink-0" />
+        {{ errorGeneral() }}
+      </p>
+    }
+
+    <ui-button type="submit" [cargando]="enviando()" [anchoCompleto]="true">
+      Iniciar sesión
+      <ui-icon name="chevron-right" [size]="18" />
+    </ui-button>
+
+    <p class="text-center text-sm text-muted-foreground">
+      ¿Eres paciente y no tienes cuenta?
+      <a routerLink="/auth/registro" class="font-medium text-primary hover:underline">Regístrate</a>
+    </p>
+  </form>
+</app-auth-layout>

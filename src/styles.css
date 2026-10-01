@@ -1,0 +1,273 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Nunito+Sans:wght@600;700;800&display=swap");
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Sistema de diseño tomado literalmente de oncocare-design-system (fuente real
+ * provista por el usuario): tokens semanticos oklch de un solo valor por rol
+ * (primary/secondary/muted/accent/...), no una escala numerica 50-950. El modo
+ * oscuro se resuelve redefiniendo estas mismas variables bajo :root.dark, asi
+ * que los componentes no necesitan clases dark: explicitas.
+ */
+@theme inline {
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Nunito Sans", ui-sans-serif, system-ui, sans-serif;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-soft: var(--primary-soft);
+  --color-secondary: var(--secondary);
+  --color-secondary-hover: var(--secondary-hover);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-soft: var(--destructive-soft);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-canvas: var(--canvas);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-lavender: var(--lavender);
+  --color-overlay: var(--overlay);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --shadow-card: var(--shadow-card);
+  --shadow-button: var(--shadow-button);
+  --shadow-modal: var(--shadow-modal);
+}
+
+:root {
+  --radius: 0.55rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.27 0.075 263);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.129 0.042 264.695);
+  --primary: oklch(0.57 0.2 258);
+  --primary-hover: oklch(0.51 0.2 258);
+  --primary-foreground: oklch(1 0 0);
+  --primary-soft: oklch(0.95 0.03 258);
+  --secondary: oklch(0.94 0.035 295);
+  --secondary-hover: oklch(0.9 0.055 295);
+  --secondary-foreground: oklch(0.43 0.12 285);
+  --muted: oklch(0.97 0.01 255);
+  --muted-foreground: oklch(0.52 0.045 260);
+  --accent: oklch(0.92 0.055 182);
+  --accent-foreground: oklch(0.34 0.085 183);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.984 0.003 247.858);
+  --destructive-soft: oklch(0.95 0.045 27.325);
+  --border: oklch(0.91 0.018 258);
+  --input: oklch(0.9 0.025 258);
+  --ring: oklch(0.57 0.2 258);
+  --canvas: oklch(0.975 0.012 250);
+  --success: oklch(0.55 0.14 160);
+  --success-foreground: oklch(1 0 0);
+  --success-soft: oklch(0.94 0.055 160);
+  --warning: oklch(0.68 0.15 75);
+  --warning-soft: oklch(0.95 0.06 85);
+  --info: oklch(0.57 0.18 250);
+  --info-soft: oklch(0.94 0.04 250);
+  --lavender: oklch(0.91 0.075 300);
+  --overlay: oklch(0.18 0.045 260 / 45%);
+  --shadow-card: 0 8px 28px oklch(0.34 0.08 255 / 7%);
+  --shadow-button: 0 5px 14px oklch(0.57 0.2 258 / 22%);
+  --shadow-modal: 0 24px 64px oklch(0.2 0.05 260 / 22%);
+  --sidebar: oklch(0.985 0.012 250);
+  --sidebar-foreground: oklch(0.129 0.042 264.695);
+  --sidebar-accent: oklch(0.95 0.03 258);
+  --sidebar-accent-foreground: oklch(0.57 0.2 258);
+  --sidebar-border: oklch(0.92 0.025 255);
+}
+
+.dark {
+  /*
+   * Jerarquia de profundidad invertida respecto al modo claro pero con la
+   * misma relacion: canvas (fondo de pagina) debe ser el mas OSCURO, y
+   * background/card (tarjetas, paneles, modales) un escalon mas CLARO para
+   * que se perciban como elevadas sobre la pagina, igual que en claro
+   * (canvas gris muy claro / background blanco puro). Antes canvas quedaba
+   * mas claro que background, por lo que las tarjetas no se distinguian del
+   * fondo ("sin separacion").
+   */
+  --canvas: oklch(0.1 0.025 264);
+  --background: oklch(0.208 0.042 265.755);
+  --foreground: oklch(0.984 0.003 247.858);
+  --card: oklch(0.24 0.04 265.755);
+  --card-foreground: oklch(0.984 0.003 247.858);
+  --primary: oklch(0.646 0.15 258);
+  --primary-hover: oklch(0.7 0.15 258);
+  --primary-foreground: oklch(0.129 0.042 264.695);
+  --primary-soft: oklch(0.32 0.07 258);
+  --secondary: oklch(0.32 0.05 260.031);
+  --secondary-hover: oklch(0.36 0.06 260);
+  --secondary-foreground: oklch(0.984 0.003 247.858);
+  --muted: oklch(0.3 0.035 260.031);
+  --muted-foreground: oklch(0.704 0.04 256.788);
+  --accent: oklch(0.3 0.035 260.031);
+  --accent-foreground: oklch(0.984 0.003 247.858);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.129 0.042 264.695);
+  --destructive-soft: oklch(0.32 0.09 22.216);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 18%);
+  --ring: oklch(0.646 0.15 258);
+  --success: oklch(0.696 0.17 162.48);
+  --success-foreground: oklch(0.129 0.042 264.695);
+  --success-soft: oklch(0.32 0.08 162);
+  --warning: oklch(0.769 0.188 70.08);
+  --warning-soft: oklch(0.34 0.08 75);
+  --info: oklch(0.646 0.15 258);
+  --info-soft: oklch(0.32 0.07 250);
+  --lavender: oklch(0.34 0.07 300);
+  --overlay: oklch(0.03 0.015 260 / 65%);
+  --sidebar: oklch(0.15 0.03 264.695);
+  --sidebar-foreground: oklch(0.984 0.003 247.858);
+  --sidebar-accent: oklch(0.3 0.045 260.031);
+  --sidebar-accent-foreground: oklch(0.7 0.15 258);
+  --sidebar-border: oklch(1 0 0 / 10%);
+}
+
+html {
+  font-family: var(--font-sans);
+  /*
+   * Le dice al navegador que tema usar para TODO lo que renderiza el, no la
+   * pagina: el desplegable/calendario nativo de <input type="date"/"time">,
+   * el icono del selector, los scrollbars, el autocompletado, etc. Sin esto,
+   * esos widgets nativos se quedan en claro sin importar el tema de la app.
+   */
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-canvas text-foreground;
+}
+
+button, a, input, select, textarea {
+  outline: none;
+}
+
+input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--primary);
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+@utility field {
+  width: 100%;
+  min-height: 2.75rem;
+  border: 1px solid var(--input);
+  border-radius: var(--radius);
+  background: var(--background);
+  padding: 0.65rem 0.8rem;
+  color: var(--foreground);
+  font-size: 0.875rem;
+  &::placeholder {
+    color: var(--muted-foreground);
+  }
+  &:focus-visible {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px oklch(0.57 0.2 258 / 14%);
+  }
+  &:disabled {
+    cursor: not-allowed;
+    background: var(--muted);
+    opacity: 0.65;
+  }
+}
+
+@utility form-label {
+  color: var(--foreground);
+  font-size: 0.8125rem;
+  font-weight: 650;
+}
+
+@utility metric-card {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 0.2rem);
+  background: var(--background);
+  padding: 1rem;
+  box-shadow: var(--shadow-card);
+}
+
+@utility status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+  border-radius: 999px;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+@utility status-success { background: var(--success-soft); color: var(--success); }
+@utility status-info { background: var(--info-soft); color: var(--info); }
+@utility status-warning { background: var(--warning-soft); color: var(--warning); }
+@utility status-lavender { background: var(--lavender); color: var(--secondary-foreground); }
+@utility status-danger { background: var(--destructive-soft); color: var(--destructive); }
+
+@utility bg-welcome {
+  background: linear-gradient(105deg, var(--background) 0%, var(--primary-soft) 72%, var(--secondary) 100%);
+}
+
+/*
+ * Fondo del panel de marca del login: navy -> indigo -> violeta oscuro, en la
+ * misma familia de tono que --primary/--secondary/--lavender (azul-purpura)
+ * pero mucho mas oscuro. El logo oficial trae blancos, lavanda claro y celeste
+ * en sus degradados; un fondo --primary (celeste medio) los apagaba por poco
+ * contraste. Este fondo oscuro combina con esos mismos tonos sin competir con
+ * el logo.
+ */
+@utility bg-login-hero {
+  background: linear-gradient(160deg, oklch(0.16 0.045 264) 0%, oklch(0.24 0.075 275) 55%, oklch(0.2 0.09 300) 100%);
+}
+
+/* Sistema de navegacion del sidebar */
+@utility menu-item {
+  @apply relative flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors;
+}
+@utility menu-item-active {
+  @apply bg-sidebar-accent text-sidebar-accent-foreground;
+}
+@utility menu-item-inactive {
+  @apply text-sidebar-foreground hover:bg-muted;
+}

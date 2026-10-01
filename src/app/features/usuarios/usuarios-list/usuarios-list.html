@@ -1,0 +1,36 @@
+<div>
+  <ui-page-header titulo="Usuarios y roles" descripcion="Administra el personal con acceso al sistema.">
+    <ui-button (click)="modalAbierto.set(true)">+ Nuevo usuario</ui-button>
+  </ui-page-header>
+
+  <ui-data-table
+    class="mt-6"
+    [items]="pagina().content"
+    [columnas]="columnas"
+    [cargando]="cargando()"
+    [totalElements]="pagina().totalElements"
+    [totalPages]="pagina().totalPages"
+    [pageNumber]="pagina().pageNumber"
+    [pageSize]="pagina().pageSize"
+    (cambiarPagina)="cargar($event)"
+    mensajeVacio="No se encontraron usuarios"
+  />
+</div>
+
+<ui-modal titulo="Nuevo usuario" descripcion="Completa los datos para registrar un nuevo usuario." [abierto]="modalAbierto()" (cerrar)="modalAbierto.set(false)">
+  <form class="space-y-3" [formGroup]="form" (ngSubmit)="crear()">
+    <ui-input label="Nombres" [control]="form.controls.nombres" [requerido]="true" />
+    <ui-input label="Correo electronico" type="email" [control]="form.controls.email" [requerido]="true" />
+    <ui-input label="Contrasena" type="password" [control]="form.controls.password" [requerido]="true" />
+    <ui-select label="Rol" [control]="form.controls.rol" [opciones]="opcionesRol" [requerido]="true" />
+
+    @if (form.controls.rol.value === 'MEDICO') {
+      <ui-select label="Especialidad" [control]="form.controls.especialidad" [opciones]="opcionesEspecialidad" [requerido]="true" />
+    }
+
+    <div class="flex justify-end gap-2 pt-2">
+      <ui-button variante="outline" type="button" (click)="modalAbierto.set(false)">Cancelar</ui-button>
+      <ui-button type="submit" [cargando]="enviando()">Crear</ui-button>
+    </div>
+  </form>
+</ui-modal>

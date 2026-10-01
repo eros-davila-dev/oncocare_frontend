@@ -1,0 +1,66 @@
+<div>
+  <ui-page-header titulo="Tratamientos" descripcion="Programa y da seguimiento a los ciclos de tratamiento oncologico.">
+    <ui-button (click)="abrirModal()">+ Programar ciclo</ui-button>
+  </ui-page-header>
+
+  <ui-data-table
+    class="mt-6 block"
+    [items]="pagina().content"
+    [columnas]="columnas"
+    [cargando]="cargando()"
+    [totalElements]="pagina().totalElements"
+    [totalPages]="pagina().totalPages"
+    [pageNumber]="pagina().pageNumber"
+    [pageSize]="pagina().pageSize"
+    (cambiarPagina)="cargar($event)"
+    mensajeVacio="No se encontraron ciclos de tratamiento"
+  >
+    <ng-template #accionesFila let-ciclo>
+      @if (ciclo.estado === 'PROGRAMADO') {
+        <ui-row-actions>
+          <button uiRowActionItem (click)="marcarRealizado(ciclo)">Marcar realizado</button>
+          <button uiRowActionItem variante="danger" (click)="suspender(ciclo)">Suspender</button>
+        </ui-row-actions>
+      }
+    </ng-template>
+  </ui-data-table>
+</div>
+
+<ui-modal
+  titulo="Programar ciclo de tratamiento"
+  descripcion="Registra una sesion dentro del esquema de tratamiento del paciente."
+  [abierto]="modalAbierto()"
+  ancho="lg"
+  (cerrar)="modalAbierto.set(false)"
+>
+  <form class="space-y-3" [formGroup]="form" (ngSubmit)="guardar()">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <ui-select label="Paciente" placeholder="Seleccione un paciente" [control]="form.controls.pacienteId" [opciones]="pacientes()" [requerido]="true" />
+      <ui-select label="Tipo de tratamiento" [control]="form.controls.tipoTratamiento" [opciones]="opcionesTipo" [requerido]="true" />
+
+      <ui-select
+        label="Especialidad del medico"
+        placeholder="Seleccione una especialidad"
+        [control]="especialidadSeleccionada"
+        [opciones]="opcionesEspecialidad"
+      />
+      <ui-select
+        label="Medico responsable"
+        placeholder="Seleccione un medico"
+        [control]="form.controls.medicoResponsableId"
+        [opciones]="opcionesMedico()"
+        [requerido]="true"
+      />
+
+      <ui-input label="Fecha de la sesion" type="date" [control]="form.controls.fechaSesion" [requerido]="true" />
+      <ui-input label="Numero de sesion" type="number" [control]="form.controls.numeroSesion" [requerido]="true" />
+      <ui-input label="Total de sesiones del esquema" type="number" [control]="form.controls.totalSesionesEsquema" [requerido]="true" />
+      <ui-input label="Observaciones" [control]="form.controls.observaciones" />
+    </div>
+
+    <div class="flex justify-end gap-2 pt-2">
+      <ui-button variante="outline" type="button" (click)="modalAbierto.set(false)">Cancelar</ui-button>
+      <ui-button type="submit" [cargando]="enviando()">Programar</ui-button>
+    </div>
+  </form>
+</ui-modal>

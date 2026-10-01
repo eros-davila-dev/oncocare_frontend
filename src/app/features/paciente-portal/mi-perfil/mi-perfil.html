@@ -1,0 +1,82 @@
+<ui-page-header titulo="Mi perfil" descripcion="Esta es la información que tenemos registrada sobre ti" />
+
+<div class="mt-6">
+  @if (cargando()) {
+    <div class="py-10">
+      <ui-loading-spinner />
+    </div>
+  } @else if (paciente(); as p) {
+    <div class="space-y-6">
+      <ui-card titulo="Datos personales">
+        <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <dt class="text-xs font-medium uppercase text-muted-foreground">Nombre completo</dt>
+            <dd class="mt-0.5 text-sm">{{ p.nombres }} {{ p.apellidos }}</dd>
+          </div>
+          <div>
+            <dt class="text-xs font-medium uppercase text-muted-foreground">Documento de identidad</dt>
+            <dd class="mt-0.5 text-sm">{{ p.documentoIdentidad }}</dd>
+          </div>
+          <div>
+            <dt class="text-xs font-medium uppercase text-muted-foreground">Fecha de nacimiento</dt>
+            <dd class="mt-0.5 text-sm">{{ p.fechaNacimiento }} &middot; {{ p.edad }} años</dd>
+          </div>
+          <div>
+            <dt class="text-xs font-medium uppercase text-muted-foreground">Convenio / seguro</dt>
+            <dd class="mt-0.5 text-sm">{{ p.convenioSeguro }}</dd>
+          </div>
+        </dl>
+      </ui-card>
+
+      <ui-card titulo="Información clínica">
+        <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <dt class="text-xs font-medium uppercase text-muted-foreground">Tipo de cáncer</dt>
+            <dd class="mt-0.5 text-sm">{{ p.tipoCancer || 'No registrado' }}</dd>
+          </div>
+          <div>
+            <dt class="text-xs font-medium uppercase text-muted-foreground">Estadio clínico</dt>
+            <dd class="mt-0.5 text-sm">{{ p.estadioClinico || 'No registrado' }}</dd>
+          </div>
+          <div>
+            <dt class="text-xs font-medium uppercase text-muted-foreground">Fecha de diagnóstico</dt>
+            <dd class="mt-0.5 text-sm">{{ p.fechaDiagnostico || 'No registrada' }}</dd>
+          </div>
+          <div>
+            <dt class="text-xs font-medium uppercase text-muted-foreground">Médico tratante</dt>
+            <dd class="mt-0.5 text-sm">{{ p.medicoTratanteId ? 'Asignado' : 'Aún no asignado' }}</dd>
+          </div>
+        </dl>
+      </ui-card>
+
+      <ui-card titulo="Contacto">
+        <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <dt class="text-xs font-medium uppercase text-muted-foreground">Teléfono</dt>
+            <dd class="mt-0.5 text-sm">{{ p.telefono || 'No registrado' }}</dd>
+          </div>
+          <div>
+            <dt class="text-xs font-medium uppercase text-muted-foreground">Correo</dt>
+            <dd class="mt-0.5 text-sm">{{ p.email || 'No registrado' }}</dd>
+          </div>
+          <div>
+            <dt class="text-xs font-medium uppercase text-muted-foreground">Dirección</dt>
+            <dd class="mt-0.5 text-sm">{{ p.direccion || 'No registrada' }}</dd>
+          </div>
+          <div>
+            <dt class="text-xs font-medium uppercase text-muted-foreground">Contacto de emergencia</dt>
+            <dd class="mt-0.5 text-sm">{{ p.contactoEmergenciaNombre }} &middot; {{ p.contactoEmergenciaTelefono }}</dd>
+          </div>
+          <div>
+            <dt class="text-xs font-medium uppercase text-muted-foreground">Registrado desde</dt>
+            <dd class="mt-0.5 text-sm">{{ p.fechaRegistro | date: 'dd/MM/yyyy' }}</dd>
+          </div>
+        </dl>
+      </ui-card>
+
+      <p class="text-sm text-muted-foreground">
+        ¿Algún dato es incorrecto? Coméntalo con el personal de recepción en tu próxima visita para actualizarlo.
+      </p>
+    </div>
+  }
+</div>

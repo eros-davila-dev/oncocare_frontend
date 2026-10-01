@@ -1,0 +1,32 @@
+<div>
+  <ui-page-header titulo="Log de auditoria" descripcion="Registro inmutable de acciones criticas del sistema." />
+
+  <div class="mt-6 rounded-xl border border-border bg-background shadow-card">
+    <ui-data-table-toolbar [envolver]="false">
+      <div filtros class="flex items-end gap-2">
+        <div class="w-56">
+          <ui-select
+            placeholder="Todas las entidades"
+            [control]="filtroEntidad"
+            [opciones]="opcionesEntidad"
+          />
+        </div>
+        <ui-button variante="secondary" (click)="cargar(0)">Filtrar</ui-button>
+        <ui-button variante="ghost" (click)="limpiarFiltro()">Limpiar</ui-button>
+      </div>
+    </ui-data-table-toolbar>
+
+    <ui-data-table
+      [envolver]="false"
+      [items]="pagina().content"
+      [columnas]="columnas"
+      [cargando]="cargando()"
+      [totalElements]="pagina().totalElements"
+      [totalPages]="pagina().totalPages"
+      [pageNumber]="pagina().pageNumber"
+      [pageSize]="pagina().pageSize"
+      (cambiarPagina)="cargar($event)"
+      mensajeVacio="No hay registros de auditoria"
+    />
+  </div>
+</div>

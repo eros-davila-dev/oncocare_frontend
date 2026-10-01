@@ -1,0 +1,24 @@
+<app-auth-layout titulo="Verificación de correo">
+  <div class="flex flex-col items-center gap-3 text-center">
+    @switch (estado()) {
+      @case ('verificando') {
+        <ui-loading-spinner />
+        <p class="text-sm text-muted-foreground">Verificando tu cuenta...</p>
+      }
+      @case ('exito') {
+        <span class="flex size-14 items-center justify-center rounded-full bg-success-soft text-success">
+          <ui-icon name="circle-check-big" [size]="24" />
+        </span>
+        <p class="text-sm text-foreground">Tu cuenta fue verificada correctamente. Ya puedes iniciar sesión.</p>
+        <a routerLink="/auth/login" class="mt-2 text-sm font-medium text-primary hover:underline">Ir a iniciar sesión</a>
+      }
+      @case ('error') {
+        <span class="flex size-14 items-center justify-center rounded-full bg-destructive-soft text-destructive">
+          <ui-icon name="circle-alert" [size]="24" />
+        </span>
+        <p class="text-sm text-foreground">{{ mensajeError() }}</p>
+        <a routerLink="/auth/registro" class="mt-2 text-sm font-medium text-primary hover:underline">Volver a registrarme</a>
+      }
+    }
+  </div>
+</app-auth-layout>

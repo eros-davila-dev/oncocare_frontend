@@ -1,0 +1,38 @@
+<ui-page-header titulo="Completa tu perfil" descripcion="Necesitamos estos datos antes de que puedas agendar tus citas" />
+
+<form class="mt-6 space-y-6" [formGroup]="form" (ngSubmit)="guardar()">
+  <ui-card titulo="Datos personales">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <ui-input label="Nombres" [control]="form.controls.nombres" [requerido]="true" />
+      <ui-input label="Apellidos" [control]="form.controls.apellidos" [requerido]="true" />
+      <ui-input label="Documento de identidad" [control]="form.controls.documentoIdentidad" [requerido]="true" />
+      <ui-input label="Fecha de nacimiento" type="date" [control]="form.controls.fechaNacimiento" [requerido]="true" />
+      <ui-input label="Teléfono" [control]="form.controls.telefono" [requerido]="true" />
+      <ui-input label="Correo electrónico" type="email" [control]="form.controls.email" />
+      <ui-input label="Dirección" [control]="form.controls.direccion" />
+      <ui-select label="Convenio o seguro" [opciones]="opcionesConvenio" [control]="form.controls.convenioSeguro" [requerido]="true" />
+    </div>
+  </ui-card>
+
+  <ui-card titulo="Información clínica (opcional)">
+    <p class="mb-4 text-sm text-muted-foreground">
+      Si ya tienes un diagnóstico previo puedes indicarlo aquí; el equipo médico lo confirmará en tu primera consulta.
+    </p>
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <ui-input label="Tipo de cáncer" [control]="form.controls.tipoCancer" />
+      <ui-input label="Estadio clínico" [control]="form.controls.estadioClinico" />
+      <ui-input label="Fecha de diagnóstico" type="date" [control]="form.controls.fechaDiagnostico" />
+    </div>
+  </ui-card>
+
+  <ui-card titulo="Contacto de emergencia">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <ui-input label="Nombre del contacto" [control]="form.controls.contactoEmergenciaNombre" [requerido]="true" />
+      <ui-input label="Teléfono del contacto" [control]="form.controls.contactoEmergenciaTelefono" [requerido]="true" />
+    </div>
+  </ui-card>
+
+  <div class="flex justify-end">
+    <ui-button type="submit" [cargando]="enviando()">Guardar y continuar</ui-button>
+  </div>
+</form>

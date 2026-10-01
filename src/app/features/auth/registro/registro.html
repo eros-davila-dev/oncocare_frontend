@@ -1,0 +1,37 @@
+<app-auth-layout titulo="Crea tu cuenta" descripcion="Regístrate para gestionar tus citas en línea">
+  @if (registroCompletado()) {
+    <div class="flex flex-col items-center gap-3 text-center">
+      <span class="flex size-14 items-center justify-center rounded-full bg-success-soft text-success">
+        <ui-icon name="circle-check-big" [size]="24" />
+      </span>
+      <p class="text-sm text-foreground">
+        Si los datos son válidos, te enviamos un correo para verificar tu cuenta. Revisa tu bandeja de entrada (y la carpeta de spam) para continuar.
+      </p>
+      <a routerLink="/auth/login" class="mt-2 text-sm font-medium text-primary hover:underline">Volver a iniciar sesión</a>
+    </div>
+  } @else {
+    <form class="space-y-5" [formGroup]="form" (ngSubmit)="registrar()">
+      <ui-input label="Nombres completos" icono="mail" placeholder="Tu nombre y apellido" [control]="form.controls.nombres" [requerido]="true" />
+      <ui-input label="Correo electrónico" type="email" icono="mail" placeholder="tu@correo.com" [control]="form.controls.email" [requerido]="true" />
+      <ui-input label="Contraseña" type="password" icono="lock" placeholder="Mínimo 8 caracteres" [control]="form.controls.password" [requerido]="true" />
+      <ui-input label="Confirmar contraseña" type="password" icono="lock" placeholder="Repite tu contraseña" [control]="form.controls.confirmacion" [requerido]="true" />
+
+      @if (errorGeneral()) {
+        <p class="flex items-center gap-2 rounded-lg bg-destructive-soft px-3 py-2 text-sm text-destructive">
+          <ui-icon name="circle-alert" [size]="16" clase="shrink-0" />
+          {{ errorGeneral() }}
+        </p>
+      }
+
+      <ui-button type="submit" [cargando]="enviando()" [anchoCompleto]="true">
+        Crear cuenta
+        <ui-icon name="chevron-right" [size]="18" />
+      </ui-button>
+
+      <p class="text-center text-sm text-muted-foreground">
+        ¿Ya tienes cuenta?
+        <a routerLink="/auth/login" class="font-medium text-primary hover:underline">Inicia sesión</a>
+      </p>
+    </form>
+  }
+</app-auth-layout>

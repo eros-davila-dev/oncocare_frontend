@@ -1,0 +1,79 @@
+<ui-page-header titulo="Mis citas" descripcion="Consulta, confirma, reprograma o cancela tus citas" />
+
+<div class="mt-6 rounded-xl border border-border bg-card">
+  <div class="px-4 pt-4 sm:px-6">
+    <ui-tabs [tabs]="tabs" [activa]="tabActiva()" (cambiarTab)="cambiarTab($event)" />
+  </div>
+
+  <div class="p-4 sm:p-6">
+    @if (cargando()) {
+      <div class="py-10">
+        <ui-loading-spinner />
+      </div>
+    } @else if (pagina().content.length === 0) {
+      <ui-empty-state titulo="No tienes citas en este estado" descripcion="Cuando agendes una cita con la fundación aparecerá aquí." />
+    } @else {
+      <ul class="space-y-3">
+        @for (cita of pagina().content; track cita.id) {
+          <li class="flex flex-col gap-3 rounded-xl border border-border p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p class="font-semibold">{{ cita.fecha }} &middot; {{ cita.hora }}</p>
+              <p class="text-sm text-muted-foreground">{{ cita.tipoConsulta }}</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <ui-badge [color]="cita.estado | estadoColor">{{ cita.estado | etiquetaEnum }}</ui-badge>
+              @if (puedeConfirmar(cita)) {
+                <ui-button variante="success" (click)="citaAConfirmar.set(cita)">Confirmar</ui-button>
+              }
+              @if (puedeReprogramar(cita)) {
+                <ui-button variante="outline" (click)="abrirReprogramar(cita)">Reprogramar</ui-button>
+              }
+              @if (puedeCancelar(cita)) {
+                <ui-button variante="danger" (click)="abrirCancelar(cita)">Cancelar</ui-button>
+              }
+            </div>
+          </li>
+        }
+      </ul>
+    }
+
+    <ui-pagination
+      [totalElements]="pagina().totalElements"
+      [totalPages]="pagina().totalPages"
+      [pageNumber]="pagina().pageNumber"
+      (cambiarPagina)="cargar($event)"
+    />
+  </div>
+</div>
+
+<ui-confirm-dialog
+  titulo="Confirmar cita"
+  mensaje="¿Confirmas que asistirás a esta cita?"
+  textoConfirmar="Sí, confirmar"
+  variante="warning"
+  [abierto]="citaAConfirmar() !== null"
+  (confirmar)="confirmarAccion()"
+  (cancelar)="citaAConfirmar.set(null)"
+/>
+
+<ui-modal titulo="Cancelar cita" [abierto]="citaACancelar() !== null" (cerrar)="citaACancelar.set(null)">
+  <div class="space-y-4">
+    <p class="text-sm text-muted-foreground">Cuéntanos brevemente el motivo de la cancelación.</p>
+    <ui-input label="Motivo" [control]="motivoCancelacion" [requerido]="true" />
+    <div class="flex justify-end gap-2">
+      <ui-button type="button" variante="outline" (click)="citaACancelar.set(null)">Volver</ui-button>
+      <ui-button type="button" variante="danger" [cargando]="enviandoAccion()" (click)="confirmarCancelacion()">Cancelar cita</ui-button>
+    </div>
+  </div>
+</ui-modal>
+
+<ui-modal titulo="Reprogramar cita" [abierto]="citaAReprogramar() !== null" (cerrar)="citaAReprogramar.set(null)">
+  <form class="space-y-4" [formGroup]="formReprogramar" (ngSubmit)="confirmarReprogramacion()">
+    <ui-input label="Nueva fecha" type="date" [control]="formReprogramar.controls.fecha" [requerido]="true" />
+    <ui-input label="Nueva hora" type="time" [control]="formReprogramar.controls.hora" [requerido]="true" />
+    <div class="flex justify-end gap-2">
+      <ui-button type="button" variante="outline" (click)="citaAReprogramar.set(null)">Volver</ui-button>
+      <ui-button type="submit" [cargando]="enviandoAccion()">Guardar nueva fecha</ui-button>
+    </div>
+  </form>
+</ui-modal>

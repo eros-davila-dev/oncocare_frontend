@@ -1,0 +1,52 @@
+<ui-modal
+  [titulo]="pacienteId() ? 'Editar paciente' : 'Registrar paciente'"
+  descripcion="Completa los datos del paciente. Puedes moverte libremente entre pestañas sin perder lo escrito."
+  [abierto]="abierto()"
+  ancho="lg"
+  (cerrar)="cerrar.emit()"
+>
+  <form [formGroup]="form" (ngSubmit)="guardar()">
+    <ui-tabs [tabs]="tabs" [activa]="tabActiva()" (cambiarTab)="tabActiva.set($event)" />
+
+    <div class="pt-5">
+      @switch (tabActiva()) {
+        @case ('Datos personales') {
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <ui-input label="Nombres" [control]="form.controls.nombres" [requerido]="true" />
+            <ui-input label="Apellidos" [control]="form.controls.apellidos" [requerido]="true" />
+            <ui-input label="Documento de identidad" [control]="form.controls.documentoIdentidad" [requerido]="true" />
+            <ui-input label="Fecha de nacimiento" type="date" [control]="form.controls.fechaNacimiento" [requerido]="true" />
+            <ui-input label="Telefono" [control]="form.controls.telefono" />
+            <ui-input label="Correo electronico" type="email" [control]="form.controls.email" />
+            <ui-input label="Direccion" [control]="form.controls.direccion" />
+            <ui-select
+              label="Convenio / seguro"
+              [control]="form.controls.convenioSeguro"
+              [opciones]="opcionesConvenio"
+              [requerido]="true"
+            />
+          </div>
+        }
+        @case ('Informacion clinica') {
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <ui-input label="Tipo de cancer" [control]="form.controls.tipoCancer" />
+            <ui-input label="Estadio clinico" [control]="form.controls.estadioClinico" />
+            <ui-input label="Fecha de diagnostico" type="date" [control]="form.controls.fechaDiagnostico" />
+            <ui-input label="ID del medico tratante" type="number" [control]="form.controls.medicoTratanteId" />
+          </div>
+        }
+        @case ('Contacto') {
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <ui-input label="Nombre del contacto" [control]="form.controls.contactoEmergenciaNombre" [requerido]="true" />
+            <ui-input label="Telefono del contacto" [control]="form.controls.contactoEmergenciaTelefono" [requerido]="true" />
+          </div>
+        }
+      }
+    </div>
+
+    <div class="mt-6 flex justify-end gap-2 border-t border-border pt-4">
+      <ui-button variante="outline" type="button" (click)="cerrar.emit()">Cancelar</ui-button>
+      <ui-button type="submit" [cargando]="enviando()">Guardar</ui-button>
+    </div>
+  </form>
+</ui-modal>
