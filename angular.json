@@ -30,7 +30,10 @@
             "allowedCommonJsDependencies": [
               "qrcode"
             ],
-            "index": "src/index.portal.html",
+            "index": {
+              "input": "src/index.portal.html",
+              "output": "index.html"
+            },
             "outputPath": "dist/portal"
           },
           "configurations": {
@@ -47,7 +50,15 @@
                   "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "optimization": {
+                "scripts": true,
+                "styles": {
+                  "minify": true,
+                  "inlineCritical": false
+                },
+                "fonts": true
+              }
             },
             "development": {
               "optimization": false,
@@ -104,7 +115,10 @@
             "allowedCommonJsDependencies": [
               "qrcode"
             ],
-            "index": "src/index.intranet.html",
+            "index": {
+              "input": "src/index.intranet.html",
+              "output": "index.html"
+            },
             "outputPath": "dist/intranet"
           },
           "configurations": {
@@ -121,7 +135,15 @@
                   "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "optimization": {
+                "scripts": true,
+                "styles": {
+                  "minify": true,
+                  "inlineCritical": false
+                },
+                "fonts": true
+              }
             },
             "development": {
               "optimization": false,
