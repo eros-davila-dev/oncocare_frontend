@@ -1,7 +1,8 @@
 /**
  * Produccion (docker compose): nginx publica el portal y la intranet en
- * puertos/dominios distintos y reenvia /api al backend. Ajustar portalUrl e
- * intranetUrl a los dominios reales al desplegar.
+ * puertos/dominios distintos y reenvia /api al backend. portalUrl e
+ * intranetUrl se reemplazan al construir la imagen (ARG PORTAL_URL /
+ * INTRANET_URL del Dockerfile, ver docker-compose.prod.yml).
  */
 export const environment = {
   production: true,

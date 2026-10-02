@@ -5,7 +5,14 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
-RUN npm run build
+# Dominios publicos de cada app (enlace "ir al portal / a la intranet"). En
+# produccion los pasa docker-compose.prod.yml; por defecto, los puertos locales.
+ARG PORTAL_URL=http://localhost:4200
+ARG INTRANET_URL=http://localhost:4300
+RUN sed -i "s#portalUrl: '[^']*'#portalUrl: '${PORTAL_URL}'#; s#intranetUrl: '[^']*'#intranetUrl: '${INTRANET_URL}'#" \
+        src/environments/environment.ts \
+    && grep -q "portalUrl: '${PORTAL_URL}'" src/environments/environment.ts \
+    && npm run build
 
 FROM nginx:1.27-alpine
 COPY --from=build /app/dist/portal/browser /usr/share/nginx/html/portal
