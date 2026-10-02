@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { IndicadoresTesis } from '../../core/models/estudio.model';
-import { INDICADORES_TESIS, esMejora, fechaCorta, formatoDiferencia, formatoValor } from './indicadores.util';
+import { IndicadoresTesis, ResultadoWilcoxon } from '../../core/models/estudio.model';
+import {
+  INDICADORES_TESIS,
+  esMejora,
+  fechaCorta,
+  formatoDiferencia,
+  formatoP,
+  formatoValor,
+  lecturaWilcoxon,
+} from './indicadores.util';
 
 const vacios: IndicadoresTesis = {
   tiempoPromedioRegistroMinutos: null,
@@ -50,6 +58,35 @@ describe('indicadores de la tesis', () => {
     expect(nca.base({ ...vacios, consultasResueltas: 2, consultasCerradas: 3, consultasResueltasBot: 1 })).toContain(
       '1 por el chatbot',
     );
+  });
+
+  describe('lectura de Wilcoxon', () => {
+    const base: ResultadoWilcoxon = {
+      pares: 12, empates: 0, n: 12, rangosNegativos: 11, rangosPositivos: 1,
+      sumaRangosNegativos: 75, sumaRangosPositivos: 3, medianaPretest: 100, medianaPostest: 0,
+      z: -2.9, pAsintotica: 0.004, pExacta: 0.001, tamanoEfecto: 0.84,
+    };
+
+    it('reconoce una mejora significativa segun el sentido de cada hipotesis', () => {
+      expect(lecturaWilcoxon(base, 'bajar').tono).toBe('exito');
+      expect(lecturaWilcoxon(base, 'subir').tono).toBe('alerta');
+    });
+
+    it('no declara significancia con p >= 0,05 ni sin pares', () => {
+      expect(lecturaWilcoxon({ ...base, pAsintotica: 0.2 }, 'bajar').tono).toBe('neutro');
+      expect(lecturaWilcoxon({ ...base, pares: 0, n: 0, pAsintotica: null }, 'bajar').texto).toContain('Sin pares');
+    });
+
+    it('advierte cuando n es chico para la aproximacion normal', () => {
+      expect(lecturaWilcoxon({ ...base, n: 5 }, 'bajar').advertencia).toContain('p exacta');
+      expect(lecturaWilcoxon(base, 'bajar').advertencia).toBeNull();
+    });
+
+    it('formatea p como SPSS', () => {
+      expect(formatoP(0.0172)).toBe('0.017');
+      expect(formatoP(0.0002)).toBe('< 0.001');
+      expect(formatoP(null)).toBe('—');
+    });
   });
 
   it('convierte fechas ISO a formato peruano', () => {

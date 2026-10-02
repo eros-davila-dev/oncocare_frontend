@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 import { Cita } from '../../core/models/cita.model';
 import {
   AlcanceIndicador,
+  AnalisisPareado,
   CanalConsulta,
   CanalMedicion,
   ComparativoIndicadores,
@@ -53,6 +54,20 @@ export class EstudioService {
 
   pareado(): Observable<FilaPareada[]> {
     return this.http.get<FilaPareada[]>(`${this.base}/indicadores/pareado`);
+  }
+
+  wilcoxon(): Observable<AnalisisPareado> {
+    return this.http.get<AnalisisPareado>(`${this.base}/indicadores/wilcoxon`);
+  }
+
+  // --- Exportaciones (anonimizadas, quedan en la auditoria) -------------------
+
+  exportarSpss(): Observable<Blob> {
+    return this.http.get(`${this.base}/exportaciones/spss.xlsx`, { responseType: 'blob' });
+  }
+
+  exportarFichas(fase: Fase, alcance: AlcanceIndicador = 'MUESTRA'): Observable<Blob> {
+    return this.http.get(`${this.base}/exportaciones/fichas.xlsx`, { params: { fase, alcance }, responseType: 'blob' });
   }
 
   // --- Fases y muestra ----------------------------------------------------

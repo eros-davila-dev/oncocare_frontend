@@ -119,3 +119,123 @@
     </p>
   </section>
 }
+
+@if (pruebas().length > 0) {
+  <section class="mt-8" aria-labelledby="titulo-wilcoxon">
+    <h2 id="titulo-wilcoxon" class="font-display text-lg font-bold">Prueba de Wilcoxon (vista preliminar)</h2>
+    <p class="text-sm text-muted-foreground">
+      Muestras relacionadas, bilateral, α = 0,05, con las mismas convenciones que SPSS. El análisis que se reporta en la
+      tesis se hace en SPSS con el archivo exportado.
+    </p>
+    <div class="mt-3 overflow-x-auto rounded-xl border border-border bg-card shadow-card">
+      <table class="w-full border-collapse text-left text-sm">
+        <thead class="bg-muted/70 text-xs text-muted-foreground">
+          <tr>
+            <th class="px-3 py-3 font-semibold">Indicador</th>
+            <th class="whitespace-nowrap px-3 py-3 text-right font-semibold" title="Pares completos (empates descartados)">n</th>
+            <th class="whitespace-nowrap px-3 py-3 text-right font-semibold" title="Rangos negativos / positivos">Rangos − / +</th>
+            <th class="whitespace-nowrap px-3 py-3 text-right font-semibold">Mediana pre → post</th>
+            <th class="whitespace-nowrap px-3 py-3 text-right font-semibold">Z</th>
+            <th class="whitespace-nowrap px-3 py-3 text-right font-semibold">p asintótica</th>
+            <th class="whitespace-nowrap px-3 py-3 text-right font-semibold">p exacta</th>
+            <th class="whitespace-nowrap px-3 py-3 text-right font-semibold" title="Tamaño del efecto r = |Z| / √pares">r</th>
+            <th class="px-3 py-3 font-semibold">Lectura</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (prueba of pruebas(); track prueba.definicion.clave) {
+            <tr class="border-t border-border align-top">
+              <td class="px-3 py-2">
+                <span class="font-semibold">{{ prueba.definicion.sigla }}</span>
+                <span class="block whitespace-nowrap text-xs text-muted-foreground">Meta: {{ prueba.definicion.sentido }}</span>
+              </td>
+              <td class="px-3 py-2 text-right tabular-nums">
+                {{ prueba.resultado.n }}
+                @if (prueba.resultado.empates > 0) {
+                  <span class="block whitespace-nowrap text-xs text-muted-foreground">{{ prueba.resultado.empates }} empates</span>
+                }
+              </td>
+              <td class="px-3 py-2 text-right tabular-nums">
+                {{ prueba.resultado.rangosNegativos }} / {{ prueba.resultado.rangosPositivos }}
+              </td>
+              <td class="px-3 py-2 text-right tabular-nums">
+                @if (prueba.resultado.medianaPretest !== null) {
+                  {{ prueba.resultado.medianaPretest!.toFixed(1) }} → {{ prueba.resultado.medianaPostest!.toFixed(1) }}
+                } @else {
+                  —
+                }
+              </td>
+              <td class="px-3 py-2 text-right tabular-nums">
+                {{ prueba.resultado.z === null ? '—' : prueba.resultado.z!.toFixed(3) }}
+              </td>
+              <td class="px-3 py-2 text-right tabular-nums">{{ formatoP(prueba.resultado.pAsintotica) }}</td>
+              <td class="px-3 py-2 text-right tabular-nums">{{ formatoP(prueba.resultado.pExacta) }}</td>
+              <td class="px-3 py-2 text-right tabular-nums">
+                {{ prueba.resultado.tamanoEfecto === null ? '—' : prueba.resultado.tamanoEfecto!.toFixed(2) }}
+              </td>
+              <td class="px-3 py-2">
+                <span
+                  class="inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                  [class]="
+                    prueba.lectura.tono === 'exito'
+                      ? 'bg-success-soft text-success'
+                      : prueba.lectura.tono === 'alerta'
+                        ? 'bg-warning-soft text-warning'
+                        : 'bg-muted text-muted-foreground'
+                  "
+                >
+                  {{ prueba.lectura.texto }}
+                </span>
+                @if (prueba.lectura.advertencia) {
+                  <span class="mt-1 block text-xs text-muted-foreground">{{ prueba.lectura.advertencia }}</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <p class="mt-2 text-xs text-muted-foreground">
+      Diferencia = postest − pretest. Rangos negativos: el valor bajó (mejora esperada en TPR y TNS); positivos: subió
+      (mejora esperada en NCA). Cada indicador usa solo a quien tiene dato en ambas fases.
+    </p>
+  </section>
+}
+
+<section class="mt-8" aria-labelledby="titulo-exportar">
+  <h2 id="titulo-exportar" class="font-display text-lg font-bold">Exportar para el análisis</h2>
+  <p class="text-sm text-muted-foreground">
+    Archivos anonimizados: solo el código del participante, sin nombres, documentos ni textos libres. Cada descarga queda
+    registrada en la auditoría.
+  </p>
+  <div class="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2">
+    <ui-card class="block">
+      <h3 class="font-semibold">Libro para SPSS 29</h3>
+      <p class="mt-1 text-sm text-muted-foreground">
+        Tabla pareada (una fila por participante), detalle con el n de cada indicador, resumen con Wilcoxon, diccionario
+        de variables y metadatos. En SPSS: Archivo › Abrir › Datos, hoja «pareado».
+      </p>
+      <ui-button class="mt-4 inline-block" [cargando]="descargando() === 'spss'" (click)="descargarSpss()">
+        <ui-icon name="download" [size]="16" /> Descargar .xlsx para SPSS
+      </ui-button>
+    </ui-card>
+    <ui-card class="block">
+      <h3 class="font-semibold">Fichas del Anexo 2</h3>
+      <p class="mt-1 text-sm text-muted-foreground">
+        Las tres fichas (tiempos, asistencias y consultas) de una fase, fila por fila, con los indicadores recalculados
+        por fórmulas de Excel para verificar que coinciden con el sistema.
+      </p>
+      <div class="mt-4 flex flex-wrap gap-2">
+        <ui-button variante="outline" [cargando]="descargando() === 'PRETEST'" (click)="descargarFichas('PRETEST')">
+          <ui-icon name="download" [size]="16" /> Fichas del pretest
+        </ui-button>
+        <ui-button variante="outline" [cargando]="descargando() === 'POSTEST'" (click)="descargarFichas('POSTEST')">
+          <ui-icon name="download" [size]="16" /> Fichas del postest
+        </ui-button>
+      </div>
+    </ui-card>
+  </div>
+  @if (errorDescarga()) {
+    <p class="mt-3 text-sm font-medium text-destructive" role="alert">{{ errorDescarga() }}</p>
+  }
+</section>

@@ -77,6 +77,29 @@ export interface FilaPareada {
   postest: IndicadoresTesis;
 }
 
+/** Prueba de Wilcoxon preliminar (mismas convenciones que SPSS). */
+export interface ResultadoWilcoxon {
+  pares: number;
+  empates: number;
+  n: number;
+  rangosNegativos: number;
+  rangosPositivos: number;
+  sumaRangosNegativos: number | null;
+  sumaRangosPositivos: number | null;
+  medianaPretest: number | null;
+  medianaPostest: number | null;
+  z: number | null;
+  pAsintotica: number | null;
+  pExacta: number | null;
+  tamanoEfecto: number | null;
+}
+
+export interface AnalisisPareado {
+  tiempoPromedioRegistro: ResultadoWilcoxon;
+  tasaAusentismo: ResultadoWilcoxon;
+  nivelConsultasAtendidas: ResultadoWilcoxon;
+}
+
 export interface FaseEstudio {
   fase: Fase;
   fechaInicio: string;

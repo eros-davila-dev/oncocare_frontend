@@ -1,4 +1,4 @@
-import { IndicadoresTesis } from '../../core/models/estudio.model';
+import { IndicadoresTesis, ResultadoWilcoxon } from '../../core/models/estudio.model';
 
 /** Sentido de mejora de cada indicador segun las hipotesis de la tesis. */
 export type SentidoMejora = 'bajar' | 'subir';
@@ -83,6 +83,47 @@ export function esMejora(diferencia: number | null, sentido: SentidoMejora): boo
     return null;
   }
   return sentido === 'bajar' ? diferencia < 0 : diferencia > 0;
+}
+
+export interface LecturaWilcoxon {
+  texto: string;
+  tono: 'exito' | 'alerta' | 'neutro';
+  advertencia: string | null;
+}
+
+/** Por debajo de este n la aproximacion normal (p asintotica) es poco fiable. */
+const N_MINIMO_ASINTOTICO = 10;
+
+/**
+ * Lectura en lenguaje llano de la prueba, con la p asintotica bilateral que
+ * SPSS muestra por defecto y alfa = 0,05. La direccion sale de cual total de
+ * rangos domina: negativos (post < pre) para TPR/TNS, positivos para NCA.
+ */
+export function lecturaWilcoxon(w: ResultadoWilcoxon, sentido: SentidoMejora): LecturaWilcoxon {
+  if (w.pares === 0 || w.pAsintotica === null) {
+    return { texto: 'Sin pares completos todavía', tono: 'neutro', advertencia: null };
+  }
+  if (w.n === 0) {
+    return { texto: 'Sin cambios entre fases (todas las diferencias son cero)', tono: 'neutro', advertencia: null };
+  }
+  const advertencia =
+    w.n < N_MINIMO_ASINTOTICO ? `Con n = ${w.n} la p asintótica es poco fiable: tome como referencia la p exacta.` : null;
+  if (w.pAsintotica >= 0.05) {
+    return { texto: 'Sin diferencia significativa (p ≥ 0,05)', tono: 'neutro', advertencia };
+  }
+  const bajo = (w.sumaRangosNegativos ?? 0) > (w.sumaRangosPositivos ?? 0);
+  const enSentido = sentido === 'bajar' ? bajo : !bajo;
+  return enSentido
+    ? { texto: 'Diferencia significativa en el sentido de la hipótesis', tono: 'exito', advertencia }
+    : { texto: 'Diferencia significativa en sentido contrario a la hipótesis', tono: 'alerta', advertencia };
+}
+
+/** p con tres decimales al estilo de SPSS (",000" se muestra como "< 0,001"). */
+export function formatoP(p: number | null): string {
+  if (p === null || p === undefined) {
+    return '—';
+  }
+  return p < 0.001 ? '< 0.001' : p.toFixed(3);
 }
 
 export function fechaCorta(iso: string): string {
