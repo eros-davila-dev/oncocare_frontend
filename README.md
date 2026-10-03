@@ -1,59 +1,36 @@
-# Frontend
+# OncoCare — Frontend
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.0.5.
+Interfaz del sistema de gestion de pacientes de la Fundacion Oncologica Three Partners. Angular 21 (standalone, signals) + Tailwind CSS 4, con **dos aplicaciones sobre el mismo codigo**:
 
-## Development server
+| App | Para quien | Desarrollo | Docker |
+|---|---|---|---|
+| `portal` | Publico y pacientes: inicio, preguntas frecuentes, registro, mis citas, Telegram, chatbot | http://localhost:4200 | puerto 80 del contenedor |
+| `intranet` | Personal: indicadores, agenda, consultas, pacientes, citas, estudio de tesis, auditoria | http://localhost:4300 | puerto 81 del contenedor |
 
-To start a local development server, run:
+La API es el repositorio **oncocare_backend** (carpeta hermana). El sistema completo con Docker se levanta desde alli (`oncocare_backend/docker`).
 
-```bash
-ng serve
-```
+## Desarrollo
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+Requiere Node.js 20+.
 
 ```bash
-ng generate component component-name
+npm install
+npm run start:portal     # http://localhost:4200
+npm run start:intranet   # http://localhost:4300
+npm test                 # Vitest
+npm run build            # dist/portal y dist/intranet
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+La URL de la API en desarrollo esta en `src/environments/environment.development.ts`; en produccion es relativa (`/api/v1`) y nginx la reenvia al backend.
 
-```bash
-ng generate --help
+## Estructura
+
+```
+src/main.portal.ts, src/main.intranet.ts   punto de entrada de cada app
+src/app/portal/, src/app/intranet/          rutas y layout propios de cada app
+src/app/core/, shared/, features/           codigo compartido (cada app solo empaqueta lo que enruta)
+public/                                     logo, favicon y logo-correo.png (cabecera de los correos)
+Dockerfile, nginx.conf, nginx-comun.conf    imagen de produccion: nginx sirve ambas apps con cabeceras de seguridad
 ```
 
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Una cuenta solo inicia sesion en su aplicacion: un paciente que entra a la intranet (o un miembro del personal que entra al portal) recibe el enlace a la que le corresponde. La seguridad real esta en el backend (`@PreAuthorize` por rol).
