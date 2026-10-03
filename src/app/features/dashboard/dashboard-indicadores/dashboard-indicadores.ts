@@ -4,14 +4,13 @@ import { RouterLink } from '@angular/router';
 import { DashboardService } from '../dashboard.service';
 import { EstudioService } from '../../estudio/estudio.service';
 import { IndicadoresDashboard } from '../../../core/models/dashboard.model';
-import { ComparativoIndicadores } from '../../../core/models/estudio.model';
+import { ResumenRecoleccion } from '../../../core/models/estudio.model';
 import { ErrorResponse } from '../../../core/models/error.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { CardComponent } from '../../../shared/ui/card/card';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header';
 import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner';
 import { IndicadorCardComponent } from '../../estudio/componentes/indicador-card/indicador-card';
-import { ComparativoIndicadoresComponent } from '../../estudio/componentes/comparativo-indicadores/comparativo-indicadores';
 import { INDICADORES_TESIS, fechaCorta } from '../../estudio/indicadores.util';
 
 const PERIODOS = [
@@ -22,8 +21,8 @@ const PERIODOS = [
 
 /**
  * Panel de gestion diaria: los tres indicadores de la tesis sobre todo el
- * sistema en el periodo elegido y, si las fases del estudio estan
- * configuradas, el comparativo pretest vs postest de la muestra.
+ * sistema en el periodo elegido y, para el investigador, la recoleccion del
+ * postest por sesion (tesis v8: lunes, miercoles y viernes).
  */
 @Component({
   selector: 'app-dashboard-indicadores',
@@ -34,7 +33,6 @@ const PERIODOS = [
     PageHeaderComponent,
     LoadingSpinnerComponent,
     IndicadorCardComponent,
-    ComparativoIndicadoresComponent,
   ],
   templateUrl: './dashboard-indicadores.html',
 })
@@ -50,12 +48,23 @@ export class DashboardIndicadoresComponent {
   protected readonly diasPeriodo = signal<number>(30);
   protected readonly cargando = signal(true);
   protected readonly resumen = signal<IndicadoresDashboard | null>(null);
-  protected readonly comparativo = signal<ComparativoIndicadores | null>(null);
-  protected readonly motivoSinComparativo = signal<string | null>(null);
+  protected readonly recoleccion = signal<ResumenRecoleccion | null>(null);
+  protected readonly motivoSinRecoleccion = signal<string | null>(null);
+  protected readonly puedeVerEstudio = this.authService.tieneAlgunRol('ADMIN', 'INVESTIGADOR');
 
   constructor() {
     this.cargarResumen();
-    this.cargarComparativo();
+    if (this.puedeVerEstudio) {
+      this.cargarRecoleccion();
+    }
+  }
+
+  protected celda(v: number | null | undefined): string {
+    return v == null ? '—' : v.toFixed(2);
+  }
+
+  protected sesionesConDatos(r: ResumenRecoleccion): number {
+    return r.sesiones.filter((s) => s.registros > 0 || s.citasElegibles > 0 || s.consultas > 0).length;
   }
 
   protected cambiarPeriodo(dias: number): void {
@@ -77,12 +86,12 @@ export class DashboardIndicadoresComponent {
     });
   }
 
-  private cargarComparativo(): void {
-    this.estudioService.comparativo('MUESTRA').subscribe({
-      next: (comparativo) => this.comparativo.set(comparativo),
+  private cargarRecoleccion(): void {
+    this.estudioService.recoleccion('POSTEST').subscribe({
+      next: (r) => this.recoleccion.set(r),
       error: (error: HttpErrorResponse) => {
         const cuerpo = error.error as ErrorResponse | undefined;
-        this.motivoSinComparativo.set(cuerpo?.message ?? 'El comparativo del estudio no esta disponible.');
+        this.motivoSinRecoleccion.set(cuerpo?.message ?? 'La recolección del postest no está disponible.');
       },
     });
   }

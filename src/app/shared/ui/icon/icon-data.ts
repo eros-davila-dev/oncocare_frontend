@@ -920,6 +920,22 @@ export const ICONOS = {
     ["circle", { "cx": 9, "cy": 7, "r": 4 }],
     ["path", { "d": "m17 8 5 5" }],
     ["path", { "d": "m22 8-5 5" }]
+  ],
+  "bot": [
+    ["path", { "d": "M12 8V4H8" }],
+    ["rect", { "width": 16, "height": 12, "x": 4, "y": 8, "rx": 2 }],
+    ["path", { "d": "M2 14h2" }],
+    ["path", { "d": "M20 14h2" }],
+    ["path", { "d": "M15 13v2" }],
+    ["path", { "d": "M9 13v2" }]
+  ],
+  "arrow-up": [
+    ["path", { "d": "m5 12 7-7 7 7" }],
+    ["path", { "d": "M12 19V5" }]
+  ],
+  "arrow-down": [
+    ["path", { "d": "M12 5v14" }],
+    ["path", { "d": "m19 12-7 7-7-7" }]
   ]
 } as const satisfies Record<string, readonly NodoIcono[]>;
 

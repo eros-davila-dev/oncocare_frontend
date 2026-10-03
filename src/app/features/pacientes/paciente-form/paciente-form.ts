@@ -14,6 +14,7 @@ import { TabsComponent } from '../../../shared/ui/tabs/tabs';
 import { ToastService } from '../../../shared/components/toast-notification/toast.service';
 import { documentoUnicoValidator } from '../../../shared/validators/documento-unico.validator';
 import { telefonoValidator } from '../../../shared/validators/telefono.validator';
+import { correoDistintoValidator } from '../../../shared/validators/correo-distinto.validator';
 
 const OPCIONES_CONVENIO: OpcionSelect[] = [
   { value: 'ESSALUD', label: 'EsSalud' },
@@ -58,7 +59,7 @@ export class PacienteFormComponent {
   private readonly camposPorTab: Record<Tab, string[]> = {
     'Datos personales': ['nombres', 'apellidos', 'documentoIdentidad', 'fechaNacimiento', 'telefono', 'email', 'direccion', 'convenioSeguro'],
     'Informacion clinica': ['tipoCancer', 'estadioClinico', 'fechaDiagnostico'],
-    Contacto: ['contactoEmergenciaNombre', 'contactoEmergenciaTelefono'],
+    Contacto: ['contactoEmergenciaNombre', 'contactoEmergenciaTelefono', 'contactoEmergenciaEmail'],
   };
 
   protected readonly form = new FormGroup({
@@ -77,7 +78,8 @@ export class PacienteFormComponent {
     }),
     fechaNacimiento: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     telefono: new FormControl('', { validators: [telefonoValidator] }),
-    email: new FormControl('', { validators: [Validators.email] }),
+    // Obligatorio: los recordatorios de cita tambien salen por correo.
+    email: new FormControl('', { validators: [Validators.required, Validators.email, Validators.maxLength(150)] }),
     direccion: new FormControl(''),
     tipoCancer: new FormControl(''),
     estadioClinico: new FormControl(''),
@@ -89,6 +91,17 @@ export class PacienteFormComponent {
       nonNullable: true,
       validators: [Validators.required, telefonoValidator],
     }),
+    contactoEmergenciaEmail: new FormControl('', {
+      nonNullable: true,
+      validators: [
+        Validators.required,
+        Validators.email,
+        Validators.maxLength(150),
+        correoDistintoValidator((): string | null | undefined => this.form?.controls.email.value),
+      ],
+    }),
+    // Ley 29733: consentimiento expreso, por eso empieza desmarcado.
+    contactoRecibeRecordatorios: new FormControl(false, { nonNullable: true }),
   });
 
   constructor() {
@@ -109,10 +122,11 @@ export class PacienteFormComponent {
           this.form.patchValue({
             ...paciente,
             fechaDiagnostico: paciente.fechaDiagnostico ?? '',
+            contactoEmergenciaEmail: paciente.contactoEmergenciaEmail ?? '',
           });
         });
       } else {
-        this.form.reset({ convenioSeguro: 'PARTICULAR' });
+        this.form.reset({ convenioSeguro: 'PARTICULAR', contactoRecibeRecordatorios: false });
       }
     });
   }

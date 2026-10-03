@@ -73,7 +73,12 @@ export const rutasIntranet: Routes = [
         canActivate: [roleGuard('ADMIN', 'INVESTIGADOR')],
         loadComponent: () => import('../features/estudio/estudio-layout/estudio-layout').then((m) => m.EstudioLayoutComponent),
         children: [
-          { path: '', pathMatch: 'full', redirectTo: 'resumen' },
+          { path: '', pathMatch: 'full', redirectTo: 'recoleccion' },
+          {
+            path: 'recoleccion',
+            loadComponent: () =>
+              import('../features/estudio/estudio-recoleccion/estudio-recoleccion').then((m) => m.EstudioRecoleccionComponent),
+          },
           {
             path: 'resumen',
             loadComponent: () => import('../features/estudio/estudio-resumen/estudio-resumen').then((m) => m.EstudioResumenComponent),
@@ -91,6 +96,12 @@ export const rutasIntranet: Routes = [
             loadComponent: () => import('../features/estudio/estudio-datos/estudio-datos').then((m) => m.EstudioDatosComponent),
           },
         ],
+      },
+      {
+        path: 'asistente-ia',
+        canActivate: [roleGuard('ADMIN')],
+        loadComponent: () =>
+          import('../features/configuracion/configuracion-gemini/configuracion-gemini').then((m) => m.ConfiguracionGeminiComponent),
       },
       {
         path: 'auditoria',

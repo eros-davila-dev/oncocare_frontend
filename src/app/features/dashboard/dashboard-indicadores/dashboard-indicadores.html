@@ -47,21 +47,88 @@
     }
   </section>
 
-  <section class="mt-8" aria-labelledby="titulo-estudio">
-    <h2 id="titulo-estudio" class="font-display text-lg font-bold">Estudio: pretest vs. postest</h2>
-    <p class="text-sm text-muted-foreground">Solo pacientes de la muestra con consentimiento informado.</p>
+  @if (puedeVerEstudio) {
+    <section class="mt-8" aria-labelledby="titulo-estudio">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 id="titulo-estudio" class="font-display text-lg font-bold">Recolección del postest por sesión</h2>
+          <p class="text-sm text-muted-foreground">
+            Lunes, miércoles y viernes de la fase postest. Cada sesión da un valor por indicador.
+          </p>
+        </div>
+        <a routerLink="/estudio/recoleccion" class="text-sm font-semibold text-primary hover:underline">Ver fichas y descargar</a>
+      </div>
 
-    @if (comparativo(); as datos) {
-      <app-comparativo-indicadores class="mt-4" [comparativo]="datos" />
-    } @else if (motivoSinComparativo()) {
-      <ui-card class="mt-4 block">
-        <p class="text-sm text-muted-foreground">{{ motivoSinComparativo() }}</p>
-        @if (authService.tieneAlgunRol('ADMIN', 'INVESTIGADOR')) {
-          <a routerLink="/estudio/muestra" class="mt-3 inline-block text-sm font-semibold text-primary hover:underline">
-            Configurar las fases del estudio
-          </a>
+      @if (recoleccion(); as r) {
+        <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-4">
+          <ui-card>
+            <p class="text-xs font-semibold uppercase text-muted-foreground">Sesiones con datos</p>
+            <p class="mt-1 font-display text-3xl font-bold">{{ sesionesConDatos(r) }} / {{ r.sesiones.length }}</p>
+            <p class="mt-1 text-xs text-muted-foreground">{{ fechaCorta(r.desde) }} al {{ fechaCorta(r.hasta) }}</p>
+          </ui-card>
+          <ui-card>
+            <p class="text-xs font-semibold uppercase text-muted-foreground">TPR (promedio de sesiones)</p>
+            <p class="mt-1 font-display text-3xl font-bold">{{ celda(r.promedioSesiones.tprMin) }} <span class="text-base">min</span></p>
+            <p class="mt-1 text-xs text-muted-foreground">{{ r.registros }} registros del personal</p>
+          </ui-card>
+          <ui-card>
+            <p class="text-xs font-semibold uppercase text-muted-foreground">Ausentismo (promedio)</p>
+            <p class="mt-1 font-display text-3xl font-bold">{{ celda(r.promedioSesiones.taPct) }} <span class="text-base">%</span></p>
+            <p class="mt-1 text-xs text-muted-foreground">{{ r.citasElegibles }} citas elegibles</p>
+          </ui-card>
+          <ui-card>
+            <p class="text-xs font-semibold uppercase text-muted-foreground">NCA (promedio)</p>
+            <p class="mt-1 font-display text-3xl font-bold">{{ celda(r.promedioSesiones.ncaPct) }} <span class="text-base">%</span></p>
+            <p class="mt-1 text-xs text-muted-foreground">{{ r.consultas }} consultas con desenlace</p>
+          </ui-card>
+        </div>
+
+        @if (r.avisos.citasSinDesenlace || r.avisos.consultasAbiertas) {
+          <p class="mt-3 text-sm text-destructive">
+            Pendiente: {{ r.avisos.citasSinDesenlace }} citas pasadas sin desenlace y
+            {{ r.avisos.consultasAbiertas }} consultas abiertas.
+          </p>
         }
-      </ui-card>
-    }
-  </section>
+
+        <div class="mt-4 overflow-x-auto rounded-xl border border-border">
+          <table class="w-full border-collapse text-left text-sm">
+            <thead class="bg-muted/70 text-xs text-muted-foreground">
+              <tr>
+                <th class="px-3 py-2 font-semibold">Sesión</th>
+                <th class="px-3 py-2 font-semibold">Fecha</th>
+                <th class="px-3 py-2 text-right font-semibold">TPR (min)</th>
+                <th class="px-3 py-2 text-right font-semibold">Ausentismo (%)</th>
+                <th class="px-3 py-2 text-right font-semibold">NCA (%)</th>
+                <th class="px-3 py-2 text-right font-semibold">Eventos</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (s of r.sesiones; track s.fecha) {
+                <tr class="border-t border-border">
+                  <td class="px-3 py-2 font-semibold">{{ s.numero }}</td>
+                  <td class="px-3 py-2">{{ fechaCorta(s.fecha) }}</td>
+                  <td class="px-3 py-2 text-right">{{ celda(s.tprMin) }}</td>
+                  <td class="px-3 py-2 text-right">{{ celda(s.taPct) }}</td>
+                  <td class="px-3 py-2 text-right">{{ celda(s.ncaPct) }}</td>
+                  <td class="px-3 py-2 text-right text-muted-foreground">
+                    {{ s.registros }} · {{ s.citasElegibles }} · {{ s.consultas }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <p class="mt-2 text-xs text-muted-foreground">
+          Eventos = registros · citas elegibles · consultas. «—» = sesión sin eventos de ese indicador.
+        </p>
+      } @else if (motivoSinRecoleccion()) {
+        <ui-card class="mt-4 block">
+          <p class="text-sm text-muted-foreground">{{ motivoSinRecoleccion() }}</p>
+          <a routerLink="/estudio/muestra" class="mt-3 inline-block text-sm font-semibold text-primary hover:underline">
+            Configurar las fechas de la fase postest
+          </a>
+        </ui-card>
+      }
+    </section>
+  }
 </div>

@@ -11,6 +11,7 @@ interface SeccionEstudio {
 }
 
 const SECCIONES: SeccionEstudio[] = [
+  { ruta: 'recoleccion', etiqueta: 'Recolección por sesión', icono: 'calendar-days' },
   { ruta: 'resumen', etiqueta: 'Resultados', icono: 'chart-column' },
   { ruta: 'muestra', etiqueta: 'Fases y muestra', icono: 'users' },
   { ruta: 'fichas', etiqueta: 'Fichas de recolección', icono: 'file-spreadsheet' },
@@ -30,7 +31,7 @@ const SECCIONES: SeccionEstudio[] = [
     <ui-page-header
       eyebrow="Investigación"
       titulo="Estudio de tesis"
-      descripcion="Medición pretest y postest de TPR, TNS y NCA con la muestra del estudio."
+      descripcion="Recolección pretest y postest de TPR, tasa de ausentismo y NCA por sesión (lunes, miércoles y viernes)."
     />
     <nav class="mt-6 flex gap-1 overflow-x-auto border-b border-border" aria-label="Secciones del estudio">
       @for (seccion of secciones; track seccion.ruta) {

@@ -73,9 +73,15 @@
               <dd class="mt-0.5 text-sm">{{ p.direccion || 'No registrada' }}</dd>
             </div>
             <div>
-              <dt class="text-xs font-medium uppercase text-muted-foreground">Contacto de emergencia</dt>
+              <dt class="text-xs font-medium uppercase text-muted-foreground">Referido</dt>
               <dd class="mt-0.5 text-sm">
                 {{ p.contactoEmergenciaNombre }} &middot; {{ p.contactoEmergenciaTelefono }}
+                @if (p.contactoEmergenciaEmail) {
+                  <br />{{ p.contactoEmergenciaEmail }}
+                }
+                <br /><span class="text-xs text-muted-foreground">{{
+                  p.contactoRecibeRecordatorios ? 'Recibe copia de los recordatorios' : 'No recibe recordatorios'
+                }}</span>
               </dd>
             </div>
           </dl>

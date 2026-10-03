@@ -24,18 +24,18 @@ export const INDICADORES_TESIS: readonly DefinicionIndicador[] = [
     hipotesis: 'H1: el sistema reduce el tiempo de registro',
     unidad: 'min',
     sentido: 'bajar',
-    formula: 'TPR = Σ TRC / NCR',
+    formula: 'TPR = Σ tiempo de cada registro / N.° de registros',
     valor: (i) => i.tiempoPromedioRegistroMinutos,
     base: (i) => `${i.registros} ${plural(i.registros, 'registro', 'registros')}`,
   },
   {
     clave: 'tns',
-    sigla: 'TNS',
+    sigla: 'TA',
     nombre: 'Tasa de ausentismo',
     hipotesis: 'H2: el sistema disminuye el ausentismo',
     unidad: '%',
     sentido: 'bajar',
-    formula: 'TNS = NI / (NI + NCC) × 100',
+    formula: 'TA = no asistidas sin aviso / citas elegibles × 100',
     valor: (i) => i.tasaAusentismo,
     base: (i) => `${i.inasistencias} de ${i.citasConDesenlace} ${plural(i.citasConDesenlace, 'cita', 'citas')} con desenlace`,
   },
@@ -46,10 +46,11 @@ export const INDICADORES_TESIS: readonly DefinicionIndicador[] = [
     hipotesis: 'H3: el sistema mejora la atencion de consultas',
     unidad: '%',
     sentido: 'subir',
-    formula: 'NCA = CA / TCR × 100',
-    valor: (i) => i.nivelConsultasAtendidas,
+    formula: 'NCA = resueltas en el primer contacto sin derivación / consultas recibidas × 100',
+    // Tesis v8: solo cuenta lo que resolvio el chatbot sin derivar al personal.
+    valor: (i) => i.nivelConsultasAtendidasAutomatico,
     base: (i) =>
-      `${i.consultasResueltas} de ${i.consultasCerradas} ${plural(i.consultasCerradas, 'consulta', 'consultas')} (${i.consultasResueltasBot} por el chatbot)`,
+      `${i.consultasResueltasBot} de ${i.consultasCerradas} ${plural(i.consultasCerradas, 'consulta', 'consultas')} resueltas por el chatbot`,
   },
 ];
 

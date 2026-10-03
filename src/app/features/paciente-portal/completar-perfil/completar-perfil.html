@@ -8,7 +8,12 @@
       <ui-input label="Documento de identidad" [control]="form.controls.documentoIdentidad" [requerido]="true" />
       <ui-input label="Fecha de nacimiento" type="date" [control]="form.controls.fechaNacimiento" [requerido]="true" />
       <ui-input label="Teléfono" [control]="form.controls.telefono" [requerido]="true" />
-      <ui-input label="Correo electrónico" type="email" [control]="form.controls.email" />
+      <ui-input
+        label="Correo electrónico"
+        type="email"
+        placeholder="Si lo dejas vacío, usamos el de tu cuenta"
+        [control]="form.controls.email"
+      />
       <ui-input label="Dirección" [control]="form.controls.direccion" />
       <ui-select label="Convenio o seguro" [opciones]="opcionesConvenio" [control]="form.controls.convenioSeguro" [requerido]="true" />
     </div>
@@ -25,10 +30,18 @@
     </div>
   </ui-card>
 
-  <ui-card titulo="Contacto de emergencia">
+  <ui-card titulo="Referido">
+    <p class="mb-4 text-sm text-muted-foreground">Un familiar o persona de confianza a quien podamos contactar.</p>
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      <ui-input label="Nombre del contacto" [control]="form.controls.contactoEmergenciaNombre" [requerido]="true" />
-      <ui-input label="Teléfono del contacto" [control]="form.controls.contactoEmergenciaTelefono" [requerido]="true" />
+      <ui-input label="Nombre del referido" [control]="form.controls.contactoEmergenciaNombre" [requerido]="true" />
+      <ui-input label="Teléfono del referido" [control]="form.controls.contactoEmergenciaTelefono" [requerido]="true" />
+      <div class="sm:col-span-2">
+        <ui-input label="Correo del referido" type="email" [control]="form.controls.contactoEmergenciaEmail" [requerido]="true" />
+      </div>
+      <label class="flex items-start gap-2 text-sm sm:col-span-2">
+        <input type="checkbox" [formControl]="form.controls.contactoRecibeRecordatorios" class="mt-0.5 rounded border-input" />
+        <span>Autorizo que le envíen a mi referido una copia de los recordatorios de mis citas (solo mi nombre, la fecha y la hora).</span>
+      </label>
     </div>
   </ui-card>
 
