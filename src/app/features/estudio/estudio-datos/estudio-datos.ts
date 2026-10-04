@@ -15,6 +15,7 @@ import { ModalComponent } from '../../../shared/ui/modal/modal';
 import { InputComponent } from '../../../shared/ui/input/input';
 import { ToastService } from '../../../shared/components/toast-notification/toast.service';
 import { TAMANO_PAGINA_POR_DEFECTO } from '../../../shared/constants/paginacion';
+import { codigoPaciente } from '../indicadores.util';
 
 const PESTANAS = ['Mediciones de registro', 'Consultas'] as const;
 type Pestana = (typeof PESTANAS)[number];
@@ -69,7 +70,7 @@ export class EstudioDatosComponent {
     { encabezado: 'Tipo', valor: (m) => m.tipo.replace('_', ' ').toLowerCase() },
     { encabezado: 'Canal', valor: (m) => m.canal },
     { encabezado: 'Duración', valor: (m) => (m.duracionSegundos === null ? '—' : this.duracion(m.duracionSegundos)) },
-    { encabezado: 'Paciente', valor: (m) => (m.pacienteId ? `#${m.pacienteId}` : '—') },
+    { encabezado: 'Paciente', valor: (m) => (m.pacienteId ? codigoPaciente(m.pacienteId) : 'Sin paciente') },
     { encabezado: 'Estado', valor: (m) => m.estado, clave: 'estadoMedicion' },
   ];
 
@@ -77,7 +78,7 @@ export class EstudioDatosComponent {
     { encabezado: 'Fecha', valor: (c) => HORA_LIMA.format(new Date(c.abiertaEn)) },
     { encabezado: 'Medio', valor: (c) => c.canal },
     { encabezado: 'Consulta', valor: (c) => c.resumen ?? c.intencion ?? '—' },
-    { encabezado: 'Paciente', valor: (c) => (c.pacienteId ? `#${c.pacienteId}` : 'Sin identificar') },
+    { encabezado: 'Paciente', valor: (c) => (c.pacienteId ? codigoPaciente(c.pacienteId) : 'Sin identificar') },
     { encabezado: 'Resultado', valor: (c) => c.resultado ?? 'ABIERTA', clave: 'resultadoConsulta' },
   ];
 

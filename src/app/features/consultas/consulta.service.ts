@@ -13,6 +13,19 @@ export interface TurnoConversacion {
   intencion: string | null;
 }
 
+/** Una consulta del historial ("Mis consultas" y ficha del paciente). */
+export interface HistorialConsulta {
+  id: number;
+  abiertaEn: string;
+  cerradaEn: string | null;
+  canal: string;
+  categoria: string | null;
+  resultado: string | null;
+  derivada: boolean;
+  resumen: string | null;
+  turnos: number;
+}
+
 export interface PreguntaFrecuente {
   id: number | null;
   pregunta: string;
@@ -37,6 +50,20 @@ export class ConsultaService {
 
   conversacion(id: number): Observable<TurnoConversacion[]> {
     return this.http.get<TurnoConversacion[]>(`${this.base}/${id}/conversacion`);
+  }
+
+  /** Consultas del paciente autenticado (portal). */
+  misConsultas(page = 0): Observable<Pagina<HistorialConsulta>> {
+    return this.http.get<Pagina<HistorialConsulta>>(`${this.base}/mias`, { params: { page, size: 10 } });
+  }
+
+  miConversacion(id: number): Observable<TurnoConversacion[]> {
+    return this.http.get<TurnoConversacion[]>(`${this.base}/mias/${id}/conversacion`);
+  }
+
+  /** Historial de un paciente (ficha en la intranet). */
+  dePaciente(pacienteId: number, page = 0): Observable<Pagina<HistorialConsulta>> {
+    return this.http.get<Pagina<HistorialConsulta>>(`${this.base}/paciente/${pacienteId}`, { params: { page, size: 10 } });
   }
 
   resolver(id: number, resuelta: boolean, nota: string | null): Observable<Consulta> {

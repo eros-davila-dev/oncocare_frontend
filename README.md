@@ -1,6 +1,6 @@
 # OncoCare — Frontend
 
-Interfaz del sistema de gestion de pacientes de la Fundacion Oncologica Three Partners. Angular 21 (standalone, signals) + Tailwind CSS 4, con **dos aplicaciones sobre el mismo codigo**:
+Interfaz del sistema de gestion de pacientes de una fundacion oncologica. Angular 21 (standalone, signals) + Tailwind CSS 4, con **dos aplicaciones sobre el mismo codigo**:
 
 | App | Para quien | Desarrollo | Docker |
 |---|---|---|---|

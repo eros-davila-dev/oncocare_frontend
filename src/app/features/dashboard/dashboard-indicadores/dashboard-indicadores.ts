@@ -7,7 +7,7 @@ import { ToastService } from '../../../shared/components/toast-notification/toas
 import { CardComponent } from '../../../shared/ui/card/card';
 import { ButtonComponent } from '../../../shared/ui/button/button';
 import { TabsComponent } from '../../../shared/ui/tabs/tabs';
-import { PageHeaderComponent } from '../../../shared/components/page-header/page-header';
+import { IconComponent } from '../../../shared/ui/icon/icon';
 import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner';
 import { formatoEtiquetaEnum } from '../../../shared/pipes/etiqueta-enum.pipe';
 import { descargarBlob, fechaCorta } from '../../estudio/indicadores.util';
@@ -37,6 +37,11 @@ const ESTADOS_CITA: Record<string, string> = {
   CANCELADA: 'Cancelada',
 };
 
+function saludoDelMomento(): string {
+  const hora = new Date().getHours();
+  return hora < 12 ? 'Buenos días' : hora < 19 ? 'Buenas tardes' : 'Buenas noches';
+}
+
 /**
  * Panel del personal: todo lo que se hizo en el periodo elegido. Tiempo de
  * registro de pacientes, citas y ausentismo, recordatorios enviados y
@@ -46,7 +51,7 @@ const ESTADOS_CITA: Record<string, string> = {
 @Component({
   selector: 'app-dashboard-indicadores',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, CardComponent, ButtonComponent, TabsComponent, PageHeaderComponent, LoadingSpinnerComponent],
+  imports: [ReactiveFormsModule, CardComponent, ButtonComponent, TabsComponent, LoadingSpinnerComponent, IconComponent],
   templateUrl: './dashboard-indicadores.html',
 })
 export class DashboardIndicadoresComponent {
@@ -62,6 +67,9 @@ export class DashboardIndicadoresComponent {
   /** El detalle lleva nombres de pacientes: no lo ve el investigador. */
   protected readonly puedeVerDetalle = this.authService.tieneAlgunRol('ADMIN', 'MEDICO', 'RECEPCIONISTA');
   protected readonly puedeDescargar = this.authService.tieneAlgunRol('ADMIN', 'RECEPCIONISTA');
+
+  protected readonly saludo = saludoDelMomento();
+  protected readonly nombre = () => this.authService.usuario()?.nombres?.split(' ')[0] ?? '';
 
   protected readonly diasPeriodo = signal<number | null>(30);
   protected readonly desdeControl = new FormControl(this.isoLocal(this.haceDias(30)), { nonNullable: true });

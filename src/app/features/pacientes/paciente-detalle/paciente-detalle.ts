@@ -9,12 +9,13 @@ import { CitaService } from '../../citas/cita.service';
 import { TratamientoService } from '../../tratamientos/tratamiento.service';
 import { ModalComponent } from '../../../shared/ui/modal/modal';
 import { TabsComponent } from '../../../shared/ui/tabs/tabs';
+import { HistorialConsultasComponent } from '../../consultas/historial-consultas/historial-consultas';
 import { BadgeComponent } from '../../../shared/ui/badge/badge';
 import { AvatarComponent } from '../../../shared/ui/avatar/avatar';
 import { EstadoColorPipe } from '../../../shared/pipes/estado-color.pipe';
 import { EtiquetaEnumPipe } from '../../../shared/pipes/etiqueta-enum.pipe';
 
-const TABS = ['Informacion', 'Datos clinicos', 'Contacto', 'Historial'] as const;
+const TABS = ['Informacion', 'Datos clinicos', 'Contacto', 'Historial', 'Consultas'] as const;
 type Tab = (typeof TABS)[number];
 
 /**
@@ -27,6 +28,7 @@ type Tab = (typeof TABS)[number];
   imports: [
     ModalComponent,
     TabsComponent,
+    HistorialConsultasComponent,
     BadgeComponent,
     AvatarComponent,
     EstadoColorPipe,

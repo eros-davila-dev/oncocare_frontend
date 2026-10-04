@@ -62,6 +62,12 @@ export const rutasPortal: Routes = [
         loadComponent: () => import('../features/paciente-portal/mis-citas/mis-citas').then((m) => m.MisCitasComponent),
       },
       {
+        path: 'mis-consultas',
+        title: 'Mis consultas',
+        canActivate: [authGuard, perfilCompletoGuard],
+        loadComponent: () => import('../features/paciente-portal/mis-consultas/mis-consultas').then((m) => m.MisConsultasComponent),
+      },
+      {
         path: 'mi-perfil',
         title: 'Mi perfil',
         canActivate: [authGuard, perfilCompletoGuard],

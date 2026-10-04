@@ -266,8 +266,61 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   @apply relative flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors;
 }
 @utility menu-item-active {
-  @apply bg-sidebar-accent text-sidebar-accent-foreground;
+  @apply bg-sidebar-accent font-semibold text-sidebar-accent-foreground;
+  box-shadow: inset 3px 0 0 var(--primary);
 }
 @utility menu-item-inactive {
   @apply text-sidebar-foreground hover:bg-muted;
+}
+
+/*
+ * Movimiento del portal: aparicion al hacer scroll (directiva appRevelar),
+ * zoom lento de la foto activa del carrusel y entrada del texto. Todo se
+ * desactiva si el usuario pidio menos movimiento en su sistema.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .revelar {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .revelar.revelado {
+    opacity: 1;
+    transform: none;
+  }
+  .zoom-lento {
+    animation: zoom-lento 7s ease-out forwards;
+  }
+  .entrar-texto > * {
+    animation: entrar-texto 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .entrar-texto > *:nth-child(2) { animation-delay: 0.08s; }
+  .entrar-texto > *:nth-child(3) { animation-delay: 0.16s; }
+  .entrar-texto > *:nth-child(4) { animation-delay: 0.24s; }
+  .flotar {
+    animation: flotar 6s ease-in-out infinite;
+  }
+}
+
+@keyframes zoom-lento {
+  from { transform: scale(1.12); }
+  to { transform: scale(1); }
+}
+
+@keyframes entrar-texto {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes flotar {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Fondo de las bandas oscuras del portal (misma familia que bg-login-hero). */
+@utility bg-portal-oscuro {
+  background:
+    radial-gradient(60rem 30rem at 85% 10%, oklch(0.45 0.16 280 / 35%), transparent 60%),
+    radial-gradient(50rem 30rem at 10% 90%, oklch(0.5 0.15 230 / 30%), transparent 60%),
+    linear-gradient(160deg, oklch(0.17 0.045 264) 0%, oklch(0.22 0.07 272) 100%);
 }

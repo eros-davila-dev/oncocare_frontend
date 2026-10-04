@@ -1,43 +1,123 @@
-<div class="grid min-h-screen grid-cols-1 lg:grid-cols-2">
-  <div class="relative hidden flex-col overflow-hidden bg-login-hero p-10 text-primary-foreground lg:flex">
-    <div class="absolute -right-24 -top-24 size-72 rounded-full bg-white/10"></div>
-    <div class="absolute -bottom-32 -left-16 size-80 rounded-full bg-white/10"></div>
-    <ui-icon name="heart-pulse" [size]="320" clase="pointer-events-none absolute -right-16 bottom-0 text-white/[0.07]" />
-
-    <div class="relative z-10 flex flex-1 flex-col items-center justify-center gap-6">
-      <div class="flex size-[640px] items-center justify-center rounded-full border border-white/10">
-        <ui-brand-logo tamano="hero" />
+<div class="grid min-h-dvh grid-cols-1 bg-canvas lg:grid-cols-[1.15fr_1fr]">
+  <!-- Panel de fotos (pantallas grandes) / franja superior (celular) -->
+  <aside
+    class="relative isolate h-56 overflow-hidden bg-login-hero text-white sm:h-64 lg:sticky lg:top-0 lg:h-dvh"
+    aria-label="Presentación"
+  >
+    @for (e of escenas; track e.imagen; let i = $index) {
+      <div
+        class="absolute inset-0 -z-10 transition-opacity duration-1000 ease-out"
+        [class]="i === indice() ? 'opacity-100' : 'opacity-0'"
+        [attr.aria-hidden]="i !== indice()"
+      >
+        <img
+          [src]="e.imagen"
+          alt=""
+          class="size-full object-cover"
+          [class.zoom-lento]="i === indice()"
+          [attr.fetchpriority]="i === 0 ? 'high' : null"
+          decoding="async"
+        />
       </div>
-      <span class="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold">
-        <ui-icon name="heart-pulse" [size]="14" />
-        Fundación Oncológica Three Partners
-      </span>
-    </div>
+    }
+    <div class="absolute inset-0 -z-10 bg-gradient-to-t from-[oklch(0.14_0.05_264/95%)] via-[oklch(0.17_0.06_270/60%)] to-[oklch(0.17_0.06_270/30%)]"></div>
 
-    <div class="relative z-10 flex flex-wrap justify-center gap-x-6 gap-y-2 pt-8 text-xs text-primary-foreground/70">
-      <span class="flex items-center gap-1.5"><ui-icon name="shield" [size]="14" /> Atención segura</span>
-      <span class="flex items-center gap-1.5"><ui-icon name="users" [size]="14" /> Seguimiento continuo</span>
-      <span class="flex items-center gap-1.5"><ui-icon name="heart" [size]="14" /> Mejor calidad de vida</span>
-    </div>
-  </div>
-
-  <div class="flex flex-col items-center justify-center bg-canvas px-6 py-12 sm:px-10">
-    <div class="w-full max-w-sm">
-      <div class="mb-8 flex justify-center lg:hidden">
-        <ui-brand-logo tamano="grande" />
+    <div class="flex h-full flex-col justify-between p-5 sm:p-8 lg:p-12">
+      <div class="flex items-center justify-between gap-3">
+        <a [routerLink]="esPortal ? '/' : '/auth/login'" class="rounded-xl bg-white/95 px-2.5 py-1.5 shadow-lg shadow-black/20">
+          <img src="/logo-oncocare.png" alt="OncoCare" class="h-10 w-auto sm:h-12" />
+        </a>
+        @if (esPortal) {
+          <a
+            routerLink="/"
+            class="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-4 text-sm font-semibold backdrop-blur transition hover:bg-white/20"
+          >
+            <ui-icon name="chevron-left" [size]="16" /> Volver al inicio
+          </a>
+        } @else {
+          <span class="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-xs font-semibold backdrop-blur">
+            <ui-icon name="shield-check" [size]="14" /> Acceso del personal
+          </span>
+        }
       </div>
 
-      <div class="rounded-2xl border border-border bg-card p-8 shadow-card sm:p-10">
-        <h2 class="font-display text-2xl font-bold">{{ titulo() }}</h2>
+      <div class="hidden max-w-xl lg:block">
+        @for (e of escenas; track e.imagen; let i = $index) {
+          @if (i === indice()) {
+            <div class="entrar-texto" aria-live="off">
+              <p class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-sm font-semibold backdrop-blur">
+                <span class="size-2 rounded-full bg-[oklch(0.8_0.14_190)]"></span>
+                {{ esPortal ? 'Portal del paciente' : 'Intranet de la fundación' }}
+              </p>
+              <h2 class="mt-5 font-display text-4xl leading-tight font-extrabold tracking-tight text-balance xl:text-5xl">{{ e.titulo }}</h2>
+              <p class="mt-4 text-lg text-white/80">{{ e.texto }}</p>
+            </div>
+          }
+        }
+
+        <div class="mt-10 flex items-center gap-3">
+          <div class="flex flex-1 gap-2">
+            @for (e of escenas; track e.imagen; let i = $index) {
+              <button
+                type="button"
+                class="h-8 flex-1"
+                [attr.aria-label]="'Mostrar: ' + e.titulo"
+                [attr.aria-current]="i === indice() ? 'true' : null"
+                (click)="ir(i)"
+              >
+                <span class="block h-1 rounded-full transition-colors" [class]="i === indice() ? 'bg-white' : 'bg-white/30 hover:bg-white/50'"></span>
+              </button>
+            }
+          </div>
+          <button
+            type="button"
+            class="grid size-9 place-items-center rounded-full border border-white/30 bg-white/10 backdrop-blur transition hover:bg-white/20"
+            [attr.aria-label]="pausado() ? 'Reanudar las fotos' : 'Pausar las fotos'"
+            [attr.aria-pressed]="pausado()"
+            (click)="pausado.update((v) => !v)"
+          >
+            <ui-icon [name]="pausado() ? 'play' : 'pause'" [size]="15" />
+          </button>
+        </div>
+
+        <ul class="mt-8 flex flex-wrap gap-x-6 gap-y-2 border-t border-white/15 pt-6 text-sm text-white/75">
+          @for (g of garantias; track g.texto) {
+            <li class="flex items-center gap-2"><ui-icon [name]="g.icono" [size]="16" /> {{ g.texto }}</li>
+          }
+        </ul>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Formulario -->
+  <main class="relative flex flex-col px-5 pb-10 sm:px-10 lg:justify-center lg:py-12">
+    <button
+      type="button"
+      class="absolute top-4 right-4 hidden size-10 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:grid"
+      (click)="themeService.alternar()"
+    >
+      <ui-icon [name]="themeService.tema() === 'oscuro' ? 'sun' : 'moon'" [size]="18" />
+      <span class="sr-only">Cambiar entre modo claro y oscuro</span>
+    </button>
+
+    <div class="relative z-10 mx-auto -mt-12 w-full max-w-md lg:mt-0">
+      <div class="rounded-3xl border border-border bg-card p-7 shadow-modal sm:p-10">
+        <span class="grid size-12 place-items-center rounded-2xl bg-primary-soft text-primary">
+          <ui-icon [name]="esPortal ? 'heart-pulse' : 'shield-check'" [size]="24" />
+        </span>
+        <h1 class="mt-5 font-display text-3xl font-extrabold tracking-tight">{{ titulo() }}</h1>
         @if (descripcion()) {
-          <p class="mt-1 text-sm text-muted-foreground">{{ descripcion() }}</p>
+          <p class="mt-2 text-muted-foreground">{{ descripcion() }}</p>
         }
         <div class="mt-8">
           <ng-content />
         </div>
       </div>
 
-      <p class="mt-6 text-center text-xs text-muted-foreground">OncoCare v1.0.0 &middot; Cuidando hoy un mejor mañana</p>
+      <p class="mt-6 flex items-center justify-center gap-2 text-center text-xs text-muted-foreground">
+        <ui-icon name="lock" [size]="13" />
+        Conexión segura · Tus datos protegidos por la Ley N.° 29733
+      </p>
     </div>
-  </div>
+  </main>
 </div>

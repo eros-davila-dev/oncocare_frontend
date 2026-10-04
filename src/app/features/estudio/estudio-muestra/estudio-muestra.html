@@ -36,115 +36,74 @@
   </div>
 </section>
 
-<section class="mt-8" aria-labelledby="titulo-muestra">
+<section class="mt-8" aria-labelledby="titulo-sesiones">
   <div class="flex flex-wrap items-end justify-between gap-3">
     <div>
-      <h2 id="titulo-muestra" class="font-display text-lg font-bold">Muestra</h2>
+      <h2 id="titulo-sesiones" class="font-display text-lg font-bold">Sesiones del estudio</h2>
       <p class="text-sm text-muted-foreground">
-        {{ incluidos() }} participantes incluidos (la tesis plantea 30 de 32 pacientes activos). Solo ellos cuentan en
-        el alcance «muestra» y en la tabla pareada.
+        {{ sesionesPrevistas }} sesiones por etapa (lunes, miércoles y viernes): {{ sesionesPrevistas * 2 }} en total. La unidad de
+        análisis son las sesiones, no un grupo fijo de pacientes.
       </p>
     </div>
-    <ui-button (click)="abrirIncluir()">Incluir paciente</ui-button>
+    <p class="text-sm font-semibold">{{ totalSesiones() }} sesiones configuradas</p>
   </div>
 
-  <div class="mt-3 overflow-x-auto rounded-xl border border-border bg-card shadow-card">
-    <table class="w-full border-collapse text-left text-sm">
-      <thead class="bg-muted/70 text-xs text-muted-foreground">
-        <tr>
-          <th class="px-3 py-3 font-semibold">Código</th>
-          <th class="px-3 py-3 font-semibold">Paciente</th>
-          <th class="px-3 py-3 font-semibold">Consentimiento</th>
-          <th class="px-3 py-3 font-semibold">Estado</th>
-          <th class="px-3 py-3"><span class="sr-only">Acciones</span></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (p of participantes(); track p.id) {
-          <tr class="border-t border-border">
-            <td class="px-3 py-3 font-semibold">{{ p.codigo }}</td>
-            <td class="px-3 py-3">
-              <p>{{ p.nombreCompleto }}</p>
-              <p class="text-xs text-muted-foreground">{{ p.documentoIdentidad }}</p>
-            </td>
-            <td class="px-3 py-3">{{ fechaCorta(p.fechaConsentimiento) }}</td>
-            <td class="px-3 py-3">
-              @if (p.incluido) {
-                <ui-badge color="success">Incluido</ui-badge>
-              } @else {
-                <ui-badge color="danger">Excluido</ui-badge>
-                <p class="mt-1 text-xs text-muted-foreground">{{ etiquetaMotivo(p.motivoExclusion) }}</p>
-              }
-            </td>
-            <td class="px-3 py-3 text-right">
-              @if (p.incluido) {
-                <ui-button variante="ghost" (click)="abrirExcluir(p)">Excluir</ui-button>
-              } @else {
-                <ui-button variante="ghost" (click)="reincorporar(p)">Reincorporar</ui-button>
-              }
-            </td>
-          </tr>
-        } @empty {
-          <tr>
-            <td colspan="5" class="px-3 py-8 text-center text-muted-foreground">
-              Aún no hay participantes. Incluya a los pacientes que firmaron el consentimiento informado.
-            </td>
-          </tr>
+  <div class="mt-3 grid grid-cols-1 gap-4 xl:grid-cols-2">
+    @for (etapa of etapas(); track etapa.fase) {
+      <ui-card class="block">
+        <div class="flex items-center justify-between gap-2">
+          <h3 class="font-display text-base font-bold">{{ etapa.fase === 'PRETEST' ? 'Pretest' : 'Postest' }}</h3>
+          @if (etapa.resumen; as r) {
+            <ui-badge [color]="r.sesiones.length === sesionesPrevistas ? 'success' : 'warning'">
+              {{ r.sesiones.length }} / {{ sesionesPrevistas }} sesiones
+            </ui-badge>
+          }
+        </div>
+        @if (etapa.resumen; as r) {
+          <div class="mt-3 overflow-x-auto rounded-lg border border-border">
+            <table class="w-full border-collapse text-left text-sm">
+              <thead class="bg-muted/70 text-xs text-muted-foreground">
+                <tr>
+                  <th class="px-3 py-2 font-semibold">N.°</th>
+                  <th class="px-3 py-2 font-semibold">Fecha</th>
+                  <th class="px-3 py-2 text-right font-semibold">Registros (TPR)</th>
+                  <th class="px-3 py-2 text-right font-semibold">Citas elegibles (TA)</th>
+                  <th class="px-3 py-2 text-right font-semibold">Consultas (NCA)</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (s of r.sesiones; track s.fecha) {
+                  <tr class="border-t border-border">
+                    <td class="px-3 py-2 font-semibold">{{ s.numero }}</td>
+                    <td class="px-3 py-2">{{ diaSemana(s.fecha) }} {{ fechaCorta(s.fecha) }}</td>
+                    <td class="px-3 py-2 text-right" [class.text-muted-foreground]="!s.registros">{{ s.registros }}</td>
+                    <td class="px-3 py-2 text-right" [class.text-muted-foreground]="!s.citasElegibles">{{ s.citasElegibles }}</td>
+                    <td class="px-3 py-2 text-right" [class.text-muted-foreground]="!s.consultas">{{ s.consultas }}</td>
+                  </tr>
+                }
+              </tbody>
+              <tfoot class="border-t border-border bg-muted/40 font-semibold">
+                <tr>
+                  <td class="px-3 py-2" colspan="2">Total</td>
+                  <td class="px-3 py-2 text-right">{{ r.registros }}</td>
+                  <td class="px-3 py-2 text-right">{{ r.citasElegibles }}</td>
+                  <td class="px-3 py-2 text-right">{{ r.consultas }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          @if (r.sesiones.length !== sesionesPrevistas) {
+            <p class="mt-2 text-sm text-warning">
+              Con estas fechas la etapa tiene {{ r.sesiones.length }} sesiones; ajuste las fechas para llegar a {{ sesionesPrevistas }}.
+            </p>
+          }
+        } @else {
+          <p class="mt-2 text-sm text-muted-foreground">{{ etapa.aviso ?? 'Configure las fechas de esta etapa.' }}</p>
         }
-      </tbody>
-    </table>
+      </ui-card>
+    }
   </div>
 </section>
-
-<ui-modal
-  titulo="Incluir paciente en la muestra"
-  descripcion="Requiere el consentimiento informado firmado (Anexo de la tesis)."
-  [abierto]="modalIncluir()"
-  (cerrar)="modalIncluir.set(false)"
->
-  <form class="grid gap-4" (ngSubmit)="incluir()">
-    <ui-select
-      label="Paciente"
-      placeholder="Seleccione un paciente"
-      [control]="formIncluir.controls.pacienteId"
-      [opciones]="opcionesPacientes()"
-      [requerido]="true"
-    />
-    <ui-input
-      label="Fecha del consentimiento"
-      type="date"
-      [control]="formIncluir.controls.fechaConsentimiento"
-      [requerido]="true"
-    />
-    <ui-input label="Observación" [control]="formIncluir.controls.observacion" />
-    <div class="flex justify-end gap-2">
-      <ui-button variante="outline" (click)="modalIncluir.set(false)">Cancelar</ui-button>
-      <ui-button type="submit" [cargando]="enviando()">Incluir</ui-button>
-    </div>
-  </form>
-</ui-modal>
-
-<ui-modal
-  titulo="Excluir del estudio"
-  descripcion="Sus datos no se borran: solo dejan de contar en la muestra y en la tabla pareada."
-  [abierto]="participanteAExcluir() !== null"
-  (cerrar)="participanteAExcluir.set(null)"
->
-  <form class="grid gap-4" (ngSubmit)="excluir()">
-    <ui-select
-      label="Motivo (criterios de exclusión de la tesis)"
-      placeholder="Seleccione el motivo"
-      [control]="formExcluir.controls.motivo"
-      [opciones]="motivosExclusion"
-      [requerido]="true"
-    />
-    <ui-input label="Observación" [control]="formExcluir.controls.observacion" />
-    <div class="flex justify-end gap-2">
-      <ui-button variante="outline" (click)="participanteAExcluir.set(null)">Cancelar</ui-button>
-      <ui-button type="submit" variante="danger">Excluir</ui-button>
-    </div>
-  </form>
-</ui-modal>
 
 <ui-confirm-dialog
   variante="warning"

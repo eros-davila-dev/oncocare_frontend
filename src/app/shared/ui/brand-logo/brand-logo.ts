@@ -18,7 +18,15 @@ const ALTO_POR_TAMANO: Record<TamanoBrandLogo, string> = {
 @Component({
   selector: 'ui-brand-logo',
   host: { class: 'inline-flex' },
-  template: ` <img src="/logo-oncocare.png" alt="OncoCare" [class]="'w-auto object-contain ' + altoClase()" /> `,
+  // En modo oscuro el texto azul marino del logo se pierde sobre el fondo:
+  // se le da una base clara (salvo en el panel de marca, que ya es su fondo).
+  template: `
+    <img
+      src="/logo-oncocare.png"
+      alt="OncoCare"
+      [class]="'w-auto object-contain ' + altoClase() + (tamano() === 'hero' ? '' : ' dark:rounded-xl dark:bg-white/95 dark:px-2 dark:py-1')"
+    />
+  `,
 })
 export class BrandLogoComponent {
   tamano = input<TamanoBrandLogo>('normal');

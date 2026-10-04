@@ -11,7 +11,7 @@
     </div>
   } @else {
     <form class="space-y-5" [formGroup]="form" (ngSubmit)="registrar()">
-      <ui-input label="Nombres completos" icono="mail" placeholder="Tu nombre y apellido" [control]="form.controls.nombres" [requerido]="true" />
+      <ui-input label="Nombres completos" icono="user-check" placeholder="Tu nombre y apellido" [control]="form.controls.nombres" [requerido]="true" />
       <ui-input label="Correo electrónico" type="email" icono="mail" placeholder="tu@correo.com" [control]="form.controls.email" [requerido]="true" />
       <ui-input label="Contraseña" type="password" icono="lock" placeholder="Mínimo 8 caracteres" [control]="form.controls.password" [requerido]="true" />
       <ui-input label="Confirmar contraseña" type="password" icono="lock" placeholder="Repite tu contraseña" [control]="form.controls.confirmacion" [requerido]="true" />

@@ -1,42 +1,18 @@
 <div class="flex min-h-dvh flex-col bg-background text-[1.0625rem]">
-  <header class="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
-    <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-      <a routerLink="/" class="shrink-0" aria-label="Inicio del portal">
-        <ui-brand-logo tamano="compacto" />
+  <header class="sticky top-0 z-40 border-b border-border/70 bg-background/85 backdrop-blur-xl supports-[backdrop-filter]:bg-background/70">
+    <div class="mx-auto flex h-18 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
+      <a routerLink="/" class="shrink-0 rounded-lg" aria-label="Inicio del portal">
+        <ui-brand-logo tamano="normal" />
       </a>
 
-      <nav class="hidden items-center gap-1 md:flex" aria-label="Principal">
-        <a
-          routerLink="/"
-          routerLinkActive="text-primary"
-          [routerLinkActiveOptions]="{ exact: true }"
-          class="rounded-lg px-3 py-2 font-semibold text-muted-foreground hover:text-foreground"
-          >Inicio</a
-        >
-        <a
-          routerLink="/preguntas-frecuentes"
-          routerLinkActive="text-primary"
-          class="rounded-lg px-3 py-2 font-semibold text-muted-foreground hover:text-foreground"
-          >Preguntas frecuentes</a
-        >
-        <a
-          routerLink="/recordatorios-telegram"
-          routerLinkActive="text-primary"
-          class="rounded-lg px-3 py-2 font-semibold text-muted-foreground hover:text-foreground"
-          >Recordatorios</a
-        >
-        @if (authService.estaAutenticado()) {
+      <nav class="hidden items-center gap-1 rounded-full border border-border bg-muted/60 p-1 md:flex" aria-label="Principal">
+        @for (enlace of enlaces(); track enlace.ruta) {
           <a
-            routerLink="/mis-citas"
-            routerLinkActive="text-primary"
-            class="rounded-lg px-3 py-2 font-semibold text-muted-foreground hover:text-foreground"
-            >Mis citas</a
-          >
-          <a
-            routerLink="/mi-perfil"
-            routerLinkActive="text-primary"
-            class="rounded-lg px-3 py-2 font-semibold text-muted-foreground hover:text-foreground"
-            >Mi perfil</a
+            [routerLink]="enlace.ruta"
+            routerLinkActive="bg-background text-foreground shadow-card"
+            [routerLinkActiveOptions]="{ exact: enlace.ruta === '/' }"
+            class="rounded-full px-4 py-2 text-[0.95rem] font-semibold text-muted-foreground transition-colors hover:text-foreground"
+            >{{ enlace.etiqueta }}</a
           >
         }
       </nav>
@@ -44,7 +20,7 @@
       <div class="flex items-center gap-2">
         <button
           type="button"
-          class="grid size-11 place-items-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+          class="grid size-11 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           (click)="themeService.alternar()"
         >
           <ui-icon [name]="themeService.tema() === 'oscuro' ? 'sun' : 'moon'" [size]="20" />
@@ -53,7 +29,7 @@
         @if (authService.estaAutenticado()) {
           <button
             type="button"
-            class="hidden min-h-11 items-center gap-2 rounded-lg px-3 font-semibold text-muted-foreground hover:bg-muted hover:text-foreground md:inline-flex"
+            class="hidden min-h-11 items-center gap-2 rounded-full px-4 font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:inline-flex"
             (click)="cerrarSesion()"
           >
             <ui-icon name="log-out" [size]="18" /> Salir
@@ -61,13 +37,13 @@
         } @else {
           <a
             routerLink="/auth/login"
-            class="hidden min-h-11 items-center rounded-lg bg-primary px-4 font-semibold text-primary-foreground hover:bg-primary-hover md:inline-flex"
-            >Ingresar</a
-          >
+            class="hidden min-h-11 items-center gap-2 rounded-full bg-primary px-5 font-semibold text-primary-foreground shadow-button transition hover:bg-primary-hover md:inline-flex"
+            >Ingresar <ui-icon name="arrow-right" [size]="17"
+          /></a>
         }
         <button
           type="button"
-          class="grid size-11 place-items-center rounded-lg text-muted-foreground hover:bg-muted md:hidden"
+          class="grid size-11 place-items-center rounded-full text-muted-foreground hover:bg-muted md:hidden"
           [attr.aria-expanded]="menuAbierto()"
           aria-controls="menu-movil"
           (click)="menuAbierto.update((v) => !v)"
@@ -79,28 +55,29 @@
     </div>
 
     @if (menuAbierto()) {
-      <nav id="menu-movil" class="border-t border-border px-4 pb-4 md:hidden" aria-label="Menú móvil">
+      <nav id="menu-movil" class="border-t border-border bg-background px-4 pb-4 md:hidden" aria-label="Menú móvil">
         <ul class="flex flex-col gap-1 pt-2" (click)="menuAbierto.set(false)">
-          <li><a routerLink="/" class="block rounded-lg px-3 py-3 font-semibold hover:bg-muted">Inicio</a></li>
-          <li>
-            <a routerLink="/preguntas-frecuentes" class="block rounded-lg px-3 py-3 font-semibold hover:bg-muted">Preguntas frecuentes</a>
-          </li>
-          <li>
-            <a routerLink="/recordatorios-telegram" class="block rounded-lg px-3 py-3 font-semibold hover:bg-muted">Recordatorios por Telegram</a>
-          </li>
-          @if (authService.estaAutenticado()) {
-            <li><a routerLink="/mis-citas" class="block rounded-lg px-3 py-3 font-semibold hover:bg-muted">Mis citas</a></li>
-            <li><a routerLink="/mi-perfil" class="block rounded-lg px-3 py-3 font-semibold hover:bg-muted">Mi perfil</a></li>
+          @for (enlace of enlaces(); track enlace.ruta) {
             <li>
-              <button type="button" class="w-full rounded-lg px-3 py-3 text-left font-semibold hover:bg-muted" (click)="cerrarSesion()">
-                Salir
+              <a
+                [routerLink]="enlace.ruta"
+                routerLinkActive="bg-primary-soft text-primary"
+                [routerLinkActiveOptions]="{ exact: enlace.ruta === '/' }"
+                class="flex items-center gap-3 rounded-xl px-3 py-3 font-semibold hover:bg-muted"
+              >
+                <ui-icon [name]="enlace.icono" [size]="20" /> {{ enlace.etiqueta }}
+              </a>
+            </li>
+          }
+          @if (authService.estaAutenticado()) {
+            <li>
+              <button type="button" class="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left font-semibold hover:bg-muted" (click)="cerrarSesion()">
+                <ui-icon name="log-out" [size]="20" /> Salir
               </button>
             </li>
           } @else {
-            <li>
-              <a routerLink="/auth/login" class="block rounded-lg bg-primary px-3 py-3 text-center font-semibold text-primary-foreground"
-                >Ingresar</a
-              >
+            <li class="pt-2">
+              <a routerLink="/auth/login" class="block rounded-xl bg-primary px-3 py-3 text-center font-semibold text-primary-foreground">Ingresar</a>
             </li>
           }
         </ul>
@@ -108,14 +85,38 @@
     }
   </header>
 
-  <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:py-10">
+  <main [class]="esPortada() ? 'w-full flex-1' : 'mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-10'">
     <router-outlet />
   </main>
 
-  <footer class="border-t border-border">
-    <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-sm text-muted-foreground">
-      <p>© {{ anio }} Fundación oncológica · Portal del paciente</p>
-      <p>Tus datos personales están protegidos conforme a la Ley N.° 29733.</p>
+  <footer class="border-t border-border bg-card">
+    <div class="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr]">
+      <div>
+        <ui-brand-logo tamano="normal" />
+        <p class="mt-4 max-w-sm text-muted-foreground">
+          Portal del paciente de la fundación: tus citas, recordatorios y respuestas a tus dudas, en un solo lugar.
+        </p>
+      </div>
+      <div>
+        <h2 class="font-display font-bold">Portal</h2>
+        <ul class="mt-3 space-y-2 text-muted-foreground">
+          @for (enlace of enlaces(); track enlace.ruta) {
+            <li><a [routerLink]="enlace.ruta" class="hover:text-primary">{{ enlace.etiqueta }}</a></li>
+          }
+        </ul>
+      </div>
+      <div>
+        <h2 class="font-display font-bold">Tu privacidad</h2>
+        <p class="mt-3 flex items-start gap-2 text-muted-foreground">
+          <ui-icon name="shield-check" [size]="20" clase="mt-0.5 shrink-0 text-success" />
+          Tus datos personales están protegidos conforme a la Ley N.° 29733.
+        </p>
+      </div>
+    </div>
+    <div class="border-t border-border">
+      <p class="mx-auto max-w-6xl px-4 py-5 text-sm text-muted-foreground sm:px-6">
+        © {{ anio }} Fundación oncológica · Portal del paciente
+      </p>
     </div>
   </footer>
 
