@@ -2,58 +2,48 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { EstudioService } from '../estudio.service';
-import { PacienteService } from '../../pacientes/paciente.service';
-import { Fase, FaseEstudio, MotivoExclusion, Participante } from '../../../core/models/estudio.model';
+import { Fase, FaseEstudio, ResumenRecoleccion } from '../../../core/models/estudio.model';
 import { ErrorResponse } from '../../../core/models/error.model';
 import { CardComponent } from '../../../shared/ui/card/card';
 import { ButtonComponent } from '../../../shared/ui/button/button';
 import { InputComponent } from '../../../shared/ui/input/input';
-import { SelectComponent, type OpcionSelect } from '../../../shared/ui/select/select';
-import { ModalComponent } from '../../../shared/ui/modal/modal';
 import { BadgeComponent } from '../../../shared/ui/badge/badge';
 import { ToastService } from '../../../shared/components/toast-notification/toast.service';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog';
 import { fechaCorta } from '../indicadores.util';
 
-const MOTIVOS_EXCLUSION: OpcionSelect[] = [
-  { value: 'SUSPENDIO_TRATAMIENTO', label: 'Suspendió el tratamiento' },
-  { value: 'FALLECIO', label: 'Falleció' },
-  { value: 'RETIRO_CONSENTIMIENTO', label: 'Retiró el consentimiento' },
-  { value: 'REGISTROS_INCOMPLETOS', label: 'Registros incompletos o ilegibles' },
-  { value: 'OTRO', label: 'Otro' },
-];
+/** Sesiones por etapa previstas en la tesis (lunes, miercoles y viernes). */
+const SESIONES_PREVISTAS = 13;
 
 interface FormularioFase {
   fase: Fase;
   form: FormGroup<{ fechaInicio: FormControl<string>; fechaFin: FormControl<string> }>;
 }
 
+interface EtapaSesiones {
+  fase: Fase;
+  resumen: ResumenRecoleccion | null;
+  aviso: string | null;
+}
+
 /**
- * Configuracion del diseno pretest-postest: fechas de cada fase (cerrarla
- * congela sus resultados) y muestra de participantes con consentimiento.
+ * Fases y sesiones del estudio (tesis v8, opcion B): fechas de cada fase
+ * (cerrarla congela sus resultados) y las 13 + 13 sesiones de lunes,
+ * miercoles y viernes con los eventos de cada indicador. La unidad de
+ * analisis son las sesiones; no hay una muestra fija de participantes.
  */
 @Component({
   selector: 'app-estudio-muestra',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    ReactiveFormsModule,
-    CardComponent,
-    ButtonComponent,
-    InputComponent,
-    SelectComponent,
-    ModalComponent,
-    BadgeComponent,
-    ConfirmDialogComponent,
-  ],
+  imports: [ReactiveFormsModule, CardComponent, ButtonComponent, InputComponent, BadgeComponent, ConfirmDialogComponent],
   templateUrl: './estudio-muestra.html',
 })
 export class EstudioMuestraComponent {
   private readonly estudioService = inject(EstudioService);
-  private readonly pacienteService = inject(PacienteService);
   private readonly toast = inject(ToastService);
 
   protected readonly fechaCorta = fechaCorta;
-  protected readonly motivosExclusion = MOTIVOS_EXCLUSION;
+  protected readonly sesionesPrevistas = SESIONES_PREVISTAS;
 
   protected readonly fases = signal<FaseEstudio[]>([]);
   protected readonly formulariosFase: FormularioFase[] = (['PRETEST', 'POSTEST'] as Fase[]).map((fase) => ({
@@ -64,33 +54,29 @@ export class EstudioMuestraComponent {
     }),
   }));
 
-  protected readonly participantes = signal<Participante[]>([]);
-  protected readonly incluidos = computed(() => this.participantes().filter((p) => p.incluido).length);
-  protected readonly opcionesPacientes = signal<OpcionSelect[]>([]);
+  protected readonly etapas = signal<EtapaSesiones[]>([
+    { fase: 'PRETEST', resumen: null, aviso: null },
+    { fase: 'POSTEST', resumen: null, aviso: null },
+  ]);
+  protected readonly totalSesiones = computed(() =>
+    this.etapas().reduce((total, e) => total + (e.resumen?.sesiones.length ?? 0), 0),
+  );
 
-  protected readonly modalIncluir = signal(false);
-  protected readonly formIncluir = new FormGroup({
-    pacienteId: new FormControl<number | null>(null, { validators: [Validators.required] }),
-    fechaConsentimiento: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    observacion: new FormControl(''),
-  });
-
-  protected readonly participanteAExcluir = signal<Participante | null>(null);
-  protected readonly formExcluir = new FormGroup({
-    motivo: new FormControl<MotivoExclusion | null>(null, { validators: [Validators.required] }),
-    observacion: new FormControl(''),
-  });
-
-  protected readonly enviando = signal(false);
   protected readonly faseACerrar = signal<Fase | null>(null);
 
   constructor() {
     this.cargarFases();
-    this.cargarParticipantes();
   }
 
   protected estadoDe(fase: Fase): FaseEstudio | undefined {
     return this.fases().find((f) => f.fase === fase);
+  }
+
+  /** "Lun", "Mié", "Vie": se lee de un vistazo que son dias de sesion. */
+  protected diaSemana(iso: string): string {
+    const [a, m, d] = iso.split('-').map(Number);
+    const dia = new Date(a, m - 1, d).toLocaleDateString('es-PE', { weekday: 'short' }).replace('.', '');
+    return dia.charAt(0).toUpperCase() + dia.slice(1);
   }
 
   protected guardarFase(item: FormularioFase): void {
@@ -123,79 +109,6 @@ export class EstudioMuestraComponent {
     });
   }
 
-  protected abrirIncluir(): void {
-    this.formIncluir.reset({ fechaConsentimiento: '' });
-    if (this.opcionesPacientes().length === 0) {
-      this.pacienteService.buscar('', 0, 100).subscribe((pagina) => {
-        const yaIncluidos = new Set(this.participantes().map((p) => p.pacienteId));
-        this.opcionesPacientes.set(
-          pagina.content
-            .filter((p) => !yaIncluidos.has(p.id))
-            .map((p) => ({ value: p.id, label: `${p.nombres} ${p.apellidos} - ${p.documentoIdentidad}` })),
-        );
-      });
-    }
-    this.modalIncluir.set(true);
-  }
-
-  protected incluir(): void {
-    if (this.formIncluir.invalid) {
-      this.formIncluir.markAllAsTouched();
-      return;
-    }
-    const v = this.formIncluir.getRawValue();
-    this.enviando.set(true);
-    this.estudioService.incluirParticipante(v.pacienteId!, v.fechaConsentimiento, v.observacion || null).subscribe({
-      next: (p) => {
-        this.enviando.set(false);
-        this.modalIncluir.set(false);
-        this.toast.exito(`Paciente incluido como ${p.codigo}`);
-        this.opcionesPacientes.set([]);
-        this.cargarParticipantes();
-      },
-      error: (e: HttpErrorResponse) => {
-        this.enviando.set(false);
-        this.toast.error(this.mensaje(e));
-      },
-    });
-  }
-
-  protected abrirExcluir(participante: Participante): void {
-    this.formExcluir.reset();
-    this.participanteAExcluir.set(participante);
-  }
-
-  protected excluir(): void {
-    const participante = this.participanteAExcluir();
-    if (!participante || this.formExcluir.invalid) {
-      this.formExcluir.markAllAsTouched();
-      return;
-    }
-    const v = this.formExcluir.getRawValue();
-    this.estudioService.excluirParticipante(participante.id, v.motivo!, v.observacion || null).subscribe({
-      next: () => {
-        this.participanteAExcluir.set(null);
-        this.toast.exito(`${participante.codigo} excluido del estudio (sus datos se conservan)`);
-        this.cargarParticipantes();
-      },
-      error: (e: HttpErrorResponse) => this.toast.error(this.mensaje(e)),
-    });
-  }
-
-  protected reincorporar(participante: Participante): void {
-    this.estudioService.reincorporarParticipante(participante.id).subscribe({
-      next: () => {
-        this.toast.exito(`${participante.codigo} reincorporado`);
-        this.cargarParticipantes();
-      },
-      error: (e: HttpErrorResponse) => this.toast.error(this.mensaje(e)),
-    });
-  }
-
-  protected etiquetaMotivo(motivo: MotivoExclusion | null): string {
-    return MOTIVOS_EXCLUSION.find((m) => m.value === motivo)?.label ?? '';
-  }
-
   private cargarFases(): void {
     this.estudioService.fases().subscribe((fases) => {
       this.fases.set(fases);
@@ -208,11 +121,21 @@ export class EstudioMuestraComponent {
           item.form.disable();
         }
       }
+      this.cargarSesiones();
     });
   }
 
-  private cargarParticipantes(): void {
-    this.estudioService.participantes().subscribe((lista) => this.participantes.set(lista));
+  private cargarSesiones(): void {
+    for (const fase of ['PRETEST', 'POSTEST'] as Fase[]) {
+      this.estudioService.recoleccion(fase).subscribe({
+        next: (resumen) => this.actualizarEtapa({ fase, resumen, aviso: null }),
+        error: (e: HttpErrorResponse) => this.actualizarEtapa({ fase, resumen: null, aviso: this.mensaje(e) }),
+      });
+    }
+  }
+
+  private actualizarEtapa(etapa: EtapaSesiones): void {
+    this.etapas.update((lista) => lista.map((e) => (e.fase === etapa.fase ? etapa : e)));
   }
 
   private mensaje(error: HttpErrorResponse): string {

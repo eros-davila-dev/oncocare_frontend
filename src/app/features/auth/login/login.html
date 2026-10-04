@@ -1,6 +1,6 @@
 <app-auth-layout
-  [titulo]="esPortal ? 'Bienvenido' : 'Intranet de la fundación'"
-  [descripcion]="esPortal ? 'Ingresa para ver y gestionar tus citas' : 'Acceso exclusivo para el personal'"
+  [titulo]="esPortal ? '¡Hola de nuevo!' : 'Intranet de la fundación'"
+  [descripcion]="esPortal ? 'Ingresa para ver y gestionar tus citas.' : 'Ingresa con tu cuenta del personal.'"
 >
   <form class="space-y-5" [formGroup]="form" (ngSubmit)="iniciarSesion()">
     <ui-input label="Correo electrónico" type="email" icono="mail" placeholder="tu@correo.com" [control]="form.controls.email" [requerido]="true" />

@@ -140,3 +140,31 @@ export function descargarBlob(blob: Blob, nombreArchivo: string): void {
   enlace.click();
   URL.revokeObjectURL(url);
 }
+
+/** Descriptivos de un grupo (las sesiones de una etapa); DE muestral (n − 1), como SPSS. */
+export interface Descriptivos {
+  n: number;
+  media: number | null;
+  de: number | null;
+  mediana: number | null;
+  minimo: number | null;
+  maximo: number | null;
+}
+
+export function descriptivos(valores: readonly (number | null | undefined)[]): Descriptivos {
+  const datos = valores.filter((v): v is number => v !== null && v !== undefined).sort((a, b) => a - b);
+  const n = datos.length;
+  if (n === 0) {
+    return { n, media: null, de: null, mediana: null, minimo: null, maximo: null };
+  }
+  const media = datos.reduce((s, v) => s + v, 0) / n;
+  const de = n > 1 ? Math.sqrt(datos.reduce((s, v) => s + (v - media) ** 2, 0) / (n - 1)) : null;
+  const mitad = Math.floor(n / 2);
+  const mediana = n % 2 === 0 ? (datos[mitad - 1] + datos[mitad]) / 2 : datos[mitad];
+  return { n, media, de, mediana, minimo: datos[0], maximo: datos[n - 1] };
+}
+
+/** Codigo anonimo del paciente en el estudio (el mismo del Excel): PAC-0001. */
+export function codigoPaciente(id: number): string {
+  return `PAC-${String(id).padStart(4, '0')}`;
+}

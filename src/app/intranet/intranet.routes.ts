@@ -69,6 +69,35 @@ export const rutasIntranet: Routes = [
           import('../features/tratamientos/tratamientos-list/tratamientos-list').then((m) => m.TratamientosListComponent),
       },
       {
+        path: 'estudio',
+        canActivate: [roleGuard('ADMIN', 'INVESTIGADOR')],
+        loadComponent: () => import('../features/estudio/estudio-layout/estudio-layout').then((m) => m.EstudioLayoutComponent),
+        children: [
+          { path: '', pathMatch: 'full', redirectTo: 'recoleccion' },
+          {
+            path: 'recoleccion',
+            loadComponent: () =>
+              import('../features/estudio/estudio-recoleccion/estudio-recoleccion').then((m) => m.EstudioRecoleccionComponent),
+          },
+          {
+            path: 'resumen',
+            loadComponent: () => import('../features/estudio/estudio-resumen/estudio-resumen').then((m) => m.EstudioResumenComponent),
+          },
+          {
+            path: 'muestra',
+            loadComponent: () => import('../features/estudio/estudio-muestra/estudio-muestra').then((m) => m.EstudioMuestraComponent),
+          },
+          {
+            path: 'fichas',
+            loadComponent: () => import('../features/estudio/estudio-fichas/estudio-fichas').then((m) => m.EstudioFichasComponent),
+          },
+          {
+            path: 'datos',
+            loadComponent: () => import('../features/estudio/estudio-datos/estudio-datos').then((m) => m.EstudioDatosComponent),
+          },
+        ],
+      },
+      {
         path: 'asistente-ia',
         canActivate: [roleGuard('ADMIN')],
         loadComponent: () =>

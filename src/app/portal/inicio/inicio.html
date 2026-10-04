@@ -1,100 +1,262 @@
-<section class="relative overflow-hidden rounded-2xl bg-welcome px-6 py-10 sm:px-10 sm:py-14">
-  <div class="relative z-10 max-w-2xl">
-    <p class="font-semibold text-primary">Portal del paciente</p>
-    <h1 class="mt-2 font-display text-4xl font-bold leading-tight sm:text-5xl">Tu atención, más cerca y sin olvidos</h1>
-    <p class="mt-4 text-lg text-muted-foreground">
-      Consulta y confirma tus citas, recibe recordatorios en Telegram y resuelve tus dudas con el asistente virtual.
-    </p>
-    <div class="mt-8 flex flex-wrap gap-3">
-      @if (authService.estaAutenticado()) {
-        <a
-          routerLink="/mis-citas"
-          class="inline-flex min-h-12 items-center rounded-lg bg-primary px-6 text-lg font-semibold text-primary-foreground hover:bg-primary-hover"
-          >Ver mis citas</a
-        >
-      } @else {
-        <a
-          routerLink="/auth/login"
-          class="inline-flex min-h-12 items-center rounded-lg bg-primary px-6 text-lg font-semibold text-primary-foreground hover:bg-primary-hover"
-          >Ingresar</a
-        >
-        <a
-          routerLink="/auth/registro"
-          class="inline-flex min-h-12 items-center rounded-lg border border-border bg-background px-6 text-lg font-semibold hover:bg-muted"
-          >Crear cuenta</a
-        >
-      }
-    </div>
-  </div>
-  <ui-icon
-    name="heart-pulse"
-    [size]="260"
-    clase="pointer-events-none absolute -bottom-16 -right-10 text-primary/10"
-  />
-</section>
+<app-carrusel-portada [diapositivas]="diapositivas()" />
 
-<section class="mt-12" aria-labelledby="titulo-beneficios">
-  <h2 id="titulo-beneficios" class="sr-only">Qué puedes hacer en el portal</h2>
-  <ul class="grid grid-cols-1 gap-4 md:grid-cols-3">
-    @for (b of beneficios; track b.titulo) {
-      <li class="rounded-xl border border-border bg-card p-6 shadow-card">
-        <span class="grid size-12 place-items-center rounded-lg bg-primary-soft text-primary">
-          <ui-icon [name]="b.icono" [size]="24" />
-        </span>
-        <h3 class="mt-4 font-display text-xl font-bold">{{ b.titulo }}</h3>
-        <p class="mt-2 text-muted-foreground">{{ b.texto }}</p>
+<!-- Accesos rapidos: montados sobre el borde inferior del carrusel -->
+<section class="relative z-10 mx-auto -mt-10 max-w-6xl px-4 sm:px-6" aria-label="Accesos rápidos">
+  <ul class="grid grid-cols-2 gap-3 rounded-2xl border border-border bg-card p-3 shadow-modal lg:grid-cols-4">
+    @for (a of accesos(); track a.ruta) {
+      <li>
+        <a
+          [routerLink]="a.ruta"
+          class="group flex h-full flex-col items-start gap-3 rounded-xl p-3 transition-colors hover:bg-primary-soft sm:flex-row sm:items-center sm:p-4"
+        >
+          <span class="grid size-12 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+            <ui-icon [name]="a.icono" [size]="22" />
+          </span>
+          <span class="min-w-0">
+            <span class="block font-display font-bold leading-tight">{{ a.titulo }}</span>
+            <span class="block text-sm text-muted-foreground">{{ a.texto }}</span>
+          </span>
+        </a>
       </li>
     }
   </ul>
 </section>
 
-<section class="mt-12 grid grid-cols-1 gap-8 lg:grid-cols-2" aria-labelledby="titulo-pasos">
-  <div>
-    <h2 id="titulo-pasos" class="font-display text-2xl font-bold">Cómo empezar</h2>
-    <ol class="mt-4 space-y-4">
-      @for (paso of pasos; track $index) {
-        <li class="flex gap-4">
-          <span class="grid size-9 shrink-0 place-items-center rounded-full bg-primary font-bold text-primary-foreground">{{
-            $index + 1
-          }}</span>
-          <p class="pt-1">{{ paso }}</p>
+<!-- Beneficios con foto -->
+<section class="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:py-28" aria-labelledby="titulo-beneficios">
+  <div class="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+    <div class="relative" appRevelar>
+      <div class="absolute -inset-4 -z-10 rotate-2 rounded-[2rem] bg-gradient-to-br from-primary/25 via-secondary to-accent/60"></div>
+      <img
+        src="/portada/equipo.webp"
+        alt="Doctora revisando resultados junto a una paciente"
+        class="aspect-[4/3] w-full rounded-3xl object-cover shadow-modal"
+        loading="lazy"
+        decoding="async"
+      />
+      <div class="flotar absolute -bottom-6 -right-2 flex items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-modal sm:-right-6">
+        <span class="grid size-11 place-items-center rounded-full bg-success-soft text-success">
+          <ui-icon name="circle-check-big" [size]="22" />
+        </span>
+        <span>
+          <span class="block text-sm font-bold">Cita confirmada</span>
+          <span class="block text-xs text-muted-foreground">Con un toque, desde Telegram</span>
+        </span>
+      </div>
+    </div>
+
+    <div>
+      <p class="font-semibold text-primary" appRevelar>Pensado para ti y tu familia</p>
+      <h2 id="titulo-beneficios" class="mt-2 font-display text-3xl font-extrabold tracking-tight sm:text-4xl" appRevelar>
+        Todo lo de tus citas, simple y en un solo lugar
+      </h2>
+      <p class="mt-4 text-lg text-muted-foreground" appRevelar>
+        Menos llamadas, menos esperas y ninguna cita olvidada. Usa el portal desde el celular, a tu ritmo.
+      </p>
+      <ul class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-1">
+        @for (b of beneficios; track b.titulo; let i = $index) {
+          <li class="flex gap-4" [appRevelar]="i * 90">
+            <span class="grid size-11 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary">
+              <ui-icon [name]="b.icono" [size]="22" />
+            </span>
+            <span>
+              <span class="block font-display text-lg font-bold">{{ b.titulo }}</span>
+              <span class="mt-1 block text-muted-foreground">{{ b.texto }}</span>
+            </span>
+          </li>
+        }
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- Como empezar -->
+<section class="bg-card py-20 lg:py-24" aria-labelledby="titulo-pasos">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6">
+    <div class="mx-auto max-w-2xl text-center">
+      <p class="font-semibold text-primary" appRevelar>Empieza hoy</p>
+      <h2 id="titulo-pasos" class="mt-2 font-display text-3xl font-extrabold tracking-tight sm:text-4xl" appRevelar>
+        Tres pasos y listo
+      </h2>
+    </div>
+    <ol class="relative mt-14 grid gap-10 md:grid-cols-3 md:gap-6">
+      <div class="absolute top-8 right-[16%] left-[16%] hidden h-0.5 bg-gradient-to-r from-primary/10 via-primary/40 to-primary/10 md:block" aria-hidden="true"></div>
+      @for (p of pasos; track p.titulo; let i = $index) {
+        <li class="relative text-center" [appRevelar]="i * 120">
+          <span class="relative mx-auto grid size-16 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-button">
+            <ui-icon [name]="p.icono" [size]="28" />
+            <span class="absolute -top-2 -right-2 grid size-7 place-items-center rounded-full border-2 border-card bg-secondary text-sm font-bold text-secondary-foreground">
+              {{ i + 1 }}
+            </span>
+          </span>
+          <h3 class="mt-5 font-display text-xl font-bold">{{ p.titulo }}</h3>
+          <p class="mx-auto mt-2 max-w-xs text-muted-foreground">{{ p.texto }}</p>
         </li>
       }
     </ol>
+    @if (!authService.estaAutenticado()) {
+      <div class="mt-12 text-center" appRevelar>
+        <a
+          routerLink="/auth/registro"
+          class="inline-flex min-h-13 items-center gap-2 rounded-xl bg-primary px-7 text-lg font-bold text-primary-foreground shadow-button transition hover:-translate-y-0.5 hover:bg-primary-hover"
+        >
+          Crear mi cuenta
+          <ui-icon name="arrow-right" [size]="20" />
+        </a>
+      </div>
+    }
   </div>
+</section>
+
+<!-- Recordatorios por Telegram -->
+<section class="relative overflow-hidden bg-portal-oscuro py-20 text-white lg:py-28" aria-labelledby="titulo-recordatorios">
+  <div class="mx-auto grid max-w-6xl items-center gap-14 px-4 sm:px-6 lg:grid-cols-2">
+    <div>
+      <p class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-sm font-semibold" appRevelar>
+        <ui-icon name="send" [size]="15" /> Recordatorios por Telegram
+      </p>
+      <h2 id="titulo-recordatorios" class="mt-5 font-display text-3xl font-extrabold tracking-tight sm:text-4xl" appRevelar>
+        Un mensaje antes de tu cita. Respondes con un botón.
+      </h2>
+      <p class="mt-4 text-lg text-white/80" appRevelar>
+        No hace falta abrir enlaces raros: escanea el código, toca «Compartir mi número» y el bot te reconoce. También
+        puede recibirlo el familiar que te acompaña.
+      </p>
+      <ul class="mt-6 space-y-3 text-white/90">
+        @for (t of ['Gratis y opcional: lo activas o desactivas cuando quieras', 'Confirmas, reprogramas o cancelas sin llamar', 'Solo te escribimos sobre tus citas']; track t; let i = $index) {
+          <li class="flex items-start gap-3" [appRevelar]="i * 90">
+            <ui-icon name="circle-check-big" [size]="22" clase="mt-0.5 shrink-0 text-[oklch(0.82_0.14_175)]" />
+            <span>{{ t }}</span>
+          </li>
+        }
+      </ul>
+      <div class="mt-8 flex flex-wrap items-center gap-6" appRevelar>
+        <a
+          routerLink="/recordatorios-telegram"
+          class="inline-flex min-h-13 items-center gap-2 rounded-xl bg-white px-6 text-lg font-bold text-[oklch(0.25_0.08_264)] transition hover:-translate-y-0.5"
+        >
+          Ver cómo activarlo
+          <ui-icon name="arrow-right" [size]="20" />
+        </a>
+        <app-qr-bot-telegram />
+      </div>
+    </div>
+
+    <!-- Maqueta del mensaje que recibe el paciente -->
+    <div class="relative mx-auto w-full max-w-sm" appRevelar>
+      <div class="absolute -inset-10 -z-10 rounded-full bg-[oklch(0.6_0.17_250/25%)] blur-3xl"></div>
+      <div class="flotar rounded-[2.5rem] border border-white/15 bg-[oklch(0.2_0.04_260)] p-3 shadow-2xl shadow-black/40">
+        <div class="overflow-hidden rounded-[2rem] bg-[oklch(0.94_0.025_230)] text-[oklch(0.25_0.04_260)]">
+          <div class="flex items-center gap-3 bg-[oklch(0.55_0.12_235)] px-4 py-3 text-white">
+            <span class="grid size-9 place-items-center rounded-full bg-white/20">
+              <ui-icon name="heart-pulse" [size]="18" />
+            </span>
+            <span>
+              <span class="block text-sm font-bold">Fundación OncoBot</span>
+              <span class="block text-xs text-white/75">bot</span>
+            </span>
+          </div>
+          <div class="space-y-3 p-4">
+            <div class="max-w-[88%] rounded-2xl rounded-tl-sm bg-white p-3 text-sm shadow-sm">
+              <p class="font-bold">Recordatorio de tu cita</p>
+              <p class="mt-1">Hola, Rosa. Mañana a las <strong>9:00 a. m.</strong> tienes control con oncología clínica.</p>
+              <p class="mt-1">¿Podrás asistir?</p>
+              <p class="mt-1 text-right text-[10px] text-[oklch(0.55_0.03_260)]">18:00</p>
+            </div>
+            <div class="grid grid-cols-3 gap-1.5 text-center text-xs font-semibold">
+              <span class="rounded-lg bg-white/80 py-2 text-[oklch(0.45_0.12_235)] shadow-sm">✅ Confirmo</span>
+              <span class="rounded-lg bg-white/80 py-2 text-[oklch(0.45_0.12_235)] shadow-sm">📅 Reprogramar</span>
+              <span class="rounded-lg bg-white/80 py-2 text-[oklch(0.45_0.12_235)] shadow-sm">❌ Cancelar</span>
+            </div>
+            <div class="ml-auto max-w-[70%] rounded-2xl rounded-tr-sm bg-[oklch(0.9_0.08_140)] p-3 text-sm shadow-sm">
+              ✅ Confirmo
+              <p class="mt-1 text-right text-[10px] text-[oklch(0.5_0.05_150)]">18:02 ✓✓</p>
+            </div>
+            <div class="max-w-[88%] rounded-2xl rounded-tl-sm bg-white p-3 text-sm shadow-sm">
+              ¡Gracias! Tu cita quedó confirmada. Te esperamos.
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="mt-4 text-center text-xs text-white/60">Ejemplo del mensaje que recibirás.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Frase con foto -->
+<section class="relative isolate overflow-hidden py-24 text-white" aria-label="Nuestro compromiso">
+  <img src="/portada/manos.webp" alt="" class="absolute inset-0 -z-10 size-full object-cover" loading="lazy" decoding="async" />
+  <div class="absolute inset-0 -z-10 bg-gradient-to-r from-[oklch(0.16_0.05_264/92%)] to-[oklch(0.22_0.08_290/75%)]"></div>
+  <div class="mx-auto max-w-4xl px-4 text-center sm:px-6" appRevelar>
+    <ui-icon name="heart" [size]="36" clase="mx-auto text-[oklch(0.8_0.12_320)]" />
+    <p class="mt-6 font-display text-3xl leading-snug font-bold text-balance sm:text-4xl">
+      «Juntos por más historias de vida.»
+    </p>
+    <p class="mt-4 text-lg text-white/80">Cuidamos hoy tu mañana, contigo y con quienes te acompañan.</p>
+  </div>
+</section>
+
+<!-- Garantias + preguntas frecuentes -->
+<section class="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:py-24" aria-labelledby="titulo-preguntas">
+  <ul class="grid gap-4 sm:grid-cols-3">
+    @for (g of garantias; track g.titulo; let i = $index) {
+      <li class="flex items-center gap-4 rounded-2xl border border-border bg-card p-5 shadow-card" [appRevelar]="i * 90">
+        <span class="grid size-12 shrink-0 place-items-center rounded-xl bg-accent text-accent-foreground">
+          <ui-icon [name]="g.icono" [size]="22" />
+        </span>
+        <span>
+          <span class="block font-display text-lg font-bold">{{ g.titulo }}</span>
+          <span class="block text-sm text-muted-foreground">{{ g.texto }}</span>
+        </span>
+      </li>
+    }
+  </ul>
 
   @if (preguntas().length > 0) {
-    <div>
-      <h2 class="font-display text-2xl font-bold">Preguntas frecuentes</h2>
-      <div class="mt-4 divide-y divide-border rounded-xl border border-border bg-card">
+    <div class="mt-20 grid gap-10 lg:grid-cols-[1fr_1.4fr]">
+      <div appRevelar>
+        <p class="font-semibold text-primary">¿Tienes dudas?</p>
+        <h2 id="titulo-preguntas" class="mt-2 font-display text-3xl font-extrabold tracking-tight sm:text-4xl">Preguntas frecuentes</h2>
+        <p class="mt-4 text-lg text-muted-foreground">
+          Si no encuentras tu respuesta, escribe al asistente virtual con el botón azul de la esquina.
+        </p>
+        <a routerLink="/preguntas-frecuentes" class="mt-6 inline-flex items-center gap-2 font-bold text-primary hover:underline">
+          Ver todas las preguntas <ui-icon name="arrow-right" [size]="18" />
+        </a>
+      </div>
+      <div class="space-y-3" appRevelar>
         @for (p of preguntas(); track p.id) {
-          <details class="group p-4 [&_summary::-webkit-details-marker]:hidden">
-            <summary class="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold">
+          <details class="group rounded-2xl border border-border bg-card p-5 shadow-card transition-colors open:border-primary/40 [&_summary::-webkit-details-marker]:hidden">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-4 font-display text-lg font-bold">
               {{ p.pregunta }}
-              <span class="text-muted-foreground transition-transform group-open:rotate-45" aria-hidden="true">+</span>
+              <span class="grid size-8 shrink-0 place-items-center rounded-full bg-primary-soft text-primary transition-transform group-open:rotate-45" aria-hidden="true">
+                <ui-icon name="plus" [size]="18" />
+              </span>
             </summary>
-            <p class="mt-2 text-muted-foreground">{{ p.respuesta }}</p>
+            <p class="mt-3 text-muted-foreground">{{ p.respuesta }}</p>
           </details>
         }
       </div>
-      <a routerLink="/preguntas-frecuentes" class="mt-3 inline-block font-semibold text-primary hover:underline">Ver todas</a>
     </div>
   }
 </section>
 
-<section class="mt-12 rounded-2xl border border-border bg-card p-6 sm:p-8" aria-labelledby="titulo-recordatorios">
-  <div class="flex flex-col gap-6 md:flex-row md:items-center">
-    <div class="min-w-0 flex-1">
-      <p class="text-sm font-semibold text-primary">Nuevo</p>
-      <h2 id="titulo-recordatorios" class="mt-1 font-display text-2xl font-bold">Recibe el aviso de tus citas en Telegram</h2>
-      <p class="mt-2 text-sm text-muted-foreground">
-        Te avisamos antes de cada cita y puedes confirmarla o cancelarla con un botón. También puede recibirlo el familiar
-        que te acompaña. Gratis y opcional.
-      </p>
-      <a routerLink="/recordatorios-telegram" class="mt-4 inline-flex min-h-11 items-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary-hover">
-        Ver cómo activarlo
-      </a>
+<!-- Llamado final -->
+@if (!authService.estaAutenticado()) {
+  <section class="mx-auto max-w-6xl px-4 pb-20 sm:px-6" aria-labelledby="titulo-cta">
+    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary to-[oklch(0.5_0.18_285)] px-6 py-14 text-center text-white shadow-modal sm:px-12" appRevelar>
+      <div class="absolute -top-20 -right-20 size-64 rounded-full bg-white/10"></div>
+      <div class="absolute -bottom-24 -left-16 size-72 rounded-full bg-white/10"></div>
+      <h2 id="titulo-cta" class="relative font-display text-3xl font-extrabold tracking-tight sm:text-4xl">Empieza a usar tu portal hoy</h2>
+      <p class="relative mx-auto mt-3 max-w-xl text-lg text-white/85">Crear tu cuenta es gratis y toma un minuto.</p>
+      <div class="relative mt-8 flex flex-wrap justify-center gap-3">
+        <a routerLink="/auth/registro" class="inline-flex min-h-13 items-center rounded-xl bg-white px-7 text-lg font-bold text-primary transition hover:-translate-y-0.5">
+          Crear cuenta
+        </a>
+        <a routerLink="/auth/login" class="inline-flex min-h-13 items-center rounded-xl border border-white/40 px-7 text-lg font-semibold transition hover:bg-white/10">
+          Ya tengo cuenta
+        </a>
+      </div>
     </div>
-    <app-qr-bot-telegram class="mx-auto md:mx-0" />
-  </div>
-</section>
+  </section>
+}

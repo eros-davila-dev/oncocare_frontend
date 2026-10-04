@@ -125,6 +125,9 @@
             </div>
           }
         }
+        @case ('Consultas') {
+          <app-historial-consultas modo="personal" [pacienteId]="p.id" />
+        }
       }
     </div>
   }

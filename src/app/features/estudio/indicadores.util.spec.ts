@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { IndicadoresTesis, ResultadoWilcoxon } from '../../core/models/estudio.model';
 import {
   INDICADORES_TESIS,
+  descriptivos,
   esMejora,
   fechaCorta,
   formatoDiferencia,
@@ -92,5 +93,22 @@ describe('indicadores de la tesis', () => {
 
   it('convierte fechas ISO a formato peruano', () => {
     expect(fechaCorta('2026-09-30')).toBe('30/09/2026');
+  });
+});
+
+describe('descriptivos', () => {
+  it('calcula media, DE muestral y mediana ignorando sesiones sin dato', () => {
+    const d = descriptivos([4, null, 6, 8, undefined]);
+    expect(d.n).toBe(3);
+    expect(d.media).toBe(6);
+    expect(d.de).toBe(2);
+    expect(d.mediana).toBe(6);
+    expect(d.minimo).toBe(4);
+    expect(d.maximo).toBe(8);
+  });
+
+  it('sin datos devuelve todo vacio y con un dato no hay DE', () => {
+    expect(descriptivos([]).media).toBeNull();
+    expect(descriptivos([5]).de).toBeNull();
   });
 });

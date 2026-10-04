@@ -18,6 +18,7 @@ type IconoNavegacion =
   | 'pacientes'
   | 'citas'
   | 'tratamientos'
+  | 'estudio'
   | 'auditoria'
   | 'usuarios'
   | 'dispositivos'
@@ -31,6 +32,7 @@ const ICONO_POR_SECCION: Record<IconoNavegacion, NombreIcono> = {
   pacientes: 'users',
   citas: 'calendar-days',
   tratamientos: 'stethoscope',
+  estudio: 'flask-conical',
   auditoria: 'shield-check',
   usuarios: 'user-cog',
   dispositivos: 'cpu',
@@ -50,6 +52,14 @@ interface GrupoDeNavegacion {
   items: ItemDeNavegacion[];
 }
 
+const ROL_LEGIBLE: Record<string, string> = {
+  ADMIN: 'Administrador',
+  MEDICO: 'Médico',
+  RECEPCIONISTA: 'Recepción',
+  INVESTIGADOR: 'Investigador',
+  PACIENTE: 'Paciente',
+};
+
 /** Navegacion de la intranet; las pantallas del paciente viven en el portal. */
 const GRUPOS_DE_NAVEGACION: GrupoDeNavegacion[] = [
   {
@@ -65,6 +75,10 @@ const GRUPOS_DE_NAVEGACION: GrupoDeNavegacion[] = [
       { ruta: '/citas', etiqueta: 'Citas', icono: 'citas', roles: ['ADMIN', 'MEDICO', 'RECEPCIONISTA'] },
       { ruta: '/tratamientos', etiqueta: 'Tratamientos', icono: 'tratamientos', roles: ['ADMIN', 'MEDICO', 'RECEPCIONISTA'] },
     ],
+  },
+  {
+    titulo: 'INVESTIGACIÓN',
+    items: [{ ruta: '/estudio', etiqueta: 'Estudio', icono: 'estudio', roles: ['ADMIN', 'INVESTIGADOR'] }],
   },
   {
     titulo: 'CONFIGURACIÓN',
@@ -98,6 +112,14 @@ export class ShellComponent {
   protected readonly sidebarAbierto = signal(false);
   protected readonly sidebarColapsado = signal(false);
   protected readonly menuPerfilAbierto = signal(false);
+
+  /** "sábado, 3 de octubre" para la barra superior. */
+  protected readonly hoy = new Date().toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  protected readonly rolLegible = computed(() => {
+    const rol = this.authService.usuario()?.rol;
+    return rol ? ROL_LEGIBLE[rol] ?? rol : '';
+  });
 
   private readonly urlActual = toSignal(
     this.router.events.pipe(

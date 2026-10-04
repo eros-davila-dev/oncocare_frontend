@@ -14,12 +14,12 @@ import { IconComponent } from '../../../shared/ui/icon/icon';
 import { ToastService } from '../../../shared/components/toast-notification/toast.service';
 import { descargarBlob } from '../indicadores.util';
 
-const PESTANAS = ['Tiempos (TPR)', 'Ausentismo (TNS)', 'Consultas (NCA)'] as const;
+const PESTANAS = ['Tiempos (TPR)', 'Ausentismo (TA)', 'Consultas (NCA)'] as const;
 type Pestana = (typeof PESTANAS)[number];
 
 const FICHA_POR_PESTANA: Record<Pestana, TipoFicha> = {
   'Tiempos (TPR)': 'tiempos',
-  'Ausentismo (TNS)': 'asistencias',
+  'Ausentismo (TA)': 'asistencias',
   'Consultas (NCA)': 'consultas',
 };
 
