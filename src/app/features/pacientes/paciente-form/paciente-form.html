@@ -16,8 +16,8 @@
             <ui-input label="Apellidos" [control]="form.controls.apellidos" [requerido]="true" />
             <ui-input label="Documento de identidad" [control]="form.controls.documentoIdentidad" [requerido]="true" />
             <ui-input label="Fecha de nacimiento" type="date" [control]="form.controls.fechaNacimiento" [requerido]="true" />
-            <ui-input label="Telefono" [control]="form.controls.telefono" />
-            <ui-input label="Correo electronico" type="email" [control]="form.controls.email" />
+            <ui-input label="Telefono" [control]="form.controls.telefono" [requerido]="true" />
+            <ui-input label="Correo electronico" type="email" [control]="form.controls.email" [requerido]="true" />
             <ui-input label="Direccion" [control]="form.controls.direccion" />
             <ui-select
               label="Convenio / seguro"
@@ -32,13 +32,23 @@
             <ui-input label="Tipo de cancer" [control]="form.controls.tipoCancer" />
             <ui-input label="Estadio clinico" [control]="form.controls.estadioClinico" />
             <ui-input label="Fecha de diagnostico" type="date" [control]="form.controls.fechaDiagnostico" />
-            <ui-input label="ID del medico tratante" type="number" [control]="form.controls.medicoTratanteId" />
+            <ui-select label="Médico tratante" placeholder="Sin asignar" [control]="form.controls.medicoTratanteId" [opciones]="opcionesMedicos()" />
           </div>
         }
         @case ('Contacto') {
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <ui-input label="Nombre del contacto" [control]="form.controls.contactoEmergenciaNombre" [requerido]="true" />
-            <ui-input label="Telefono del contacto" [control]="form.controls.contactoEmergenciaTelefono" [requerido]="true" />
+            <p class="text-sm text-muted-foreground sm:col-span-2">
+              Referido: familiar o persona de confianza a quien contactar por el paciente.
+            </p>
+            <ui-input label="Nombre del referido" [control]="form.controls.contactoEmergenciaNombre" [requerido]="true" />
+            <ui-input label="Telefono del referido" [control]="form.controls.contactoEmergenciaTelefono" [requerido]="true" />
+            <div class="sm:col-span-2">
+              <ui-input label="Correo del referido" type="email" [control]="form.controls.contactoEmergenciaEmail" [requerido]="true" />
+            </div>
+            <label class="flex items-start gap-2 text-sm sm:col-span-2">
+              <input type="checkbox" [formControl]="form.controls.contactoRecibeRecordatorios" class="mt-0.5 rounded border-input" />
+              <span>El paciente autoriza enviar a su referido una copia de los recordatorios de cita (solo nombre, fecha y hora).</span>
+            </label>
           </div>
         }
       }

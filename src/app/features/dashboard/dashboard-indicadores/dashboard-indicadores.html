@@ -2,20 +2,12 @@
   <ui-page-header
     eyebrow="Gestión de pacientes"
     titulo="Panel de indicadores"
-    descripcion="Tiempo de registro, ausentismo y consultas atendidas, medidos automáticamente por el sistema."
+    descripcion="Todo lo que se hizo en el periodo: registro de pacientes, citas y ausentismo, recordatorios y consultas."
   />
 
-  <section class="mt-6" aria-labelledby="titulo-periodo">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <div>
-        <h2 id="titulo-periodo" class="font-display text-lg font-bold">Todo el sistema</h2>
-        @if (resumen(); as datos) {
-          <p class="text-sm text-muted-foreground">
-            Del {{ fechaCorta(datos.desde) }} al {{ fechaCorta(datos.hasta) }}
-          </p>
-        }
-      </div>
-      <div class="flex gap-1 rounded-lg bg-muted p-1" role="group" aria-label="Periodo">
+  <section class="mt-6 flex flex-wrap items-end justify-between gap-3" aria-label="Periodo">
+    <div class="flex flex-wrap items-end gap-3">
+      <div class="flex gap-1 rounded-lg bg-muted p-1" role="group" aria-label="Periodo rápido">
         @for (periodo of periodos; track periodo.dias) {
           <button
             type="button"
@@ -28,40 +20,260 @@
           </button>
         }
       </div>
+      <label class="text-xs font-semibold text-muted-foreground">
+        Desde
+        <input type="date" class="mt-1 block min-h-9 rounded-md border border-border bg-background px-2 text-sm text-foreground" [formControl]="desdeControl" />
+      </label>
+      <label class="text-xs font-semibold text-muted-foreground">
+        Hasta
+        <input type="date" class="mt-1 block min-h-9 rounded-md border border-border bg-background px-2 text-sm text-foreground" [formControl]="hastaControl" />
+      </label>
+      <ui-button variante="outline" (click)="aplicarRango()">Ver</ui-button>
     </div>
-
-    @if (cargando()) {
-      <ui-loading-spinner class="mt-6 block" />
-    } @else if (resumen(); as datos) {
-      <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
-        @for (definicion of definiciones; track definicion.clave) {
-          <app-indicador-card [definicion]="definicion" [indicadores]="datos.indicadores" />
-        }
-      </div>
-      @if (datos.cumplimientoTratamientoPorcentaje != null) {
-        <p class="mt-3 text-sm text-muted-foreground">
-          Contexto clínico: avance promedio de los esquemas de tratamiento
-          {{ datos.cumplimientoTratamientoPorcentaje.toFixed(1) }} %.
-        </p>
-      }
+    @if (puedeDescargar) {
+      <ui-button variante="outline" [cargando]="descargando()" (click)="descargar()">Descargar Excel</ui-button>
     }
   </section>
 
-  <section class="mt-8" aria-labelledby="titulo-estudio">
-    <h2 id="titulo-estudio" class="font-display text-lg font-bold">Estudio: pretest vs. postest</h2>
-    <p class="text-sm text-muted-foreground">Solo pacientes de la muestra con consentimiento informado.</p>
+  @if (cargando()) {
+    <ui-loading-spinner class="mt-8 block" />
+  } @else if (error()) {
+    <ui-card class="mt-6 block"><p class="text-sm text-destructive">{{ error() }}</p></ui-card>
+  } @else if (resumen(); as r) {
+    <p class="mt-3 text-sm text-muted-foreground">Del {{ fechaCorta(r.desde) }} al {{ fechaCorta(r.hasta) }}</p>
 
-    @if (comparativo(); as datos) {
-      <app-comparativo-indicadores class="mt-4" [comparativo]="datos" />
-    } @else if (motivoSinComparativo()) {
-      <ui-card class="mt-4 block">
-        <p class="text-sm text-muted-foreground">{{ motivoSinComparativo() }}</p>
-        @if (authService.tieneAlgunRol('ADMIN', 'INVESTIGADOR')) {
-          <a routerLink="/estudio/muestra" class="mt-3 inline-block text-sm font-semibold text-primary hover:underline">
-            Configurar las fases del estudio
-          </a>
+    <div class="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <ui-card>
+        <p class="text-xs font-bold tracking-wide text-primary">TIEMPO DE REGISTRO</p>
+        <p class="mt-2 font-display text-3xl font-bold" [class.text-muted-foreground]="r.registros.promedioMin === null">
+          {{ numero(r.registros.promedioMin, 2) }} <span class="text-base font-semibold">min</span>
+        </p>
+        <p class="mt-1 text-sm text-muted-foreground">
+          Promedio de {{ r.registros.total }} {{ r.registros.total === 1 ? 'paciente registrado' : 'pacientes registrados' }} por el personal
+        </p>
+        @if (r.registros.total) {
+          <p class="mt-1 text-xs text-muted-foreground">Más rápido {{ numero(r.registros.minimoMin, 2) }} · más lento {{ numero(r.registros.maximoMin, 2) }} min</p>
         }
       </ui-card>
+
+      <ui-card>
+        <p class="text-xs font-bold tracking-wide text-primary">AUSENTISMO</p>
+        <p class="mt-2 font-display text-3xl font-bold" [class.text-muted-foreground]="r.citas.ausentismoPct === null">
+          {{ numero(r.citas.ausentismoPct) }} <span class="text-base font-semibold">%</span>
+        </p>
+        <p class="mt-1 text-sm text-muted-foreground">
+          {{ r.citas.noAsistio }} no asistieron de {{ r.citas.atendidas + r.citas.noAsistio }} citas con desenlace
+        </p>
+        <p class="mt-1 text-xs text-muted-foreground">
+          {{ r.citas.total }} citas · {{ r.citas.canceladas }} canceladas · {{ r.citas.pendientes }} por atender · {{ r.citas.reprogramadas }} reprogramadas
+        </p>
+      </ui-card>
+
+      <ui-card>
+        <p class="text-xs font-bold tracking-wide text-primary">RECORDATORIOS</p>
+        <p class="mt-2 font-display text-3xl font-bold">{{ r.recordatorios.enviados }} <span class="text-base font-semibold">enviados</span></p>
+        <p class="mt-1 text-sm text-muted-foreground">
+          {{ numero(r.recordatorios.coberturaPct) }} % de las citas con desenlace recibió recordatorio
+        </p>
+        <p class="mt-1 text-xs text-muted-foreground">
+          {{ canales().length ? canales().join(' · ') : 'Ninguno enviado' }}
+          @if (r.recordatorios.respondidos) {
+            · {{ r.recordatorios.respondidos }} respondidos
+          }
+        </p>
+      </ui-card>
+
+      <ui-card>
+        <p class="text-xs font-bold tracking-wide text-primary">CONSULTAS ATENDIDAS</p>
+        <p class="mt-2 font-display text-3xl font-bold" [class.text-muted-foreground]="r.consultas.atendidasAutomaticoPct === null">
+          {{ numero(r.consultas.atendidasAutomaticoPct) }} <span class="text-base font-semibold">%</span>
+        </p>
+        <p class="mt-1 text-sm text-muted-foreground">
+          {{ r.consultas.resueltasPorAsistente }} de {{ r.consultas.cerradas }} resueltas por el asistente, sin pasar al personal
+        </p>
+        <p class="mt-1 text-xs text-muted-foreground">
+          {{ r.consultas.total }} recibidas · {{ r.consultas.derivadas }} derivadas · {{ r.consultas.abiertas }} abiertas
+          @if (r.consultas.tiempoRespuestaPromedioMin !== null) {
+            · responde en {{ numero(r.consultas.tiempoRespuestaPromedioMin * 60, 0) }} s
+          }
+        </p>
+      </ui-card>
+    </div>
+
+    @if (pendientes().length) {
+      <div class="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm" role="status">
+        <p class="font-semibold text-destructive">Pendiente de revisar</p>
+        <ul class="mt-1 list-disc pl-5 text-foreground">
+          @for (aviso of pendientes(); track aviso) {
+            <li>{{ aviso }}</li>
+          }
+        </ul>
+      </div>
     }
-  </section>
+
+    @if (categorias().length) {
+      <section class="mt-6" aria-labelledby="titulo-temas">
+        <h2 id="titulo-temas" class="font-display text-lg font-bold">¿Sobre qué preguntan?</h2>
+        <div class="mt-2 flex flex-wrap gap-2">
+          @for (c of categorias(); track c.categoria) {
+            <span class="rounded-full bg-muted px-3 py-1 text-sm">{{ c.categoria }} <strong>{{ c.n }}</strong></span>
+          }
+        </div>
+      </section>
+    }
+
+    <section class="mt-8" aria-labelledby="titulo-dias">
+      <h2 id="titulo-dias" class="font-display text-lg font-bold">Día por día</h2>
+      @if (r.dias.length) {
+        <div class="mt-3 overflow-x-auto rounded-xl border border-border">
+          <table class="w-full border-collapse text-left text-sm">
+            <thead class="bg-muted/70 text-xs text-muted-foreground">
+              <tr>
+                <th class="px-3 py-2 font-semibold">Fecha</th>
+                <th class="px-3 py-2 text-right font-semibold">Registros</th>
+                <th class="px-3 py-2 text-right font-semibold">Tiempo de registro (min)</th>
+                <th class="px-3 py-2 text-right font-semibold">Citas con desenlace</th>
+                <th class="px-3 py-2 text-right font-semibold">Ausentismo (%)</th>
+                <th class="px-3 py-2 text-right font-semibold">Recordatorios</th>
+                <th class="px-3 py-2 text-right font-semibold">Consultas</th>
+                <th class="px-3 py-2 text-right font-semibold">Atendidas por el asistente (%)</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (d of r.dias; track d.fecha) {
+                <tr class="border-t border-border">
+                  <td class="px-3 py-2 font-semibold">{{ fechaCorta(d.fecha) }}</td>
+                  <td class="px-3 py-2 text-right">{{ d.registros }}</td>
+                  <td class="px-3 py-2 text-right">{{ numero(d.tprMin, 2) }}</td>
+                  <td class="px-3 py-2 text-right">{{ d.citasElegibles }}</td>
+                  <td class="px-3 py-2 text-right">{{ numero(d.ausentismoPct) }}</td>
+                  <td class="px-3 py-2 text-right">{{ d.recordatoriosEnviados }}</td>
+                  <td class="px-3 py-2 text-right">{{ d.consultas }}</td>
+                  <td class="px-3 py-2 text-right">{{ numero(d.atendidasAutomaticoPct) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <p class="mt-2 text-xs text-muted-foreground">«—» = ese día no hubo eventos de ese indicador.</p>
+      } @else {
+        <p class="mt-2 text-sm text-muted-foreground">No hubo actividad en este periodo.</p>
+      }
+    </section>
+
+    @if (puedeVerDetalle && detalle(); as d) {
+      <section class="mt-8" aria-labelledby="titulo-detalle">
+        <h2 id="titulo-detalle" class="font-display text-lg font-bold">Detalle</h2>
+        <ui-tabs class="mt-2" [tabs]="pestanas" [activa]="pestana()" (cambiarTab)="pestana.set($event)" />
+
+        <div class="mt-3 overflow-x-auto rounded-xl border border-border">
+          <table class="w-full border-collapse text-left text-sm">
+            @switch (pestana()) {
+              @case ('Registros') {
+                <thead class="bg-muted/70 text-xs text-muted-foreground">
+                  <tr>
+                    <th class="px-3 py-2 font-semibold">Fecha</th>
+                    <th class="px-3 py-2 font-semibold">Paciente</th>
+                    <th class="px-3 py-2 font-semibold">Registrado por</th>
+                    <th class="px-3 py-2 text-right font-semibold">Tiempo (min)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (f of d.registros; track $index) {
+                    <tr class="border-t border-border">
+                      <td class="px-3 py-2">{{ fechaCorta(f.fecha) }} {{ f.hora.slice(0, 5) }}</td>
+                      <td class="px-3 py-2">{{ f.paciente ?? 'Paciente no disponible' }}</td>
+                      <td class="px-3 py-2">{{ f.registradoPor ?? '—' }}</td>
+                      <td class="px-3 py-2 text-right">
+                        {{ numero(f.minutos, 2) }}
+                        @if (f.sospechosa) {
+                          <span class="ml-1 text-xs text-destructive">revisar</span>
+                        }
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="4" class="px-3 py-4 text-center text-muted-foreground">Sin registros en el periodo.</td></tr>
+                  }
+                </tbody>
+              }
+              @case ('Citas') {
+                <thead class="bg-muted/70 text-xs text-muted-foreground">
+                  <tr>
+                    <th class="px-3 py-2 font-semibold">Fecha</th>
+                    <th class="px-3 py-2 font-semibold">Paciente</th>
+                    <th class="px-3 py-2 font-semibold">Médico</th>
+                    <th class="px-3 py-2 font-semibold">Estado</th>
+                    <th class="px-3 py-2 font-semibold">Recordatorio</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (f of d.citas; track $index) {
+                    <tr class="border-t border-border">
+                      <td class="px-3 py-2">{{ fechaCorta(f.fecha) }} {{ f.hora.slice(0, 5) }}</td>
+                      <td class="px-3 py-2">{{ f.paciente ?? 'Paciente no disponible' }}</td>
+                      <td class="px-3 py-2">{{ f.medico ?? 'Sin médico asignado' }}</td>
+                      <td class="px-3 py-2">{{ estadoCita(f.estado) }}</td>
+                      <td class="px-3 py-2">{{ f.recordatorioEnviado ? 'Enviado' : 'No' }}</td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="5" class="px-3 py-4 text-center text-muted-foreground">Sin citas en el periodo.</td></tr>
+                  }
+                </tbody>
+              }
+              @case ('Recordatorios') {
+                <thead class="bg-muted/70 text-xs text-muted-foreground">
+                  <tr>
+                    <th class="px-3 py-2 font-semibold">Paciente</th>
+                    <th class="px-3 py-2 font-semibold">Cita</th>
+                    <th class="px-3 py-2 font-semibold">Canal</th>
+                    <th class="px-3 py-2 font-semibold">Estado</th>
+                    <th class="px-3 py-2 font-semibold">Enviado</th>
+                    <th class="px-3 py-2 font-semibold">Respuesta</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (f of d.recordatorios; track $index) {
+                    <tr class="border-t border-border">
+                      <td class="px-3 py-2">{{ f.paciente ?? 'Paciente no disponible' }}</td>
+                      <td class="px-3 py-2">{{ fechaCorta(f.fechaCita) }}</td>
+                      <td class="px-3 py-2">{{ canalRecordatorio(f.canal) }}</td>
+                      <td class="px-3 py-2">{{ etiqueta(f.estado) }}</td>
+                      <td class="px-3 py-2">{{ fechaHora(f.enviadoEn) }}</td>
+                      <td class="px-3 py-2">{{ f.respuesta ? etiqueta(f.respuesta) : '—' }}</td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="6" class="px-3 py-4 text-center text-muted-foreground">Sin recordatorios en el periodo.</td></tr>
+                  }
+                </tbody>
+              }
+              @case ('Consultas') {
+                <thead class="bg-muted/70 text-xs text-muted-foreground">
+                  <tr>
+                    <th class="px-3 py-2 font-semibold">Fecha</th>
+                    <th class="px-3 py-2 font-semibold">Paciente</th>
+                    <th class="px-3 py-2 font-semibold">Canal</th>
+                    <th class="px-3 py-2 font-semibold">Tema</th>
+                    <th class="px-3 py-2 font-semibold">Resultado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (f of d.consultas; track $index) {
+                    <tr class="border-t border-border">
+                      <td class="px-3 py-2">{{ fechaCorta(f.fecha) }} {{ f.hora.slice(0, 5) }}</td>
+                      <td class="px-3 py-2">{{ f.paciente ?? 'Visitante sin identificar' }}</td>
+                      <td class="px-3 py-2">{{ etiqueta(f.canal) }}</td>
+                      <td class="px-3 py-2">{{ f.categoria ? etiqueta(f.categoria) : '—' }}</td>
+                      <td class="px-3 py-2">{{ resultadoConsulta(f) }}</td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="5" class="px-3 py-4 text-center text-muted-foreground">Sin consultas en el periodo.</td></tr>
+                  }
+                </tbody>
+              }
+            }
+          </table>
+        </div>
+      </section>
+    }
+  }
 </div>

@@ -9,4 +9,7 @@ export interface AuditoriaAccion {
   ipOrigen: string | null;
   fecha: string;
   resultado: 'EXITO' | 'FALLIDO';
+  /** Quien hizo la accion y sobre que, con nombres (resueltos por el backend). */
+  usuarioNombre?: string | null;
+  entidadDescripcion?: string | null;
 }

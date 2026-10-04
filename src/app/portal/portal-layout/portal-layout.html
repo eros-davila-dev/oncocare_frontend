@@ -19,6 +19,12 @@
           class="rounded-lg px-3 py-2 font-semibold text-muted-foreground hover:text-foreground"
           >Preguntas frecuentes</a
         >
+        <a
+          routerLink="/recordatorios-telegram"
+          routerLinkActive="text-primary"
+          class="rounded-lg px-3 py-2 font-semibold text-muted-foreground hover:text-foreground"
+          >Recordatorios</a
+        >
         @if (authService.estaAutenticado()) {
           <a
             routerLink="/mis-citas"
@@ -78,6 +84,9 @@
           <li><a routerLink="/" class="block rounded-lg px-3 py-3 font-semibold hover:bg-muted">Inicio</a></li>
           <li>
             <a routerLink="/preguntas-frecuentes" class="block rounded-lg px-3 py-3 font-semibold hover:bg-muted">Preguntas frecuentes</a>
+          </li>
+          <li>
+            <a routerLink="/recordatorios-telegram" class="block rounded-lg px-3 py-3 font-semibold hover:bg-muted">Recordatorios por Telegram</a>
           </li>
           @if (authService.estaAutenticado()) {
             <li><a routerLink="/mis-citas" class="block rounded-lg px-3 py-3 font-semibold hover:bg-muted">Mis citas</a></li>

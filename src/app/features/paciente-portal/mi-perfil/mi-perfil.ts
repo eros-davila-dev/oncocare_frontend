@@ -1,4 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { VinculoTelegramComponent } from '../../telegram/vinculo-telegram/vinculo-telegram';
 import { DatePipe } from '@angular/common';
 import { PacienteService } from '../../pacientes/paciente.service';
@@ -10,12 +11,14 @@ import { LoadingSpinnerComponent } from '../../../shared/components/loading-spin
 /** Ficha clinica de solo lectura del paciente autenticado (seccion 31). */
 @Component({
   selector: 'app-mi-perfil',
-  imports: [DatePipe, PageHeaderComponent, CardComponent, LoadingSpinnerComponent, VinculoTelegramComponent],
+  imports: [DatePipe, RouterLink, PageHeaderComponent, CardComponent, LoadingSpinnerComponent, VinculoTelegramComponent],
   templateUrl: './mi-perfil.html',
 })
 export class MiPerfilComponent {
   private readonly pacienteService = inject(PacienteService);
 
+  /** Viene de completar el perfil: se resalta el paso recomendado de Telegram. */
+  protected readonly pasoTelegram = inject(ActivatedRoute).snapshot.queryParamMap.get('paso') === 'telegram';
   protected readonly cargando = signal(true);
   protected readonly paciente = signal<Paciente | null>(null);
 

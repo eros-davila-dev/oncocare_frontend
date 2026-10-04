@@ -19,6 +19,8 @@ interface RespuestaChatbot {
   respuesta: string;
   consultaId: number | null;
   estadoConsulta: ResultadoConsulta | null;
+  /** Botones de respuesta rapida que decide el backend segun lo que acaba de pasar. */
+  sugerencias?: string[];
 }
 
 const CLAVE_SESION = 'onco.chatbot.sesion';
@@ -35,6 +37,9 @@ const CLAVE_SESION = 'onco.chatbot.sesion';
  *
  * Si hay una sesion iniciada, el interceptor JWT adjunta el token y el
  * backend puede gestionar las citas propias del paciente.
+ *
+ * Sugerencias: botones que el paciente toca en vez de escribir. Tocar una
+ * envia su texto como un mensaje normal, asi que pasa por el mismo flujo.
  */
 @Component({
   selector: 'app-chatbot-widget',
@@ -49,12 +54,27 @@ export class ChatbotWidgetComponent {
   protected readonly abierto = signal(false);
   protected readonly enviando = signal(false);
   protected readonly mensajeActual = signal('');
+  protected readonly sugerencias = signal<string[]>([]);
+  private sugerenciasCargadas = false;
   protected readonly mensajes = signal<MensajeChat[]>([
     { autor: 'bot', texto: 'Hola, soy el asistente virtual de la fundación. ¿En qué puedo ayudarte?' },
   ]);
 
   protected alternar(): void {
     this.abierto.update((valor) => !valor);
+    if (this.abierto() && !this.sugerenciasCargadas) {
+      this.sugerenciasCargadas = true;
+      this.http
+        .get<string[]>(`${environment.apiUrl}/chatbot/sugerencias`)
+        .pipe(catchError(() => of<string[]>([])))
+        .subscribe((lista) => this.sugerencias.set(lista));
+    }
+  }
+
+  /** Tocar una sugerencia equivale a escribirla y enviarla. */
+  protected usarSugerencia(texto: string): void {
+    this.mensajeActual.set(texto);
+    this.enviar();
   }
 
   protected enviar(): void {
@@ -62,6 +82,7 @@ export class ChatbotWidgetComponent {
     if (!texto || this.enviando()) {
       return;
     }
+    this.sugerencias.set([]);
     this.mensajes.update((actual) => [...actual, { autor: 'usuario', texto }]);
     this.mensajeActual.set('');
     this.conversar(
@@ -88,6 +109,7 @@ export class ChatbotWidgetComponent {
     if (this.enviando()) {
       return;
     }
+    this.sugerencias.set([]);
     this.mensajes.update((actual) => [...actual, { autor: 'usuario', texto: 'Quiero hablar con una persona' }]);
     this.conversar(this.http.post<RespuestaChatbot>(`${environment.apiUrl}/chatbot/escalar`, { sesionId: this.sesionId }), false);
   }
@@ -114,6 +136,7 @@ export class ChatbotWidgetComponent {
             valorable: valorable && respuesta.estadoConsulta === 'RESUELTA_BOT',
           },
         ]);
+        this.sugerencias.set(respuesta.sugerencias ?? []);
         this.enviando.set(false);
       });
   }

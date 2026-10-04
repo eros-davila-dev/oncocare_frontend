@@ -18,6 +18,7 @@ import { TabsComponent } from '../../../shared/ui/tabs/tabs';
 import { EstadoColorPipe } from '../../../shared/pipes/estado-color.pipe';
 import { EtiquetaEnumPipe } from '../../../shared/pipes/etiqueta-enum.pipe';
 import { ToastService } from '../../../shared/components/toast-notification/toast.service';
+import { AvisoTelegramComponent } from '../../telegram/aviso-telegram/aviso-telegram';
 import { TAMANO_PAGINA_POR_DEFECTO } from '../../../shared/constants/paginacion';
 
 const TABS = ['Todas', 'Programada', 'Confirmada', 'Atendida', 'Cancelada', 'No asistió'] as const;
@@ -40,7 +41,7 @@ const ESTADO_POR_TAB: Record<TabCita, EstadoCita | undefined> = {
  */
 @Component({
   selector: 'app-mis-citas',
-  imports: [
+  imports: [AvisoTelegramComponent, 
     ReactiveFormsModule,
     PageHeaderComponent,
     EmptyStateComponent,

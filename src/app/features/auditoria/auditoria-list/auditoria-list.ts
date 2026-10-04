@@ -45,9 +45,16 @@ export class AuditoriaListComponent {
 
   protected readonly columnas: ColumnaTabla<AuditoriaAccion>[] = [
     { encabezado: 'Fecha', valor: (a) => new Date(a.fecha).toLocaleString('es-PE') },
-    { encabezado: 'Usuario', valor: (a) => this.nombreUsuario(a.usuarioId) },
+    {
+      encabezado: 'Usuario',
+      valor: (a) =>
+        a.usuarioNombre ?? (!a.usuarioId && a.ipOrigen === 'telegram' ? 'Paciente (desde Telegram)' : this.nombreUsuario(a.usuarioId)),
+    },
     { encabezado: 'Accion', valor: (a) => formatoEtiquetaEnum(a.accion) },
-    { encabezado: 'Entidad', valor: (a) => formatoEtiquetaEnum(a.entidadAfectada) + (a.entidadId ? ` #${a.entidadId}` : '') },
+    {
+      encabezado: 'Sobre',
+      valor: (a) => formatoEtiquetaEnum(a.entidadAfectada) + (a.entidadDescripcion ? `: ${a.entidadDescripcion}` : ''),
+    },
     { encabezado: 'IP', valor: (a) => a.ipOrigen ?? 'No disponible' },
     { encabezado: 'Resultado', valor: (a) => formatoEtiquetaEnum(a.resultado) },
   ];
@@ -77,7 +84,7 @@ export class AuditoriaListComponent {
     if (!usuarioId) {
       return 'Sistema';
     }
-    return this.nombresUsuarios().get(usuarioId) ?? `Usuario #${usuarioId}`;
+    return this.nombresUsuarios().get(usuarioId) ?? 'Usuario eliminado';
   }
 
   protected limpiarFiltro(): void {

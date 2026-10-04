@@ -4,6 +4,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router } from '@angular/router';
 import { map } from 'rxjs';
 import { PacienteService } from '../../pacientes/paciente.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { MedicionRegistroService } from '../../../core/services/medicion-registro.service';
 import { ConvenioSeguro } from '../../../core/models/paciente.model';
 import { ErrorResponse } from '../../../core/models/error.model';
@@ -15,6 +16,8 @@ import { ButtonComponent } from '../../../shared/ui/button/button';
 import { ToastService } from '../../../shared/components/toast-notification/toast.service';
 import { documentoUnicoValidator } from '../../../shared/validators/documento-unico.validator';
 import { telefonoValidator } from '../../../shared/validators/telefono.validator';
+import { correoDistintoValidator } from '../../../shared/validators/correo-distinto.validator';
+import { telefonoDistintoValidator } from '../../../shared/validators/telefono-distinto.validator';
 
 const OPCIONES_CONVENIO: OpcionSelect[] = [
   { value: 'ESSALUD', label: 'EsSalud' },
@@ -36,6 +39,7 @@ const OPCIONES_CONVENIO: OpcionSelect[] = [
 })
 export class CompletarPerfilComponent {
   private readonly pacienteService = inject(PacienteService);
+  private readonly authService = inject(AuthService);
   private readonly toastService = inject(ToastService);
   private readonly router = inject(Router);
   private readonly medicionRegistroService = inject(MedicionRegistroService);
@@ -66,8 +70,23 @@ export class CompletarPerfilComponent {
     contactoEmergenciaNombre: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     contactoEmergenciaTelefono: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required, telefonoValidator],
+      validators: [
+        Validators.required,
+        telefonoValidator,
+        telefonoDistintoValidator((): string | null | undefined => this.form?.controls.telefono.value),
+      ],
     }),
+    contactoEmergenciaEmail: new FormControl('', {
+      nonNullable: true,
+      validators: [
+        Validators.required,
+        Validators.email,
+        Validators.maxLength(150),
+        correoDistintoValidator((): string | null | undefined => this.form?.controls.email.value || this.authService.usuario()?.email),
+      ],
+    }),
+    // Ley 29733: consentimiento expreso, por eso empieza desmarcado.
+    contactoRecibeRecordatorios: new FormControl(false, { nonNullable: true }),
   });
 
   constructor() {
@@ -98,7 +117,8 @@ export class CompletarPerfilComponent {
       .subscribe({
         next: () => {
           this.toastService.exito('¡Listo! Tu perfil quedó registrado.');
-          this.router.navigate(['/mis-citas']);
+          // Paso recomendado (no obligatorio): activar los recordatorios por Telegram.
+          this.router.navigate(['/mi-perfil'], { queryParams: { paso: 'telegram' } });
         },
         error: (error: HttpErrorResponse) => {
           this.enviando.set(false);

@@ -1,5 +1,7 @@
 <ui-page-header titulo="Mis citas" descripcion="Consulta, confirma, reprograma o cancela tus citas" />
 
+<app-aviso-telegram />
+
 <div class="mt-6 rounded-xl border border-border bg-card">
   <div class="px-4 pt-4 sm:px-6">
     <ui-tabs [tabs]="tabs" [activa]="tabActiva()" (cambiarTab)="cambiarTab($event)" />

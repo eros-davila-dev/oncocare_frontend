@@ -18,9 +18,13 @@ export interface Paciente {
   estadioClinico: string | null;
   fechaDiagnostico: string | null;
   medicoTratanteId: number | null;
+  medicoTratanteNombre?: string | null;
   convenioSeguro: ConvenioSeguro;
   contactoEmergenciaNombre: string;
   contactoEmergenciaTelefono: string;
+  /** Correo del referido (contacto de emergencia): copia de los recordatorios si el paciente lo autoriza. */
+  contactoEmergenciaEmail: string | null;
+  contactoRecibeRecordatorios: boolean;
   activo: boolean;
   fechaRegistro: string;
 }
@@ -40,6 +44,9 @@ export interface PacienteRequest {
   convenioSeguro: ConvenioSeguro;
   contactoEmergenciaNombre: string;
   contactoEmergenciaTelefono: string;
+  /** Correo del referido (contacto de emergencia): copia de los recordatorios si el paciente lo autoriza. */
+  contactoEmergenciaEmail: string | null;
+  contactoRecibeRecordatorios: boolean;
   /**
    * Sesion de medicion del TPR abierta al mostrar el formulario
    * (MedicionRegistroService). El tiempo lo mide el servidor, nunca el navegador.
@@ -62,6 +69,9 @@ export interface PacienteResumen {
   medicoTratanteEspecialidad: Especialidad | null;
   ultimaCita: string | null;
   proximaCita: string | null;
+  /** Telegram vinculado: el paciente y/o su acompanante reciben los recordatorios. */
+  tieneTelegram?: boolean;
+  referidoTieneTelegram?: boolean;
 }
 
 export interface EstadisticasPacientes {

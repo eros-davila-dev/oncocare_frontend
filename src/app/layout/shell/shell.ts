@@ -21,7 +21,7 @@ type IconoNavegacion =
   | 'auditoria'
   | 'usuarios'
   | 'dispositivos'
-  | 'estudio';
+  | 'asistente';
 
 const ICONO_POR_SECCION: Record<IconoNavegacion, NombreIcono> = {
   dashboard: 'layout-dashboard',
@@ -34,7 +34,7 @@ const ICONO_POR_SECCION: Record<IconoNavegacion, NombreIcono> = {
   auditoria: 'shield-check',
   usuarios: 'user-cog',
   dispositivos: 'cpu',
-  estudio: 'flask-conical',
+  asistente: 'bot',
 };
 
 interface ItemDeNavegacion {
@@ -67,13 +67,10 @@ const GRUPOS_DE_NAVEGACION: GrupoDeNavegacion[] = [
     ],
   },
   {
-    titulo: 'INVESTIGACIÓN',
-    items: [{ ruta: '/estudio', etiqueta: 'Estudio de tesis', icono: 'estudio', roles: ['ADMIN', 'INVESTIGADOR'] }],
-  },
-  {
     titulo: 'CONFIGURACIÓN',
     items: [
       { ruta: '/preguntas-frecuentes', etiqueta: 'Preguntas frecuentes', icono: 'preguntas', roles: ['ADMIN', 'RECEPCIONISTA'] },
+      { ruta: '/asistente-ia', etiqueta: 'Asistente IA', icono: 'asistente', roles: ['ADMIN'] },
       { ruta: '/auditoria', etiqueta: 'Auditoría', icono: 'auditoria', roles: ['ADMIN'] },
       { ruta: '/usuarios', etiqueta: 'Usuarios', icono: 'usuarios', roles: ['ADMIN'] },
       { ruta: '/dispositivos', etiqueta: 'Dispositivos', icono: 'dispositivos', roles: ['ADMIN'] },

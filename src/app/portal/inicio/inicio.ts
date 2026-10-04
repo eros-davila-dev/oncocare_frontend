@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { QrBotTelegramComponent } from '../../features/telegram/qr-bot-telegram/qr-bot-telegram';
 import { AuthService } from '../../core/services/auth.service';
 import { IconComponent } from '../../shared/ui/icon/icon';
 import type { NombreIcono } from '../../shared/ui/icon/icon-data';
@@ -43,7 +44,7 @@ const PASOS = [
 @Component({
   selector: 'app-inicio-portal',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, IconComponent],
+  imports: [RouterLink, IconComponent, QrBotTelegramComponent],
   templateUrl: './inicio.html',
 })
 export class InicioPortalComponent {

@@ -19,6 +19,9 @@ export interface Cita {
   desenlaceRegistradoPor: number | null;
   cierreAutomatico: boolean;
   vecesReprogramada: number;
+  /** Nombres resueltos por el backend (nunca se muestra el id crudo). */
+  pacienteNombre?: string | null;
+  medicoNombre?: string | null;
 }
 
 export interface CitaRequest {

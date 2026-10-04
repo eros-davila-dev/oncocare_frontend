@@ -98,9 +98,6 @@ export class AuthService {
     if (this.tieneAlgunRol('RECEPCIONISTA')) {
       return '/agenda';
     }
-    if (this.tieneAlgunRol('INVESTIGADOR')) {
-      return '/estudio';
-    }
     return '/dashboard';
   }
 

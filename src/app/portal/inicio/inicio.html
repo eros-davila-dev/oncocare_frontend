@@ -81,3 +81,20 @@
     </div>
   }
 </section>
+
+<section class="mt-12 rounded-2xl border border-border bg-card p-6 sm:p-8" aria-labelledby="titulo-recordatorios">
+  <div class="flex flex-col gap-6 md:flex-row md:items-center">
+    <div class="min-w-0 flex-1">
+      <p class="text-sm font-semibold text-primary">Nuevo</p>
+      <h2 id="titulo-recordatorios" class="mt-1 font-display text-2xl font-bold">Recibe el aviso de tus citas en Telegram</h2>
+      <p class="mt-2 text-sm text-muted-foreground">
+        Te avisamos antes de cada cita y puedes confirmarla o cancelarla con un botón. También puede recibirlo el familiar
+        que te acompaña. Gratis y opcional.
+      </p>
+      <a routerLink="/recordatorios-telegram" class="mt-4 inline-flex min-h-11 items-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary-hover">
+        Ver cómo activarlo
+      </a>
+    </div>
+    <app-qr-bot-telegram class="mx-auto md:mx-0" />
+  </div>
+</section>

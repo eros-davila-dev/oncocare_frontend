@@ -64,8 +64,16 @@
             <dd class="mt-0.5 text-sm">{{ p.direccion || 'No registrada' }}</dd>
           </div>
           <div>
-            <dt class="text-xs font-medium uppercase text-muted-foreground">Contacto de emergencia</dt>
-            <dd class="mt-0.5 text-sm">{{ p.contactoEmergenciaNombre }} &middot; {{ p.contactoEmergenciaTelefono }}</dd>
+            <dt class="text-xs font-medium uppercase text-muted-foreground">Referido</dt>
+            <dd class="mt-0.5 text-sm">
+              {{ p.contactoEmergenciaNombre }} &middot; {{ p.contactoEmergenciaTelefono }}
+              @if (p.contactoEmergenciaEmail) {
+                <br />{{ p.contactoEmergenciaEmail }}
+              }
+              <br /><span class="text-xs text-muted-foreground">{{
+                p.contactoRecibeRecordatorios ? 'Recibe copia de los recordatorios' : 'No recibe recordatorios'
+              }}</span>
+            </dd>
           </div>
           <div>
             <dt class="text-xs font-medium uppercase text-muted-foreground">Registrado desde</dt>
@@ -74,7 +82,16 @@
         </dl>
       </ui-card>
 
-      <app-vinculo-telegram />
+      @if (pasoTelegram) {
+        <div class="rounded-xl border border-primary/40 bg-primary-soft p-4">
+          <p class="font-semibold">¡Tu perfil está listo! Último paso (recomendado)</p>
+          <p class="mt-1 text-sm text-muted-foreground">
+            Activa los recordatorios por Telegram para no olvidar tus citas. Puedes hacerlo ahora o cuando quieras desde esta página.
+          </p>
+          <a routerLink="/mis-citas" class="mt-2 inline-block text-sm font-semibold text-primary hover:underline">Ahora no, ir a mis citas</a>
+        </div>
+      }
+      <app-vinculo-telegram id="telegram" />
 
       <p class="text-sm text-muted-foreground">
         ¿Algún dato es incorrecto? Coméntalo con el personal de recepción en tu próxima visita para actualizarlo.

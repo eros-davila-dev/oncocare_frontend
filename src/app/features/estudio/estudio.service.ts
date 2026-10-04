@@ -10,6 +10,7 @@ import {
   CanalMedicion,
   ComparativoIndicadores,
   Consulta,
+  DetalleRecoleccion,
   EstadoMedicion,
   Fase,
   FaseEstudio,
@@ -23,6 +24,7 @@ import {
   ResultadoConsulta,
   ResultadoImportacion,
   ResultadoIndicadores,
+  ResumenRecoleccion,
   TipoFicha,
   TipoMedicion,
 } from '../../core/models/estudio.model';
@@ -58,6 +60,23 @@ export class EstudioService {
 
   wilcoxon(): Observable<AnalisisPareado> {
     return this.http.get<AnalisisPareado>(`${this.base}/indicadores/wilcoxon`);
+  }
+
+  // --- Recoleccion por sesion (tesis v8) --------------------------------------
+
+  recoleccion(fase: Fase): Observable<ResumenRecoleccion> {
+    return this.http.get<ResumenRecoleccion>(`${this.base}/recoleccion`, { params: { fase } });
+  }
+
+  /** Fichas de una sesion; sin fecha, las de todas las sesiones de la fase. */
+  detalleRecoleccion(fase: Fase, fecha?: string): Observable<DetalleRecoleccion> {
+    const params: Record<string, string> = { fase };
+    if (fecha) params['fecha'] = fecha;
+    return this.http.get<DetalleRecoleccion>(`${this.base}/recoleccion/detalle`, { params });
+  }
+
+  exportarRecoleccion(fase: Fase): Observable<Blob> {
+    return this.http.get(`${this.base}/recoleccion/exportar.xlsx`, { params: { fase }, responseType: 'blob' });
   }
 
   // --- Exportaciones (anonimizadas, quedan en la auditoria) -------------------

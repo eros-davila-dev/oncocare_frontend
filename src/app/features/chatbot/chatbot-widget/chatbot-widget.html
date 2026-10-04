@@ -1,7 +1,7 @@
 <div class="fixed bottom-4 left-4 z-50">
   @if (abierto()) {
     <section
-      class="flex h-[28rem] w-[min(22rem,calc(100vw-2rem))] flex-col rounded-xl border border-border bg-background shadow-modal"
+      class="flex h-[min(32rem,calc(100vh-2rem))] w-[min(22rem,calc(100vw-2rem))] flex-col rounded-xl border border-border bg-background shadow-modal"
       aria-label="Asistente virtual"
     >
       <header class="flex items-center justify-between rounded-t-xl bg-primary px-4 py-3 text-primary-foreground">
@@ -59,6 +59,20 @@
           <p class="text-xs text-muted-foreground">Escribiendo...</p>
         }
       </div>
+
+      @if (sugerencias().length && !enviando()) {
+        <div class="flex flex-wrap gap-1.5 border-t border-border px-3 pt-2" aria-label="Sugerencias">
+          @for (sugerencia of sugerencias(); track sugerencia) {
+            <button
+              type="button"
+              class="rounded-full border border-primary/40 bg-primary-soft px-3 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
+              (click)="usarSugerencia(sugerencia)"
+            >
+              {{ sugerencia }}
+            </button>
+          }
+        </div>
+      }
 
       <div class="border-t border-border px-3 pt-2">
         <button
