@@ -21,7 +21,14 @@
           </div>
           <p class="mt-1 text-sm text-muted-foreground">
             {{ canal(consulta) }} · abierta {{ fecha(consulta.abiertaEn) }} ·
-            {{ consulta.pacienteId ? 'Paciente #' + consulta.pacienteId : 'Visitante sin identificar' }}
+            @if (consulta.pacienteNombre) {
+              <span class="font-medium text-foreground">{{ consulta.pacienteNombre }}</span>
+              @if (consulta.pacienteTelefono) {
+                · <a [href]="'tel:' + consulta.pacienteTelefono" class="text-primary hover:underline" (click)="$event.stopPropagation()">{{ consulta.pacienteTelefono }}</a>
+              }
+            } @else {
+              Visitante sin identificar (no inició sesión)
+            }
             @if (consulta.valoracion === -1) {
               · valoró mal la respuesta del asistente
             }

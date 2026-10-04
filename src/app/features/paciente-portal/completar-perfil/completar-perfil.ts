@@ -17,6 +17,7 @@ import { ToastService } from '../../../shared/components/toast-notification/toas
 import { documentoUnicoValidator } from '../../../shared/validators/documento-unico.validator';
 import { telefonoValidator } from '../../../shared/validators/telefono.validator';
 import { correoDistintoValidator } from '../../../shared/validators/correo-distinto.validator';
+import { telefonoDistintoValidator } from '../../../shared/validators/telefono-distinto.validator';
 
 const OPCIONES_CONVENIO: OpcionSelect[] = [
   { value: 'ESSALUD', label: 'EsSalud' },
@@ -69,7 +70,11 @@ export class CompletarPerfilComponent {
     contactoEmergenciaNombre: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     contactoEmergenciaTelefono: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required, telefonoValidator],
+      validators: [
+        Validators.required,
+        telefonoValidator,
+        telefonoDistintoValidator((): string | null | undefined => this.form?.controls.telefono.value),
+      ],
     }),
     contactoEmergenciaEmail: new FormControl('', {
       nonNullable: true,
@@ -112,7 +117,8 @@ export class CompletarPerfilComponent {
       .subscribe({
         next: () => {
           this.toastService.exito('¡Listo! Tu perfil quedó registrado.');
-          this.router.navigate(['/mis-citas']);
+          // Paso recomendado (no obligatorio): activar los recordatorios por Telegram.
+          this.router.navigate(['/mi-perfil'], { queryParams: { paso: 'telegram' } });
         },
         error: (error: HttpErrorResponse) => {
           this.enviando.set(false);

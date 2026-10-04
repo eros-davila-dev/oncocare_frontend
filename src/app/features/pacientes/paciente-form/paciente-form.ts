@@ -11,10 +11,14 @@ import { ButtonComponent } from '../../../shared/ui/button/button';
 import { ModalComponent } from '../../../shared/ui/modal/modal';
 import { SelectComponent, type OpcionSelect } from '../../../shared/ui/select/select';
 import { TabsComponent } from '../../../shared/ui/tabs/tabs';
+import { formatoEtiquetaEnum } from '../../../shared/pipes/etiqueta-enum.pipe';
+import { UsuarioService } from '../../usuarios/usuario.service';
+import { forkJoin } from 'rxjs';
 import { ToastService } from '../../../shared/components/toast-notification/toast.service';
 import { documentoUnicoValidator } from '../../../shared/validators/documento-unico.validator';
 import { telefonoValidator } from '../../../shared/validators/telefono.validator';
 import { correoDistintoValidator } from '../../../shared/validators/correo-distinto.validator';
+import { telefonoDistintoValidator } from '../../../shared/validators/telefono-distinto.validator';
 
 const OPCIONES_CONVENIO: OpcionSelect[] = [
   { value: 'ESSALUD', label: 'EsSalud' },
@@ -43,6 +47,10 @@ export class PacienteFormComponent {
   private readonly pacienteService = inject(PacienteService);
   private readonly toastService = inject(ToastService);
   private readonly medicionRegistroService = inject(MedicionRegistroService);
+  private readonly usuarioService = inject(UsuarioService);
+
+  /** Medicos de todas las especialidades, por nombre (antes se pedia el id a mano). */
+  protected readonly opcionesMedicos = signal<OpcionSelect[]>([]);
 
   pacienteId = input<number | null>(null);
   abierto = input(false);
@@ -77,7 +85,8 @@ export class PacienteFormComponent {
       ],
     }),
     fechaNacimiento: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    telefono: new FormControl('', { validators: [telefonoValidator] }),
+    // Obligatorio: es la llave para vincular Telegram con "Compartir mi numero".
+    telefono: new FormControl('', { validators: [Validators.required, telefonoValidator] }),
     // Obligatorio: los recordatorios de cita tambien salen por correo.
     email: new FormControl('', { validators: [Validators.required, Validators.email, Validators.maxLength(150)] }),
     direccion: new FormControl(''),
@@ -89,7 +98,11 @@ export class PacienteFormComponent {
     contactoEmergenciaNombre: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     contactoEmergenciaTelefono: new FormControl('', {
       nonNullable: true,
-      validators: [Validators.required, telefonoValidator],
+      validators: [
+        Validators.required,
+        telefonoValidator,
+        telefonoDistintoValidator((): string | null | undefined => this.form?.controls.telefono.value),
+      ],
     }),
     contactoEmergenciaEmail: new FormControl('', {
       nonNullable: true,
@@ -105,6 +118,14 @@ export class PacienteFormComponent {
   });
 
   constructor() {
+    const especialidades = ['ONCOLOGIA_CLINICA', 'ONCOLOGIA_QUIRURGICA', 'RADIOTERAPIA', 'CUIDADOS_PALIATIVOS'] as const;
+    forkJoin(especialidades.map((e) => this.usuarioService.medicosPorEspecialidad(e))).subscribe({
+      next: (listas) =>
+        this.opcionesMedicos.set(
+          listas.flat().map((m) => ({ value: m.id, label: `${m.nombres}${m.especialidad ? ' — ' + formatoEtiquetaEnum(m.especialidad) : ''}` })),
+        ),
+      error: () => this.opcionesMedicos.set([]),
+    });
     effect(() => {
       if (!this.abierto()) {
         return;

@@ -90,7 +90,16 @@ export class PacientesListComponent {
     { encabezado: 'Ultima cita', valor: (p) => this.formatoFecha(p.ultimaCita) },
     { encabezado: 'Proxima cita', valor: (p) => this.formatoFecha(p.proximaCita) },
     { encabezado: 'Medico tratante', clave: 'medico', valor: (p) => p.medicoTratanteNombre ?? 'Sin asignar' },
+    { encabezado: 'Telegram', valor: (p) => this.telegram(p) },
   ];
+
+  /** Quien recibe los recordatorios por Telegram (recepcion ve a quien falta vincular). */
+  private telegram(p: PacienteResumen): string {
+    if (p.tieneTelegram && p.referidoTieneTelegram) return '✓ Paciente y acompañante';
+    if (p.tieneTelegram) return '✓ Paciente';
+    if (p.referidoTieneTelegram) return '✓ Acompañante';
+    return 'Sin vincular';
+  }
 
   constructor() {
     this.cargar(0);

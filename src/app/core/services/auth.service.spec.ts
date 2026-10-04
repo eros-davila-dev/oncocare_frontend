@@ -44,7 +44,7 @@ describe('AuthService: portal e intranet', () => {
 
   it('cada rol aterriza en la pantalla donde trabaja', () => {
     expect(servicioCon('intranet', 'RECEPCIONISTA').rutaInicio()).toBe('/agenda');
-    expect(servicioCon('intranet', 'INVESTIGADOR').rutaInicio()).toBe('/estudio');
+    expect(servicioCon('intranet', 'INVESTIGADOR').rutaInicio()).toBe('/dashboard');
     expect(servicioCon('intranet', 'MEDICO').rutaInicio()).toBe('/dashboard');
     expect(servicioCon('portal', 'PACIENTE').rutaInicio()).toBe('/mis-citas');
     expect(servicioCon('portal', null).rutaInicio()).toBe('/');

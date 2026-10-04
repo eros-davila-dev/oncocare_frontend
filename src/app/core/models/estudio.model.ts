@@ -150,6 +150,9 @@ export interface Consulta {
   resueltaPorUsuarioId: number | null;
   capturaManual: boolean;
   observacion: string | null;
+  /** Solo en la bandeja del personal: quien hizo la consulta. */
+  pacienteNombre?: string | null;
+  pacienteTelefono?: string | null;
 }
 
 export interface FichaTiempoRequest {
@@ -242,6 +245,9 @@ export interface ResumenRecoleccion {
   citasElegibles: number;
   consultas: number;
   avisos: AvisosRecoleccion;
+  /** Citas elegibles que recibieron al menos un recordatorio. */
+  citasConRecordatorio: number;
+  coberturaRecordatorioPct?: number | null;
 }
 
 export interface FilaTiempoRecoleccion {

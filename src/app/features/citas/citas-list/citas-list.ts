@@ -106,8 +106,8 @@ export class CitasListComponent {
     { encabezado: 'Fecha', valor: (c) => new Date(c.fecha).toLocaleDateString('es-PE') },
     { encabezado: 'Hora', valor: (c) => c.hora },
     { encabezado: 'Tipo de consulta', valor: (c) => c.tipoConsulta },
-    { encabezado: 'Paciente', valor: (c) => this.nombresPacientes().get(c.pacienteId) ?? `Paciente #${c.pacienteId}` },
-    { encabezado: 'Medico', valor: (c) => (c.medicoId ? `Médico #${c.medicoId}` : '—') },
+    { encabezado: 'Paciente', valor: (c) => c.pacienteNombre ?? this.nombresPacientes().get(c.pacienteId) ?? 'Paciente no disponible' },
+    { encabezado: 'Medico', valor: (c) => c.medicoNombre ?? (c.medicoId ? 'Médico no disponible' : 'Sin médico asignado') },
   ];
 
   constructor() {

@@ -99,6 +99,10 @@ const ESTADO_CITA: Record<string, string> = {
           <p class="mt-1 text-xs text-muted-foreground">
             Promedio de {{ conDatos('taPct') }} sesiones con datos · {{ r.citasElegibles }} citas elegibles
           </p>
+          <p class="mt-1 text-xs text-muted-foreground">
+            Recordatorio enviado: {{ r.citasConRecordatorio }} de {{ r.citasElegibles }}
+            ({{ valor(r.coberturaRecordatorioPct, ' %') }})
+          </p>
         </ui-card>
         <ui-card>
           <p class="text-xs font-semibold uppercase text-muted-foreground">H3 · Nivel de consultas atendidas</p>

@@ -79,7 +79,7 @@ export class TratamientosListComponent {
   });
 
   protected readonly columnas: ColumnaTabla<CicloTratamiento>[] = [
-    { encabezado: 'Paciente', valor: (c) => this.nombresPacientes().get(c.pacienteId) ?? `Paciente #${c.pacienteId}` },
+    { encabezado: 'Paciente', valor: (c) => c.pacienteNombre ?? this.nombresPacientes().get(c.pacienteId) ?? 'Paciente no disponible' },
     { encabezado: 'Tipo', valor: (c) => formatoEtiquetaEnum(c.tipoTratamiento) },
     { encabezado: 'Sesion', valor: (c) => `${c.numeroSesion} de ${c.totalSesionesEsquema}` },
     { encabezado: 'Cumplimiento', valor: (c) => `${c.porcentajeCumplimiento.toFixed(0)}%` },

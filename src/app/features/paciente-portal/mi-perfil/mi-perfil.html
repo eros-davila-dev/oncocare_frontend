@@ -82,7 +82,16 @@
         </dl>
       </ui-card>
 
-      <app-vinculo-telegram />
+      @if (pasoTelegram) {
+        <div class="rounded-xl border border-primary/40 bg-primary-soft p-4">
+          <p class="font-semibold">¡Tu perfil está listo! Último paso (recomendado)</p>
+          <p class="mt-1 text-sm text-muted-foreground">
+            Activa los recordatorios por Telegram para no olvidar tus citas. Puedes hacerlo ahora o cuando quieras desde esta página.
+          </p>
+          <a routerLink="/mis-citas" class="mt-2 inline-block text-sm font-semibold text-primary hover:underline">Ahora no, ir a mis citas</a>
+        </div>
+      }
+      <app-vinculo-telegram id="telegram" />
 
       <p class="text-sm text-muted-foreground">
         ¿Algún dato es incorrecto? Coméntalo con el personal de recepción en tu próxima visita para actualizarlo.

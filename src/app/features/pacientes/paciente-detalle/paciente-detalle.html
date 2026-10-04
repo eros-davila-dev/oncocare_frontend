@@ -53,7 +53,7 @@
             <div>
               <dt class="text-xs font-medium uppercase text-muted-foreground">Medico tratante</dt>
               <dd class="mt-0.5 text-sm">
-                {{ p.medicoTratanteId ? '#' + p.medicoTratanteId : 'No asignado' }}
+                {{ p.medicoTratanteNombre ?? (p.medicoTratanteId ? 'Médico no disponible' : 'No asignado') }}
               </dd>
             </div>
           </dl>

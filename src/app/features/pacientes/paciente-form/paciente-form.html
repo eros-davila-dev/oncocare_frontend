@@ -16,7 +16,7 @@
             <ui-input label="Apellidos" [control]="form.controls.apellidos" [requerido]="true" />
             <ui-input label="Documento de identidad" [control]="form.controls.documentoIdentidad" [requerido]="true" />
             <ui-input label="Fecha de nacimiento" type="date" [control]="form.controls.fechaNacimiento" [requerido]="true" />
-            <ui-input label="Telefono" [control]="form.controls.telefono" />
+            <ui-input label="Telefono" [control]="form.controls.telefono" [requerido]="true" />
             <ui-input label="Correo electronico" type="email" [control]="form.controls.email" [requerido]="true" />
             <ui-input label="Direccion" [control]="form.controls.direccion" />
             <ui-select
@@ -32,7 +32,7 @@
             <ui-input label="Tipo de cancer" [control]="form.controls.tipoCancer" />
             <ui-input label="Estadio clinico" [control]="form.controls.estadioClinico" />
             <ui-input label="Fecha de diagnostico" type="date" [control]="form.controls.fechaDiagnostico" />
-            <ui-input label="ID del medico tratante" type="number" [control]="form.controls.medicoTratanteId" />
+            <ui-select label="Médico tratante" placeholder="Sin asignar" [control]="form.controls.medicoTratanteId" [opciones]="opcionesMedicos()" />
           </div>
         }
         @case ('Contacto') {

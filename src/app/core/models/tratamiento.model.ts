@@ -12,6 +12,8 @@ export interface CicloTratamiento {
   medicoResponsableId: number;
   estado: EstadoCicloTratamiento;
   observaciones: string | null;
+  pacienteNombre?: string | null;
+  medicoResponsableNombre?: string | null;
 }
 
 export interface CicloTratamientoRequest {

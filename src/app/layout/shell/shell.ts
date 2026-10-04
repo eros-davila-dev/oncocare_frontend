@@ -21,7 +21,6 @@ type IconoNavegacion =
   | 'auditoria'
   | 'usuarios'
   | 'dispositivos'
-  | 'estudio'
   | 'asistente';
 
 const ICONO_POR_SECCION: Record<IconoNavegacion, NombreIcono> = {
@@ -35,7 +34,6 @@ const ICONO_POR_SECCION: Record<IconoNavegacion, NombreIcono> = {
   auditoria: 'shield-check',
   usuarios: 'user-cog',
   dispositivos: 'cpu',
-  estudio: 'flask-conical',
   asistente: 'bot',
 };
 
@@ -67,10 +65,6 @@ const GRUPOS_DE_NAVEGACION: GrupoDeNavegacion[] = [
       { ruta: '/citas', etiqueta: 'Citas', icono: 'citas', roles: ['ADMIN', 'MEDICO', 'RECEPCIONISTA'] },
       { ruta: '/tratamientos', etiqueta: 'Tratamientos', icono: 'tratamientos', roles: ['ADMIN', 'MEDICO', 'RECEPCIONISTA'] },
     ],
-  },
-  {
-    titulo: 'INVESTIGACIÓN',
-    items: [{ ruta: '/estudio', etiqueta: 'Estudio de tesis', icono: 'estudio', roles: ['ADMIN', 'INVESTIGADOR'] }],
   },
   {
     titulo: 'CONFIGURACIÓN',

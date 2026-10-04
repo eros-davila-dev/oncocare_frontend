@@ -44,6 +44,11 @@ export const rutasPortal: Routes = [
         loadComponent: () => import('./preguntas/preguntas-publicas').then((m) => m.PreguntasPublicasComponent),
       },
       {
+        path: 'recordatorios-telegram',
+        title: 'Recordatorios por Telegram',
+        loadComponent: () => import('../features/telegram/guia-telegram/guia-telegram').then((m) => m.GuiaTelegramComponent),
+      },
+      {
         path: 'completar-perfil',
         title: 'Completar mi perfil',
         canActivate: [authGuard, perfilPendienteGuard],
