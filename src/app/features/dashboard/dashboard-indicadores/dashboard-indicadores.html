@@ -39,160 +39,196 @@
         <input type="date" class="mt-1 block min-h-9 rounded-md border border-border bg-background px-2 text-sm text-foreground" [formControl]="hastaControl" />
       </label>
       <ui-button variante="outline" (click)="aplicarRango()">Ver</ui-button>
+      @if (fuente() === 'SERVIDOR' && etapasEstudio().length) {
+        <div class="flex gap-1 rounded-lg bg-muted p-1" role="group" aria-label="Etapas del estudio">
+          @for (e of etapasEstudio(); track e.etiqueta) {
+            <button
+              type="button"
+              class="min-h-9 rounded-md px-3 text-sm font-semibold transition-colors"
+              [class]="etapaActiva(e.rango) ? 'bg-background text-foreground shadow-card' : 'text-muted-foreground hover:text-foreground'"
+              [attr.aria-pressed]="etapaActiva(e.rango)"
+              (click)="verEtapa(e.rango)"
+            >
+              {{ e.etiqueta }}
+            </button>
+          }
+        </div>
+      }
     </div>
     @if (puedeDescargar) {
       <ui-button variante="outline" [cargando]="descargando()" (click)="descargar()">Descargar Excel</ui-button>
     }
   </section>
 
+  @if (pacientesDemo() > 0) {
+    <div class="mt-4 flex items-start gap-3 rounded-xl border border-warning/50 bg-warning-soft p-4 text-sm" role="status">
+      <ui-icon name="triangle-alert" [size]="20" clase="mt-0.5 shrink-0 text-warning" />
+      <p>
+        <strong>Datos de demostración cargados</strong> ({{ pacientesDemo() }} pacientes ficticios DEMO-NNN). Los registros, citas y
+        consultas de las últimas semanas son aleatorios, sirven solo para probar el sistema y no son resultados de la tesis.
+        Quítelos con <code class="rounded bg-background/70 px-1">docker/demo/quitar-datos-demo.sql</code> antes de recolectar datos reales.
+      </p>
+    </div>
+  }
+
   @if (cargando()) {
     <ui-loading-spinner class="mt-8 block" />
   } @else if (error()) {
     <ui-card class="mt-6 block"><p class="text-sm text-destructive">{{ error() }}</p></ui-card>
   } @else if (resumen(); as r) {
-    <p class="mt-3 text-sm text-muted-foreground">Del {{ fechaCorta(r.desde) }} al {{ fechaCorta(r.hasta) }}</p>
-
-    <div class="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <ui-card>
-        <div class="flex items-center justify-between gap-2">
-          <p class="text-xs font-bold tracking-wide text-primary">TIEMPO DE REGISTRO</p>
-          <span class="grid size-9 place-items-center rounded-lg bg-primary-soft text-primary"><ui-icon name="clock" [size]="18" /></span>
-        </div>
-        <p class="mt-2 font-display text-3xl font-bold" [class.text-muted-foreground]="r.registros.promedioMin === null">
-          {{ numero(r.registros.promedioMin, 2) }} <span class="text-base font-semibold">min</span>
-        </p>
-        <p class="mt-1 text-sm text-muted-foreground">
-          Promedio de {{ r.registros.total }} {{ r.registros.total === 1 ? 'paciente registrado' : 'pacientes registrados' }} por el personal
-        </p>
-        @if (r.registros.total) {
-          <p class="mt-1 text-xs text-muted-foreground">Más rápido {{ numero(r.registros.minimoMin, 2) }} · más lento {{ numero(r.registros.maximoMin, 2) }} min</p>
-        }
-      </ui-card>
-
-      <ui-card>
-        <div class="flex items-center justify-between gap-2">
-          <p class="text-xs font-bold tracking-wide text-primary">AUSENTISMO</p>
-          <span class="grid size-9 place-items-center rounded-lg bg-warning-soft text-warning"><ui-icon name="calendar-days" [size]="18" /></span>
-        </div>
-        <p class="mt-2 font-display text-3xl font-bold" [class.text-muted-foreground]="r.citas.ausentismoPct === null">
-          {{ numero(r.citas.ausentismoPct) }} <span class="text-base font-semibold">%</span>
-        </p>
-        <p class="mt-1 text-sm text-muted-foreground">
-          {{ r.citas.noAsistio }} no asistieron de {{ r.citas.atendidas + r.citas.noAsistio }} citas con desenlace
-        </p>
-        <p class="mt-1 text-xs text-muted-foreground">
-          {{ r.citas.total }} citas · {{ r.citas.canceladas }} canceladas · {{ r.citas.pendientes }} por atender · {{ r.citas.reprogramadas }} reprogramadas
-        </p>
-      </ui-card>
-
-      <ui-card>
-        <div class="flex items-center justify-between gap-2">
-          <p class="text-xs font-bold tracking-wide text-primary">RECORDATORIOS</p>
-          <span class="grid size-9 place-items-center rounded-lg bg-success-soft text-success"><ui-icon name="bell" [size]="18" /></span>
-        </div>
-        <p class="mt-2 font-display text-3xl font-bold">{{ r.recordatorios.enviados }} <span class="text-base font-semibold">enviados</span></p>
-        <p class="mt-1 text-sm text-muted-foreground">
-          {{ numero(r.recordatorios.coberturaPct) }} % de las citas con desenlace recibió recordatorio
-        </p>
-        <p class="mt-1 text-xs text-muted-foreground">
-          {{ canales().length ? canales().join(' · ') : 'Ninguno enviado' }}
-          @if (r.recordatorios.respondidos) {
-            · {{ r.recordatorios.respondidos }} respondidos
+    <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+      <p class="text-sm text-muted-foreground">Del {{ fechaCorta(r.desde) }} al {{ fechaCorta(r.hasta) }}</p>
+      <div class="flex flex-wrap items-center gap-2 text-sm">
+        <span class="font-semibold text-muted-foreground">Fuente de los datos:</span>
+        <div class="flex gap-1 rounded-lg bg-muted p-1" role="group" aria-label="Fuente de los datos">
+          @for (f of fuentes; track f.valor) {
+            <button
+              type="button"
+              class="min-h-8 rounded-md px-3 text-sm font-semibold transition-colors"
+              [class]="fuente() === f.valor ? 'bg-background text-foreground shadow-card' : 'text-muted-foreground hover:text-foreground'"
+              [attr.aria-pressed]="fuente() === f.valor"
+              (click)="cambiarFuente(f.valor)"
+            >
+              {{ f.etiqueta }}
+            </button>
           }
-        </p>
-      </ui-card>
-
-      <ui-card>
-        <div class="flex items-center justify-between gap-2">
-          <p class="text-xs font-bold tracking-wide text-primary">CONSULTAS ATENDIDAS</p>
-          <span class="grid size-9 place-items-center rounded-lg bg-lavender text-secondary-foreground"><ui-icon name="bot" [size]="18" /></span>
         </div>
-        <p class="mt-2 font-display text-3xl font-bold" [class.text-muted-foreground]="r.consultas.atendidasAutomaticoPct === null">
-          {{ numero(r.consultas.atendidasAutomaticoPct) }} <span class="text-base font-semibold">%</span>
-        </p>
-        <p class="mt-1 text-sm text-muted-foreground">
-          {{ r.consultas.resueltasPorAsistente }} de {{ r.consultas.cerradas }} resueltas por el asistente, sin pasar al personal
-        </p>
-        <p class="mt-1 text-xs text-muted-foreground">
-          {{ r.consultas.total }} recibidas · {{ r.consultas.derivadas }} derivadas · {{ r.consultas.abiertas }} abiertas
-          @if (r.consultas.tiempoRespuestaPromedioMin !== null) {
-            · responde en {{ numero(r.consultas.tiempoRespuestaPromedioMin * 60, 0) }} s
-          }
-        </p>
-      </ui-card>
-    </div>
-
-    @if (pendientes().length) {
-      <div class="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm" role="status">
-        <p class="font-semibold text-destructive">Pendiente de revisar</p>
-        <ul class="mt-1 list-disc pl-5 text-foreground">
-          @for (aviso of pendientes(); track aviso) {
-            <li>{{ aviso }}</li>
-          }
-        </ul>
       </div>
+    </div>
+    @if (fuente() === 'SERVIDOR') {
+      <p class="mt-2 rounded-lg bg-info-soft px-3 py-2 text-xs text-foreground">
+        Datos del servidor de la fundación, importados a esta instalación (pretest: fichas manuales validadas por la fundación). Los
+        pacientes se identifican solo por su código. Los indicadores se calculan con las mismas reglas que usa el sistema.
+      </p>
     }
 
-    @if (categorias().length) {
-      <section class="mt-6" aria-labelledby="titulo-temas">
-        <h2 id="titulo-temas" class="font-display text-lg font-bold">¿Sobre qué preguntan?</h2>
-        <div class="mt-2 flex flex-wrap gap-2">
-          @for (c of categorias(); track c.categoria) {
-            <span class="rounded-full bg-muted px-3 py-1 text-sm">{{ c.categoria }} <strong>{{ c.n }}</strong></span>
+    <ui-tabs class="mt-4" [tabs]="vistas" [activa]="vista()" (cambiarTab)="vista.set($event)" />
+
+    @switch (vista()) {
+      <!-- ============================== GENERAL ============================== -->
+      @case ('General') {
+        <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          @for (k of tarjetas(); track k.vista) {
+            <button
+              type="button"
+              class="group flex h-full flex-col items-stretch justify-start rounded-xl border border-border bg-card p-5 text-left shadow-card transition hover:-translate-y-0.5 hover:border-primary/40"
+              (click)="vista.set(k.vista)"
+            >
+              <span class="flex items-center justify-between gap-2">
+                <span class="text-xs font-bold tracking-wide text-primary">{{ k.titulo }}</span>
+                <span class="grid size-9 place-items-center rounded-lg" [class]="k.colorIcono"><ui-icon [name]="k.icono" [size]="18" /></span>
+              </span>
+              <span class="mt-3 block font-display text-3xl font-bold">
+                {{ k.valor }} <span class="text-base font-semibold">{{ k.unidad }}</span>
+              </span>
+              <span class="mt-1 block text-sm text-muted-foreground">{{ k.detalle }}</span>
+              @if (k.pre !== null || k.post !== null) {
+                <span class="mt-3 flex flex-wrap gap-x-3 gap-y-1 border-t border-border pt-2 text-xs text-muted-foreground">
+                  @if (k.pre !== null) {
+                    <span>Pretest <strong class="text-foreground">{{ numero(k.pre, 2) }}</strong></span>
+                  }
+                  @if (k.post !== null) {
+                    <span>Postest (servidor) <strong class="text-foreground">{{ numero(k.post, 2) }}</strong></span>
+                  }
+                </span>
+              }
+              <span class="mt-auto inline-flex items-center gap-1 pt-3 text-xs font-semibold text-primary">
+                Ver detalle <ui-icon name="arrow-right" [size]="14" clase="transition-transform group-hover:translate-x-0.5" />
+              </span>
+            </button>
           }
         </div>
-      </section>
-    }
 
-    <section class="mt-8" aria-labelledby="titulo-dias">
-      <h2 id="titulo-dias" class="font-display text-lg font-bold">Día por día</h2>
-      @if (r.dias.length) {
-        <div class="mt-3 overflow-x-auto rounded-xl border border-border">
-          <table class="w-full border-collapse text-left text-sm">
-            <thead class="bg-muted/70 text-xs text-muted-foreground">
-              <tr>
-                <th class="px-3 py-2 font-semibold">Fecha</th>
-                <th class="px-3 py-2 text-right font-semibold">Registros</th>
-                <th class="px-3 py-2 text-right font-semibold">Tiempo de registro (min)</th>
-                <th class="px-3 py-2 text-right font-semibold">Citas con desenlace</th>
-                <th class="px-3 py-2 text-right font-semibold">Ausentismo (%)</th>
-                <th class="px-3 py-2 text-right font-semibold">Recordatorios</th>
-                <th class="px-3 py-2 text-right font-semibold">Consultas</th>
-                <th class="px-3 py-2 text-right font-semibold">Atendidas por el asistente (%)</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (d of r.dias; track d.fecha) {
-                <tr class="border-t border-border">
-                  <td class="px-3 py-2 font-semibold">{{ fechaCorta(d.fecha) }}</td>
-                  <td class="px-3 py-2 text-right">{{ d.registros }}</td>
-                  <td class="px-3 py-2 text-right">{{ numero(d.tprMin, 2) }}</td>
-                  <td class="px-3 py-2 text-right">{{ d.citasElegibles }}</td>
-                  <td class="px-3 py-2 text-right">{{ numero(d.ausentismoPct) }}</td>
-                  <td class="px-3 py-2 text-right">{{ d.recordatoriosEnviados }}</td>
-                  <td class="px-3 py-2 text-right">{{ d.consultas }}</td>
-                  <td class="px-3 py-2 text-right">{{ numero(d.atendidasAutomaticoPct) }}</td>
-                </tr>
+        <p class="mt-3 text-xs text-muted-foreground">
+          El valor grande de cada tarjeta es el resultado de todos los eventos del periodo; «Pretest» y «Postest» son el promedio de las
+          13 sesiones de cada etapa, que es el valor que se analiza en SPSS.
+        </p>
+
+        @if (comparacion().length) {
+          <section class="mt-6" aria-labelledby="titulo-comparacion">
+            <h2 id="titulo-comparacion" class="font-display text-lg font-bold">Pretest vs postest</h2>
+            <p class="text-sm text-muted-foreground">
+              Promedio de las 13 sesiones de cada etapa. Pretest: instrumento aplicado a mano y validado por la fundación.
+              @if (postestImportado().length) {
+                Postest: medido en el servidor de la fundación e importado a esta instalación.
               }
-            </tbody>
-          </table>
-        </div>
-        <p class="mt-2 text-xs text-muted-foreground">«—» = ese día no hubo eventos de ese indicador.</p>
-      } @else {
-        <p class="mt-2 text-sm text-muted-foreground">No hubo actividad en este periodo.</p>
-      }
-    </section>
-
-    @if (puedeVerDetalle && detalle(); as d) {
-      <section class="mt-8" aria-labelledby="titulo-detalle">
-        <h2 id="titulo-detalle" class="font-display text-lg font-bold">Detalle</h2>
-        <ui-tabs class="mt-2" [tabs]="pestanas" [activa]="pestana()" (cambiarTab)="pestana.set($event)" />
-
-        <div class="mt-3 overflow-x-auto rounded-xl border border-border">
-          <table class="w-full border-collapse text-left text-sm">
-            @switch (pestana()) {
-              @case ('Registros') {
+            </p>
+            <div class="mt-3 overflow-x-auto rounded-xl border border-border">
+              <table class="w-full border-collapse text-left text-sm">
                 <thead class="bg-muted/70 text-xs text-muted-foreground">
+                  <tr>
+                    <th class="px-3 py-2 font-semibold">Indicador</th>
+                    <th class="px-3 py-2 text-right font-semibold">Pretest</th>
+                    <th class="px-3 py-2 text-right font-semibold">Postest {{ postestImportado().length ? '(servidor)' : '' }}</th>
+                    <th class="px-3 py-2 text-right font-semibold">Diferencia</th>
+                    <th class="px-3 py-2 font-semibold">Meta</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (c of comparacion(); track c.indicador) {
+                    <tr class="border-t border-border">
+                      <td class="px-3 py-2 font-semibold">{{ c.indicador }}</td>
+                      <td class="px-3 py-2 text-right tabular-nums">{{ numero(c.pre, 2) }} {{ c.unidad }}</td>
+                      <td class="px-3 py-2 text-right tabular-nums">{{ c.post === null ? '—' : numero(c.post, 2) + ' ' + c.unidad }}</td>
+                      <td class="px-3 py-2 text-right tabular-nums">
+                        {{ c.diferencia === null ? '—' : (c.diferencia > 0 ? '+' : '') + numero(c.diferencia, 2) + ' ' + c.unidad }}
+                      </td>
+                      <td class="px-3 py-2">
+                        {{ c.meta }}
+                        @if (c.cumple !== null) {
+                          <span class="ml-1 text-xs" [class]="c.cumple ? 'text-success' : 'text-destructive'">
+                            · {{ c.cumple ? 'en el sentido esperado' : 'en sentido contrario' }}
+                          </span>
+                        }
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </section>
+        }
+
+        @if (pendientes().length) {
+          <div class="mt-6 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm" role="status">
+            <p class="font-semibold text-destructive">Pendiente de revisar</p>
+            <ul class="mt-1 list-disc pl-5 text-foreground">
+              @for (aviso of pendientes(); track aviso) {
+                <li>{{ aviso }}</li>
+              }
+            </ul>
+          </div>
+        }
+      }
+
+      <!-- ========================= TIEMPO DE REGISTRO ========================= -->
+      @case ('Tiempo de registro') {
+        <div class="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <ui-card>
+            <p class="text-xs font-bold tracking-wide text-primary">TIEMPO PROMEDIO DE REGISTRO</p>
+            <p class="mt-2 font-display text-4xl font-bold" [class.text-muted-foreground]="r.registros.promedioMin == null">
+              {{ numero(r.registros.promedioMin, 2) }} <span class="text-lg font-semibold">min</span>
+            </p>
+            <dl class="mt-4 space-y-2 text-sm">
+              <div class="flex justify-between gap-3"><dt class="text-muted-foreground">Pacientes registrados por el personal</dt><dd class="font-semibold tabular-nums">{{ r.registros.total }}</dd></div>
+              <div class="flex justify-between gap-3"><dt class="text-muted-foreground">Más rápido</dt><dd class="font-semibold tabular-nums">{{ numero(r.registros.minimoMin, 2) }} min</dd></div>
+              <div class="flex justify-between gap-3"><dt class="text-muted-foreground">Más lento</dt><dd class="font-semibold tabular-nums">{{ numero(r.registros.maximoMin, 2) }} min</dd></div>
+              <div class="flex justify-between gap-3"><dt class="text-muted-foreground">Con tiempo fuera de lo normal</dt><dd class="font-semibold tabular-nums">{{ r.registros.porRevisar }}</dd></div>
+            </dl>
+            <ng-container *ngTemplateOutlet="referencias; context: { pre: pretest().tpr, post: postestDelExcel().tpr, unidad: 'min' }" />
+            <p class="mt-4 text-xs text-muted-foreground">Meta: bajar. Solo cuenta el registro hecho por el personal en la intranet.</p>
+          </ui-card>
+          <ng-container *ngTemplateOutlet="grafico; context: { g: serie('tpr'), clase: 'lg:col-span-2' }" />
+        </div>
+        @if (fuente() === 'LOCAL') {
+          <app-eventos-importados class="mt-6" tipo="REGISTRO" />
+        }
+        @if (puedeVerDetalle && detalle(); as d) {
+          <section class="mt-6" aria-labelledby="titulo-det-registros">
+            <h2 id="titulo-det-registros" class="font-display text-lg font-bold">Registros del periodo</h2>
+            <div class="mt-3 max-h-[28rem] overflow-auto rounded-xl border border-border">
+              <table class="w-full border-collapse text-left text-sm">
+                <thead class="sticky top-0 bg-muted text-xs text-muted-foreground">
                   <tr>
                     <th class="px-3 py-2 font-semibold">Fecha</th>
                     <th class="px-3 py-2 font-semibold">Paciente</th>
@@ -203,10 +239,10 @@
                 <tbody>
                   @for (f of d.registros; track $index) {
                     <tr class="border-t border-border">
-                      <td class="px-3 py-2">{{ fechaCorta(f.fecha) }} {{ f.hora.slice(0, 5) }}</td>
+                      <td class="px-3 py-2">{{ fechaCorta(f.fecha) }} {{ f.hora ? f.hora.slice(0, 5) : '' }}</td>
                       <td class="px-3 py-2">{{ f.paciente ?? 'Paciente no disponible' }}</td>
                       <td class="px-3 py-2">{{ f.registradoPor ?? '—' }}</td>
-                      <td class="px-3 py-2 text-right">
+                      <td class="px-3 py-2 text-right tabular-nums">
                         {{ numero(f.minutos, 2) }}
                         @if (f.sospechosa) {
                           <span class="ml-1 text-xs text-destructive">revisar</span>
@@ -217,9 +253,42 @@
                     <tr><td colspan="4" class="px-3 py-4 text-center text-muted-foreground">Sin registros en el periodo.</td></tr>
                   }
                 </tbody>
-              }
-              @case ('Citas') {
-                <thead class="bg-muted/70 text-xs text-muted-foreground">
+              </table>
+            </div>
+          </section>
+        }
+      }
+
+      <!-- ============================== AUSENTISMO ============================== -->
+      @case ('Ausentismo') {
+        <div class="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <ui-card>
+            <p class="text-xs font-bold tracking-wide text-primary">TASA DE AUSENTISMO</p>
+            <p class="mt-2 font-display text-4xl font-bold" [class.text-muted-foreground]="r.citas.ausentismoPct == null">
+              {{ numero(r.citas.ausentismoPct) }} <span class="text-lg font-semibold">%</span>
+            </p>
+            <p class="mt-1 text-sm text-muted-foreground">
+              {{ r.citas.noAsistio }} no asistieron de {{ r.citas.atendidas + r.citas.noAsistio }} citas con desenlace
+            </p>
+            <ng-container *ngTemplateOutlet="referencias; context: { pre: pretest().ta, post: postestDelExcel().ta, unidad: '%' }" />
+            <h3 class="mt-5 text-sm font-semibold">Citas por resultado</h3>
+            <app-grafico-barras class="mt-3" titulo="Citas por resultado" [items]="citasPorResultado()" [mostrarPorcentaje]="true" />
+            <p class="mt-4 text-xs text-muted-foreground">
+              Meta: bajar. {{ r.citas.total }} citas en el periodo; las canceladas ({{ r.citas.canceladas }}) y las que aún no se atienden
+              ({{ r.citas.pendientes }}) no entran al cálculo.
+            </p>
+          </ui-card>
+          <ng-container *ngTemplateOutlet="grafico; context: { g: serie('ta'), clase: 'lg:col-span-2' }" />
+        </div>
+        @if (fuente() === 'LOCAL') {
+          <app-eventos-importados class="mt-6" tipo="CITA" />
+        }
+        @if (puedeVerDetalle && detalle(); as d) {
+          <section class="mt-6" aria-labelledby="titulo-det-citas">
+            <h2 id="titulo-det-citas" class="font-display text-lg font-bold">Citas del periodo</h2>
+            <div class="mt-3 max-h-[28rem] overflow-auto rounded-xl border border-border">
+              <table class="w-full border-collapse text-left text-sm">
+                <thead class="sticky top-0 bg-muted text-xs text-muted-foreground">
                   <tr>
                     <th class="px-3 py-2 font-semibold">Fecha</th>
                     <th class="px-3 py-2 font-semibold">Paciente</th>
@@ -231,9 +300,9 @@
                 <tbody>
                   @for (f of d.citas; track $index) {
                     <tr class="border-t border-border">
-                      <td class="px-3 py-2">{{ fechaCorta(f.fecha) }} {{ f.hora.slice(0, 5) }}</td>
+                      <td class="px-3 py-2">{{ fechaCorta(f.fecha) }} {{ f.hora ? f.hora.slice(0, 5) : '' }}</td>
                       <td class="px-3 py-2">{{ f.paciente ?? 'Paciente no disponible' }}</td>
-                      <td class="px-3 py-2">{{ f.medico ?? 'Sin médico asignado' }}</td>
+                      <td class="px-3 py-2">{{ f.medico ?? '—' }}</td>
                       <td class="px-3 py-2">{{ estadoCita(f.estado) }}</td>
                       <td class="px-3 py-2">{{ f.recordatorioEnviado ? 'Enviado' : 'No' }}</td>
                     </tr>
@@ -241,9 +310,35 @@
                     <tr><td colspan="5" class="px-3 py-4 text-center text-muted-foreground">Sin citas en el periodo.</td></tr>
                   }
                 </tbody>
-              }
-              @case ('Recordatorios') {
-                <thead class="bg-muted/70 text-xs text-muted-foreground">
+              </table>
+            </div>
+          </section>
+        }
+      }
+
+      <!-- ============================ RECORDATORIOS ============================ -->
+      @case ('Recordatorios') {
+        <div class="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <ui-card>
+            <p class="text-xs font-bold tracking-wide text-primary">RECORDATORIOS ENVIADOS</p>
+            <p class="mt-2 font-display text-4xl font-bold">{{ r.recordatorios.enviados }}</p>
+            <dl class="mt-4 space-y-2 text-sm">
+              <div class="flex justify-between gap-3"><dt class="text-muted-foreground">Citas con desenlace que recibieron recordatorio</dt><dd class="font-semibold tabular-nums">{{ numero(r.recordatorios.coberturaPct) }} %</dd></div>
+              <div class="flex justify-between gap-3"><dt class="text-muted-foreground">Respondidos por el paciente</dt><dd class="font-semibold tabular-nums">{{ r.recordatorios.respondidos }}</dd></div>
+              <div class="flex justify-between gap-3"><dt class="text-muted-foreground">No se pudieron enviar</dt><dd class="font-semibold tabular-nums">{{ r.recordatorios.fallidos }}</dd></div>
+              <div class="flex justify-between gap-3"><dt class="text-muted-foreground">Pendientes de envío</dt><dd class="font-semibold tabular-nums">{{ r.recordatorios.pendientes }}</dd></div>
+            </dl>
+            <h3 class="mt-5 text-sm font-semibold">Por canal</h3>
+            <app-grafico-barras class="mt-3" titulo="Recordatorios por canal" [items]="recordatoriosPorCanal()" [mostrarPorcentaje]="true" />
+          </ui-card>
+          <ng-container *ngTemplateOutlet="grafico; context: { g: serie('recordatorios'), clase: 'lg:col-span-2' }" />
+        </div>
+        @if (puedeVerDetalle && detalle(); as d) {
+          <section class="mt-6" aria-labelledby="titulo-det-recordatorios">
+            <h2 id="titulo-det-recordatorios" class="font-display text-lg font-bold">Recordatorios del periodo</h2>
+            <div class="mt-3 max-h-[28rem] overflow-auto rounded-xl border border-border">
+              <table class="w-full border-collapse text-left text-sm">
+                <thead class="sticky top-0 bg-muted text-xs text-muted-foreground">
                   <tr>
                     <th class="px-3 py-2 font-semibold">Paciente</th>
                     <th class="px-3 py-2 font-semibold">Cita</th>
@@ -267,9 +362,50 @@
                     <tr><td colspan="6" class="px-3 py-4 text-center text-muted-foreground">Sin recordatorios en el periodo.</td></tr>
                   }
                 </tbody>
+              </table>
+            </div>
+          </section>
+        }
+      }
+
+      <!-- =============================== CONSULTAS =============================== -->
+      @case ('Consultas') {
+        <div class="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <ui-card>
+            <p class="text-xs font-bold tracking-wide text-primary">CONSULTAS ATENDIDAS POR EL ASISTENTE</p>
+            <p class="mt-2 font-display text-4xl font-bold" [class.text-muted-foreground]="r.consultas.atendidasAutomaticoPct == null">
+              {{ numero(r.consultas.atendidasAutomaticoPct) }} <span class="text-lg font-semibold">%</span>
+            </p>
+            <p class="mt-1 text-sm text-muted-foreground">
+              {{ r.consultas.resueltasPorAsistente }} de {{ r.consultas.cerradas }} resueltas en el primer contacto, sin pasar al personal
+            </p>
+            <dl class="mt-4 space-y-2 text-sm">
+              <div class="flex justify-between gap-3"><dt class="text-muted-foreground">Recibidas</dt><dd class="font-semibold tabular-nums">{{ r.consultas.total }}</dd></div>
+              <div class="flex justify-between gap-3"><dt class="text-muted-foreground">Derivadas al personal</dt><dd class="font-semibold tabular-nums">{{ r.consultas.derivadas }}</dd></div>
+              <div class="flex justify-between gap-3"><dt class="text-muted-foreground">Abiertas</dt><dd class="font-semibold tabular-nums">{{ r.consultas.abiertas }}</dd></div>
+              @if (r.consultas.tiempoRespuestaPromedioMin != null) {
+                <div class="flex justify-between gap-3"><dt class="text-muted-foreground">Primera respuesta</dt><dd class="font-semibold tabular-nums">{{ numero(r.consultas.tiempoRespuestaPromedioMin * 60, 0) }} s</dd></div>
               }
-              @case ('Consultas') {
-                <thead class="bg-muted/70 text-xs text-muted-foreground">
+            </dl>
+            <ng-container *ngTemplateOutlet="referencias; context: { pre: pretest().nca, post: postestDelExcel().nca, unidad: '%' }" />
+            <p class="mt-4 text-xs text-muted-foreground">Meta: subir. Los saludos y mensajes ajenos a la fundación no cuentan como consultas.</p>
+          </ui-card>
+          <ng-container *ngTemplateOutlet="grafico; context: { g: serie('nca'), clase: 'lg:col-span-2' }" />
+        </div>
+        @if (fuente() === 'LOCAL') {
+          <app-eventos-importados class="mt-6" tipo="CONSULTA" />
+        }
+        <ui-card class="mt-4 block">
+          <h2 class="font-display text-base font-bold">¿Sobre qué preguntan?</h2>
+          <p class="text-xs text-muted-foreground">Consultas al asistente por tema.</p>
+          <app-grafico-barras class="mt-3" titulo="Consultas por tema" [items]="consultasPorTema()" [mostrarPorcentaje]="true" />
+        </ui-card>
+        @if (puedeVerDetalle && detalle(); as d) {
+          <section class="mt-6" aria-labelledby="titulo-det-consultas">
+            <h2 id="titulo-det-consultas" class="font-display text-lg font-bold">Consultas del periodo</h2>
+            <div class="mt-3 max-h-[28rem] overflow-auto rounded-xl border border-border">
+              <table class="w-full border-collapse text-left text-sm">
+                <thead class="sticky top-0 bg-muted text-xs text-muted-foreground">
                   <tr>
                     <th class="px-3 py-2 font-semibold">Fecha</th>
                     <th class="px-3 py-2 font-semibold">Paciente</th>
@@ -281,7 +417,7 @@
                 <tbody>
                   @for (f of d.consultas; track $index) {
                     <tr class="border-t border-border">
-                      <td class="px-3 py-2">{{ fechaCorta(f.fecha) }} {{ f.hora.slice(0, 5) }}</td>
+                      <td class="px-3 py-2">{{ fechaCorta(f.fecha) }} {{ f.hora ? f.hora.slice(0, 5) : '' }}</td>
                       <td class="px-3 py-2">{{ f.paciente ?? 'Visitante sin identificar' }}</td>
                       <td class="px-3 py-2">{{ etiqueta(f.canal) }}</td>
                       <td class="px-3 py-2">{{ f.categoria ? etiqueta(f.categoria) : '—' }}</td>
@@ -291,11 +427,69 @@
                     <tr><td colspan="5" class="px-3 py-4 text-center text-muted-foreground">Sin consultas en el periodo.</td></tr>
                   }
                 </tbody>
-              }
-            }
-          </table>
-        </div>
-      </section>
+              </table>
+            </div>
+          </section>
+        }
+      }
     }
   }
 </div>
+
+<!-- Pretest y postest del indicador, debajo de su valor -->
+<ng-template #referencias let-pre="pre" let-post="post" let-unidad="unidad">
+  @if (pre != null || post != null) {
+    <div class="mt-4 space-y-1.5 border-t border-border pt-3 text-xs">
+      @if (pre != null) {
+        <p class="flex items-center justify-between gap-3">
+          <span class="flex items-center gap-1.5 text-muted-foreground"><span class="inline-block h-0.5 w-3 rounded-full bg-foreground/55"></span>Pretest (línea base)</span>
+          <span class="font-semibold tabular-nums">{{ numero(pre, 2) }} {{ unidad }}</span>
+        </p>
+      }
+      @if (post != null) {
+        <p class="flex items-center justify-between gap-3">
+          <span class="flex items-center gap-1.5 text-muted-foreground"><span class="inline-block w-3 border-t-[1.5px] border-dashed border-foreground/55"></span>Postest (servidor de la fundación)</span>
+          <span class="font-semibold tabular-nums">{{ numero(post, 2) }} {{ unidad }}</span>
+        </p>
+      }
+    </div>
+  }
+</ng-template>
+
+<!-- Grafico de columnas del indicador, dia a dia -->
+<ng-template #grafico let-g="g" let-clase="clase">
+  @if (g) {
+    <ui-card [class]="'block ' + clase">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h2 class="font-display text-base font-bold">{{ g.titulo }}</h2>
+          <p class="text-xs text-muted-foreground">{{ g.subtitulo }}</p>
+        </div>
+        <button
+          type="button"
+          class="shrink-0 rounded-md px-2 py-1 text-xs font-semibold text-primary hover:bg-primary-soft"
+          (click)="alternarTabla(g.clave)"
+        >
+          {{ tablas().has(g.clave) ? 'Ver gráfico' : 'Ver tabla' }}
+        </button>
+      </div>
+      <app-grafico-columnas
+        class="mt-4"
+        [titulo]="g.titulo"
+        [puntos]="g.puntos"
+        [unidad]="g.unidad"
+        [decimales]="g.decimales"
+        [maximo]="g.maximo"
+        [verTabla]="tablas().has(g.clave)"
+        [referencias]="g.referencias"
+      />
+      <p class="mt-3 text-xs text-muted-foreground">
+        Cada columna es un día con actividad ({{ fuente() === 'SERVIDOR' ? 'servidor de la fundación' : 'esta instalación' }}); una
+        raya en la base indica un día sin eventos de este indicador.
+        @if (g.referencias.length) {
+          Las líneas son el promedio del pretest (continua) y del postest del servidor (punteada).
+        }
+      </p>
+    </ui-card>
+  }
+</ng-template>

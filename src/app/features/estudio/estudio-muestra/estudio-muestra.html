@@ -36,6 +36,118 @@
   </div>
 </section>
 
+<section class="mt-8" aria-labelledby="titulo-linea-base">
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <h2 id="titulo-linea-base" class="font-display text-lg font-bold">Línea base del pretest</h2>
+      <p class="max-w-3xl text-sm text-muted-foreground">
+        El pretest se recolectó a mano antes del sistema. Suba el instrumento (.xlsx): se lee la hoja
+        <strong>SPSS_Independientes</strong> y se guardan solo las filas de pretest, con su fuente. El postest nunca se carga
+        desde una planilla: lo mide el sistema.
+      </p>
+    </div>
+    <label class="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-4 text-sm font-semibold hover:bg-muted">
+      {{ cargandoLineaBase() ? 'Cargando...' : lineaBase().length ? 'Reemplazar archivo' : 'Subir instrumento' }}
+      <input type="file" accept=".xlsx,.csv" class="sr-only" [disabled]="cargandoLineaBase()" (change)="subirLineaBase($event)" />
+    </label>
+  </div>
+  @if (lineaBase().length) {
+    <div class="mt-3 overflow-x-auto rounded-xl border border-border">
+      <table class="w-full border-collapse text-left text-sm">
+        <thead class="bg-muted/70 text-xs text-muted-foreground">
+          <tr>
+            <th class="px-3 py-2 font-semibold">N.°</th>
+            <th class="px-3 py-2 font-semibold">Fecha</th>
+            <th class="px-3 py-2 text-right font-semibold">TPR (min)</th>
+            <th class="px-3 py-2 text-right font-semibold">TA (%)</th>
+            <th class="px-3 py-2 text-right font-semibold">NCA (%)</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (s of lineaBase(); track s.fecha) {
+            <tr class="border-t border-border">
+              <td class="px-3 py-2 font-semibold">{{ s.numero }}</td>
+              <td class="px-3 py-2">{{ diaSemana(s.fecha) }} {{ fechaCorta(s.fecha) }}</td>
+              <td class="px-3 py-2 text-right tabular-nums">{{ s.tprMin ?? '—' }}</td>
+              <td class="px-3 py-2 text-right tabular-nums">{{ s.taPct ?? '—' }}</td>
+              <td class="px-3 py-2 text-right tabular-nums">{{ s.ncaPct ?? '—' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <p class="mt-2 text-xs text-muted-foreground">Fuente: {{ lineaBase()[0].fuente }}.</p>
+  } @else {
+    <p class="mt-3 text-sm text-muted-foreground">Todavía no se cargó la línea base.</p>
+  }
+</section>
+
+<section class="mt-8" aria-labelledby="titulo-postest-importado">
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <h2 id="titulo-postest-importado" class="font-display text-lg font-bold">Postest medido en el servidor de la fundación</h2>
+      <p class="max-w-3xl text-sm text-muted-foreground">
+        Valores por sesión del postest (hoja <strong>SPSS_Independientes</strong>) extraídos del servidor de la fundación, donde
+        funcionó el sistema. Se importan a esta instalación local con su origen y sin crear pacientes ni eventos. Si esta
+        instalación llega a medir el postest, se usa lo medido.
+      </p>
+    </div>
+    <label class="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-4 text-sm font-semibold hover:bg-muted">
+      {{ cargandoPostest() ? 'Cargando...' : postestImportado().length ? 'Reemplazar archivo' : 'Importar postest' }}
+      <input type="file" accept=".xlsx,.csv" class="sr-only" [disabled]="cargandoPostest()" (change)="subirPostest($event)" />
+    </label>
+  </div>
+  @if (postestImportado().length) {
+    <div class="mt-3 overflow-x-auto rounded-xl border border-warning/40">
+      <table class="w-full border-collapse text-left text-sm">
+        <thead class="bg-warning-soft text-xs text-foreground">
+          <tr>
+            <th class="px-3 py-2 font-semibold">N.°</th>
+            <th class="px-3 py-2 font-semibold">Fecha</th>
+            <th class="px-3 py-2 text-right font-semibold">TPR (min)</th>
+            <th class="px-3 py-2 text-right font-semibold">TA (%)</th>
+            <th class="px-3 py-2 text-right font-semibold">NCA (%)</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (s of postestImportado(); track s.fecha) {
+            <tr class="border-t border-border">
+              <td class="px-3 py-2 font-semibold">{{ s.numero }}</td>
+              <td class="px-3 py-2">{{ diaSemana(s.fecha) }} {{ fechaCorta(s.fecha) }}</td>
+              <td class="px-3 py-2 text-right tabular-nums">{{ s.tprMin ?? '—' }}</td>
+              <td class="px-3 py-2 text-right tabular-nums">{{ s.taPct ?? '—' }}</td>
+              <td class="px-3 py-2 text-right tabular-nums">{{ s.ncaPct ?? '—' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <p class="mt-2 text-xs text-muted-foreground">Fuente: {{ postestImportado()[0].fuente }}.</p>
+  } @else {
+    <p class="mt-3 text-sm text-muted-foreground">No se importó el postest.</p>
+  }
+</section>
+
+<section class="mt-8" aria-labelledby="titulo-eventos-importados">
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <h2 id="titulo-eventos-importados" class="font-display text-lg font-bold">Eventos por paciente del instrumento</h2>
+      <p class="max-w-3xl text-sm text-muted-foreground">
+        Hojas <strong>TPR_</strong>, <strong>Ausentismo_</strong> y <strong>Consultas_</strong> (PRE y POST): cada registro, cita y
+        consulta con el código anónimo del paciente. No crea pacientes ni usuarios; se ve en cada pestaña del panel de indicadores.
+        Una carga nueva reemplaza la anterior.
+      </p>
+    </div>
+    <label class="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-4 text-sm font-semibold hover:bg-muted">
+      {{ cargandoEventos() ? 'Cargando...' : 'Importar eventos' }}
+      <input type="file" accept=".xlsx" class="sr-only" [disabled]="cargandoEventos()" (change)="subirEventos($event)" />
+    </label>
+  </div>
+  @if (ultimaImportacionEventos()) {
+    <p class="mt-2 text-sm text-muted-foreground">Última importación: {{ ultimaImportacionEventos() }}</p>
+  }
+</section>
+
 <section class="mt-8" aria-labelledby="titulo-sesiones">
   <div class="flex flex-wrap items-end justify-between gap-3">
     <div>

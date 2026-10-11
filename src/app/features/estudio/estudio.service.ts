@@ -4,6 +4,8 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Cita } from '../../core/models/cita.model';
 import {
+  LineaBaseSesion,
+  ResultadoLineaBase,
   AlcanceIndicador,
   AnalisisPareado,
   CanalConsulta,
@@ -73,6 +75,32 @@ export class EstudioService {
     const params: Record<string, string> = { fase };
     if (fecha) params['fecha'] = fecha;
     return this.http.get<DetalleRecoleccion>(`${this.base}/recoleccion/detalle`, { params });
+  }
+
+  /** Linea base del pretest (valores por sesion del instrumento manual). */
+  lineaBase(fase: Fase = 'PRETEST'): Observable<LineaBaseSesion[]> {
+    return this.http.get<LineaBaseSesion[]>(`${this.base}/linea-base`, { params: { fase } });
+  }
+
+  /** Postest medido en el servidor de la fundacion e importado (solo filas de postest). */
+  importarPostest(archivo: File): Observable<ResultadoLineaBase> {
+    const datos = new FormData();
+    datos.append('archivo', archivo);
+    return this.http.post<ResultadoLineaBase>(`${this.base}/linea-base/postest-importado`, datos);
+  }
+
+  /** Carga la hoja SPSS_Independientes del instrumento; solo se guardan las filas de pretest. */
+  cargarLineaBase(archivo: File): Observable<ResultadoLineaBase> {
+    const datos = new FormData();
+    datos.append('archivo', archivo);
+    return this.http.post<ResultadoLineaBase>(`${this.base}/linea-base`, datos);
+  }
+
+  /** Eventos por paciente del instrumento (hojas TPR_, Ausentismo_ y Consultas_ PRE/POST). */
+  importarEventos(archivo: File): Observable<{ eventosPorHoja: Record<string, number>; total: number }> {
+    const datos = new FormData();
+    datos.append('archivo', archivo);
+    return this.http.post<{ eventosPorHoja: Record<string, number>; total: number }>(`${this.base}/eventos-importados`, datos);
   }
 
   exportarRecoleccion(fase: Fase): Observable<Blob> {

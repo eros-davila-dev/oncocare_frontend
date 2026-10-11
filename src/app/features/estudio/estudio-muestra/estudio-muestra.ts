@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { EstudioService } from '../estudio.service';
-import { Fase, FaseEstudio, ResumenRecoleccion } from '../../../core/models/estudio.model';
+import { Fase, FaseEstudio, LineaBaseSesion, ResumenRecoleccion } from '../../../core/models/estudio.model';
 import { ErrorResponse } from '../../../core/models/error.model';
 import { CardComponent } from '../../../shared/ui/card/card';
 import { ButtonComponent } from '../../../shared/ui/button/button';
@@ -63,9 +63,81 @@ export class EstudioMuestraComponent {
   );
 
   protected readonly faseACerrar = signal<Fase | null>(null);
+  protected readonly lineaBase = signal<LineaBaseSesion[]>([]);
+  protected readonly cargandoLineaBase = signal(false);
+  protected readonly postestImportado = signal<LineaBaseSesion[]>([]);
+  protected readonly cargandoPostest = signal(false);
+  protected readonly cargandoEventos = signal(false);
+  protected readonly ultimaImportacionEventos = signal<string | null>(null);
 
   constructor() {
     this.cargarFases();
+    this.estudioService.lineaBase().subscribe((s) => this.lineaBase.set(s));
+    this.estudioService.lineaBase('POSTEST').subscribe((s) => this.postestImportado.set(s));
+  }
+
+  /** Eventos por paciente (codigo anonimo) de las fichas del instrumento, pretest y postest. */
+  protected subirEventos(evento: Event): void {
+    const entrada = evento.target as HTMLInputElement;
+    const archivo = entrada.files?.[0];
+    entrada.value = '';
+    if (!archivo) return;
+    this.cargandoEventos.set(true);
+    this.estudioService.importarEventos(archivo).subscribe({
+      next: (r) => {
+        this.cargandoEventos.set(false);
+        const detalle = Object.entries(r.eventosPorHoja).map(([h, n]) => `${h}: ${n}`).join(' · ');
+        this.ultimaImportacionEventos.set(detalle);
+        this.toast.exito(`Eventos importados: ${r.total}`);
+      },
+      error: (e: HttpErrorResponse) => {
+        this.cargandoEventos.set(false);
+        this.toast.error(this.mensaje(e));
+      },
+    });
+  }
+
+  /** Importa el postest medido en el servidor de la fundacion, rotulado con su origen. */
+  protected subirPostest(evento: Event): void {
+    const entrada = evento.target as HTMLInputElement;
+    const archivo = entrada.files?.[0];
+    entrada.value = '';
+    if (!archivo) return;
+    this.cargandoPostest.set(true);
+    this.estudioService.importarPostest(archivo).subscribe({
+      next: (r) => {
+        this.postestImportado.set(r.sesiones);
+        this.cargandoPostest.set(false);
+        this.toast.exito(`Postest importado: ${r.sesionesCargadas} sesiones (medidas en el servidor de la fundación)`);
+      },
+      error: (e: HttpErrorResponse) => {
+        this.cargandoPostest.set(false);
+        this.toast.error(this.mensaje(e));
+      },
+    });
+  }
+
+  /** Sube la hoja SPSS_Independientes del instrumento: solo se guardan las filas del pretest. */
+  protected subirLineaBase(evento: Event): void {
+    const entrada = evento.target as HTMLInputElement;
+    const archivo = entrada.files?.[0];
+    entrada.value = '';
+    if (!archivo) return;
+    this.cargandoLineaBase.set(true);
+    this.estudioService.cargarLineaBase(archivo).subscribe({
+      next: (r) => {
+        this.lineaBase.set(r.sesiones);
+        this.cargandoLineaBase.set(false);
+        this.toast.exito(
+          `Línea base cargada: ${r.sesionesCargadas} sesiones del pretest` +
+            (r.filasPostestIgnoradas ? ` (se ignoraron ${r.filasPostestIgnoradas} filas de postest)` : ''),
+        );
+      },
+      error: (e: HttpErrorResponse) => {
+        this.cargandoLineaBase.set(false);
+        this.toast.error(this.mensaje(e));
+      },
+    });
   }
 
   protected estadoDe(fase: Fase): FaseEstudio | undefined {
