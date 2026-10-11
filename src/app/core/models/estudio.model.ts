@@ -286,3 +286,21 @@ export interface DetalleRecoleccion {
   citas: FilaCitaRecoleccion[];
   consultas: FilaConsultaRecoleccion[];
 }
+
+/** Linea base del pretest por sesion (instrumento manual validado por la fundacion). */
+export interface LineaBaseSesion {
+  fase: Fase;
+  numero: number;
+  fecha: string;
+  tprMin: number | null;
+  taPct: number | null;
+  ncaPct: number | null;
+  fuente: string;
+  cargadoEn: string;
+}
+
+export interface ResultadoLineaBase {
+  sesionesCargadas: number;
+  filasPostestIgnoradas: number;
+  sesiones: LineaBaseSesion[];
+}

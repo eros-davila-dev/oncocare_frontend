@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { EstudioService } from '../estudio.service';
-import { Fase, ResumenRecoleccion, SesionRecoleccion } from '../../../core/models/estudio.model';
+import { Fase, LineaBaseSesion, ResumenRecoleccion, SesionRecoleccion } from '../../../core/models/estudio.model';
 import { ErrorResponse } from '../../../core/models/error.model';
 import { CardComponent } from '../../../shared/ui/card/card';
 import { ButtonComponent } from '../../../shared/ui/button/button';
@@ -29,6 +29,8 @@ const SESIONES_PREVISTAS = 13;
 interface Etapa {
   resumen: ResumenRecoleccion | null;
   aviso: string | null;
+  /** Fuente de los valores cuando no los midio el sistema (linea base del pretest). */
+  fuente?: string;
 }
 
 /**
@@ -58,8 +60,8 @@ export class EstudioResumenComponent {
 
   protected readonly filas = computed(() =>
     INDICADORES.map((ind) => {
-      const pre = this.describir(this.pretest().resumen, ind);
-      const post = this.describir(this.postest().resumen, ind);
+      const pre = this.describir(this.pretestEfectivo().resumen, ind);
+      const post = this.describir(this.postestEfectivo().resumen, ind);
       const diferencia = pre.media !== null && post.media !== null ? post.media - pre.media : null;
       const mejora = diferencia === null ? null : ind.sentido === 'bajar' ? diferencia < 0 : diferencia > 0;
       return { ind, pre, post, diferencia, mejora };
@@ -67,7 +69,7 @@ export class EstudioResumenComponent {
   );
 
   constructor() {
-    let pendientes = 2;
+    let pendientes = 4;
     const listo = () => {
       pendientes -= 1;
       if (pendientes === 0) this.cargando.set(false);
@@ -85,6 +87,57 @@ export class EstudioResumenComponent {
         },
       });
     }
+    // El pretest se recolecto a mano antes del sistema: si el sistema no tiene
+    // datos de esa etapa, se usa la linea base cargada desde el instrumento.
+    this.estudioService.lineaBase().subscribe({
+      next: (sesiones) => {
+        this.lineaBase.set(sesiones);
+        listo();
+      },
+      error: () => listo(),
+    });
+    this.estudioService.lineaBase('POSTEST').subscribe({
+      next: (sesiones) => {
+        this.postestImportado.set(sesiones);
+        listo();
+      },
+      error: () => listo(),
+    });
+  }
+
+  /** Postest importado del instrumento: solo se usa si el sistema no tiene datos de esa etapa. */
+  protected readonly postestImportado = signal<LineaBaseSesion[]>([]);
+  protected readonly postestEfectivo = computed<Etapa>(() => this.etapaDesde(this.postest(), this.postestImportado(), 'POSTEST'));
+
+  protected readonly lineaBase = signal<LineaBaseSesion[]>([]);
+
+  /** Pretest efectivo: el del sistema si tiene datos; si no, la linea base. */
+  protected readonly pretestEfectivo = computed<Etapa>(() => this.etapaDesde(this.pretest(), this.lineaBase(), 'PRETEST'));
+
+  /** Lo que midio el sistema si tiene datos; si no, las sesiones cargadas del instrumento (con su fuente). */
+  private etapaDesde(sistema: Etapa, base: LineaBaseSesion[], fase: Fase): Etapa {
+    if ((sistema.resumen && this.conDatos(sistema.resumen) > 0) || base.length === 0) {
+      return sistema;
+    }
+    const sesiones: SesionRecoleccion[] = base.map((s) => ({
+      numero: s.numero,
+      fecha: s.fecha,
+      registros: 0,
+      tprMin: s.tprMin,
+      citasElegibles: 0,
+      inasistencias: 0,
+      taPct: s.taPct,
+      consultas: 0,
+      resueltas: 0,
+      ncaPct: s.ncaPct,
+    }));
+    const resumen = {
+      fase,
+      desde: base[0].fecha,
+      hasta: base[base.length - 1].fecha,
+      sesiones,
+    } as unknown as ResumenRecoleccion;
+    return { resumen, aviso: null, fuente: base[0].fuente };
   }
 
   protected numero(v: number | null, decimales = 2): string {
@@ -92,7 +145,11 @@ export class EstudioResumenComponent {
   }
 
   protected conDatos(r: ResumenRecoleccion | null): number {
-    return r ? r.sesiones.filter((s) => s.registros > 0 || s.citasElegibles > 0 || s.consultas > 0).length : 0;
+    return r
+      ? r.sesiones.filter(
+          (s) => s.registros > 0 || s.citasElegibles > 0 || s.consultas > 0 || s.tprMin != null || s.taPct != null || s.ncaPct != null,
+        ).length
+      : 0;
   }
 
   protected descargar(fase: Fase): void {

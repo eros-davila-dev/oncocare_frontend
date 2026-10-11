@@ -9,7 +9,7 @@
     </p>
 
     <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-      @for (etapa of [{ nombre: 'Pretest', fase: 'PRETEST', datos: pretest() }, { nombre: 'Postest', fase: 'POSTEST', datos: postest() }]; track etapa.fase) {
+      @for (etapa of [{ nombre: 'Pretest', fase: 'PRETEST', datos: pretestEfectivo() }, { nombre: 'Postest', fase: 'POSTEST', datos: postestEfectivo() }]; track etapa.fase) {
         <ui-card>
           <div class="flex items-start justify-between gap-3">
             <div>
@@ -17,6 +17,14 @@
               @if (etapa.datos.resumen; as r) {
                 <p class="mt-1 font-display text-2xl font-bold">{{ conDatos(r) }} / {{ r.sesiones.length }} <span class="text-base font-semibold">sesiones con datos</span></p>
                 <p class="text-sm text-muted-foreground">Del {{ fechaCorta(r.desde) }} al {{ fechaCorta(r.hasta) }}</p>
+                @if (etapa.datos.fuente) {
+                  <p
+                    class="mt-1 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                    [class]="etapa.fase === 'POSTEST' ? 'bg-warning-soft text-foreground' : 'bg-lavender text-secondary-foreground'"
+                  >
+                    {{ etapa.fase === 'POSTEST' ? 'Servidor' : 'Línea base' }} · {{ etapa.datos.fuente }}
+                  </p>
+                }
                 @if (r.sesiones.length !== sesionesPrevistas) {
                   <p class="mt-2 text-sm text-warning">Con estas fechas hay {{ r.sesiones.length }} sesiones; la tesis prevé {{ sesionesPrevistas }}.</p>
                 }
@@ -27,7 +35,7 @@
             <ui-button
               variante="outline"
               [cargando]="descargando() === etapa.fase"
-              [disabled]="!etapa.datos.resumen"
+              [disabled]="!etapa.datos.resumen || !!etapa.datos.fuente"
               (click)="descargar($any(etapa.fase))"
             >
               <ui-icon name="download" [size]="16" /> Excel
