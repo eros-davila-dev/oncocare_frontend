@@ -4,6 +4,8 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Cita } from '../../core/models/cita.model';
 import {
+  LineaBaseSesion,
+  ResultadoLineaBase,
   AlcanceIndicador,
   AnalisisPareado,
   CanalConsulta,
@@ -29,6 +31,8 @@ import {
   TipoMedicion,
 } from '../../core/models/estudio.model';
 import { Pagina } from '../../core/models/pagina.model';
+
+export type FuenteRecoleccion = 'LOCAL' | 'SERVIDOR';
 
 export interface FiltroIndicadores {
   fase?: Fase;
@@ -64,19 +68,46 @@ export class EstudioService {
 
   // --- Recoleccion por sesion (tesis v8) --------------------------------------
 
-  recoleccion(fase: Fase): Observable<ResumenRecoleccion> {
-    return this.http.get<ResumenRecoleccion>(`${this.base}/recoleccion`, { params: { fase } });
+  /** fuente: LOCAL = lo que mide esta instalacion; SERVIDOR = eventos importados del servidor de la fundacion. */
+  recoleccion(fase: Fase, fuente: FuenteRecoleccion = 'LOCAL'): Observable<ResumenRecoleccion> {
+    return this.http.get<ResumenRecoleccion>(`${this.base}/recoleccion`, { params: { fase, fuente } });
   }
 
   /** Fichas de una sesion; sin fecha, las de todas las sesiones de la fase. */
-  detalleRecoleccion(fase: Fase, fecha?: string): Observable<DetalleRecoleccion> {
-    const params: Record<string, string> = { fase };
+  detalleRecoleccion(fase: Fase, fecha?: string, fuente: FuenteRecoleccion = 'LOCAL'): Observable<DetalleRecoleccion> {
+    const params: Record<string, string> = { fase, fuente };
     if (fecha) params['fecha'] = fecha;
     return this.http.get<DetalleRecoleccion>(`${this.base}/recoleccion/detalle`, { params });
   }
 
-  exportarRecoleccion(fase: Fase): Observable<Blob> {
-    return this.http.get(`${this.base}/recoleccion/exportar.xlsx`, { params: { fase }, responseType: 'blob' });
+  /** Linea base del pretest (valores por sesion del instrumento manual). */
+  lineaBase(fase: Fase = 'PRETEST'): Observable<LineaBaseSesion[]> {
+    return this.http.get<LineaBaseSesion[]>(`${this.base}/linea-base`, { params: { fase } });
+  }
+
+  /** Postest medido en el servidor de la fundacion e importado (solo filas de postest). */
+  importarPostest(archivo: File): Observable<ResultadoLineaBase> {
+    const datos = new FormData();
+    datos.append('archivo', archivo);
+    return this.http.post<ResultadoLineaBase>(`${this.base}/linea-base/postest-importado`, datos);
+  }
+
+  /** Carga la hoja SPSS_Independientes del instrumento; solo se guardan las filas de pretest. */
+  cargarLineaBase(archivo: File): Observable<ResultadoLineaBase> {
+    const datos = new FormData();
+    datos.append('archivo', archivo);
+    return this.http.post<ResultadoLineaBase>(`${this.base}/linea-base`, datos);
+  }
+
+  /** Eventos por paciente del instrumento (hojas TPR_, Ausentismo_ y Consultas_ PRE/POST). */
+  importarEventos(archivo: File): Observable<{ eventosPorHoja: Record<string, number>; total: number }> {
+    const datos = new FormData();
+    datos.append('archivo', archivo);
+    return this.http.post<{ eventosPorHoja: Record<string, number>; total: number }>(`${this.base}/eventos-importados`, datos);
+  }
+
+  exportarRecoleccion(fase: Fase, fuente: FuenteRecoleccion = 'LOCAL'): Observable<Blob> {
+    return this.http.get(`${this.base}/recoleccion/exportar.xlsx`, { params: { fase, fuente }, responseType: 'blob' });
   }
 
   // --- Exportaciones (anonimizadas, quedan en la auditoria) -------------------

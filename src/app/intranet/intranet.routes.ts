@@ -73,7 +73,7 @@ export const rutasIntranet: Routes = [
         canActivate: [roleGuard('ADMIN', 'INVESTIGADOR')],
         loadComponent: () => import('../features/estudio/estudio-layout/estudio-layout').then((m) => m.EstudioLayoutComponent),
         children: [
-          { path: '', pathMatch: 'full', redirectTo: 'recoleccion' },
+          { path: '', pathMatch: 'full', redirectTo: 'resumen' },
           {
             path: 'recoleccion',
             loadComponent: () =>

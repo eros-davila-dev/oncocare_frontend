@@ -69,7 +69,8 @@ export class EstudioDatosComponent {
     { encabezado: 'Inicio', valor: (m) => HORA_LIMA.format(new Date(m.inicio)) },
     { encabezado: 'Tipo', valor: (m) => m.tipo.replace('_', ' ').toLowerCase() },
     { encabezado: 'Canal', valor: (m) => m.canal },
-    { encabezado: 'Duración', valor: (m) => (m.duracionSegundos === null ? '—' : this.duracion(m.duracionSegundos)) },
+    // Una sesion abandonada no tiene fin, ni duracion: llega sin el campo (no null).
+    { encabezado: 'Duración', valor: (m) => (m.duracionSegundos == null ? '—' : this.duracion(m.duracionSegundos)) },
     { encabezado: 'Paciente', valor: (m) => (m.pacienteId ? codigoPaciente(m.pacienteId) : 'Sin paciente') },
     { encabezado: 'Estado', valor: (m) => m.estado, clave: 'estadoMedicion' },
   ];
@@ -157,6 +158,21 @@ export class EstudioDatosComponent {
       ABIERTA: 'info',
     };
     return colores[estado] ?? 'neutral';
+  }
+
+  protected etiquetaEstado(estado: string): string {
+    const etiquetas: Record<string, string> = {
+      COMPLETADA: 'Completada',
+      EN_CURSO: 'En curso',
+      ABANDONADA: 'Abandonada (sin guardar)',
+      ANULADA: 'Anulada',
+      RESUELTA_BOT: 'Resuelta por el chatbot',
+      RESUELTA_PERSONAL: 'Resuelta por el personal',
+      ESCALADA: 'Derivada al personal',
+      NO_RESUELTA: 'No resuelta',
+      ABIERTA: 'Abierta',
+    };
+    return etiquetas[estado] ?? estado;
   }
 
   private duracion(segundos: number): string {
