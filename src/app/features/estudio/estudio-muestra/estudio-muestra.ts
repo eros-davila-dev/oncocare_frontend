@@ -144,6 +144,10 @@ export class EstudioMuestraComponent {
     return this.fases().find((f) => f.fase === fase);
   }
 
+  protected dosDecimales(v: number | null): string {
+    return v == null ? '—' : v.toFixed(2);
+  }
+
   /** "Lun", "Mié", "Vie": se lee de un vistazo que son dias de sesion. */
   protected diaSemana(iso: string): string {
     const [a, m, d] = iso.split('-').map(Number);

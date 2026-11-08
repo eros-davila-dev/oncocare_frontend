@@ -26,12 +26,20 @@ const INDICADORES: IndicadorEtapa[] = [
 /** Sesiones por etapa previstas en la tesis (lunes, miercoles y viernes). */
 const SESIONES_PREVISTAS = 13;
 
+type OrigenEtapa = 'LOCAL' | 'SERVIDOR' | 'LINEA_BASE';
+
 interface Etapa {
   resumen: ResumenRecoleccion | null;
   aviso: string | null;
-  /** Fuente de los valores cuando no los midio el sistema (linea base del pretest). */
-  fuente?: string;
+  /** De donde salen los valores: esta instalacion, el servidor de la fundacion o las sesiones cargadas del instrumento. */
+  origen?: OrigenEtapa;
 }
+
+const ETIQUETA_ORIGEN: Record<OrigenEtapa, string> = {
+  LOCAL: 'Medido por esta instalación',
+  SERVIDOR: 'Servidor de la fundación · calculado desde cada evento',
+  LINEA_BASE: 'Valores por sesión cargados del instrumento',
+};
 
 /**
  * Resultados por etapa (tesis v8, opcion B): las 13 sesiones del pretest y
@@ -51,12 +59,19 @@ export class EstudioResumenComponent {
   private readonly estudioService = inject(EstudioService);
 
   protected readonly fechaCorta = fechaCorta;
+  protected readonly etiquetaOrigen = ETIQUETA_ORIGEN;
   protected readonly sesionesPrevistas = SESIONES_PREVISTAS;
   protected readonly cargando = signal(true);
-  protected readonly pretest = signal<Etapa>({ resumen: null, aviso: null });
-  protected readonly postest = signal<Etapa>({ resumen: null, aviso: null });
   protected readonly descargando = signal<Fase | null>(null);
   protected readonly errorDescarga = signal<string | null>(null);
+
+  /** Por fase: lo medido localmente, lo calculado desde los eventos del servidor y la linea base cargada. */
+  private readonly local = { PRETEST: signal<Etapa>({ resumen: null, aviso: null }), POSTEST: signal<Etapa>({ resumen: null, aviso: null }) };
+  private readonly servidor = { PRETEST: signal<Etapa>({ resumen: null, aviso: null }), POSTEST: signal<Etapa>({ resumen: null, aviso: null }) };
+  private readonly lineaBase = { PRETEST: signal<LineaBaseSesion[]>([]), POSTEST: signal<LineaBaseSesion[]>([]) };
+
+  protected readonly pretestEfectivo = computed<Etapa>(() => this.etapaEfectiva('PRETEST'));
+  protected readonly postestEfectivo = computed<Etapa>(() => this.etapaEfectiva('POSTEST'));
 
   protected readonly filas = computed(() =>
     INDICADORES.map((ind) => {
@@ -64,61 +79,52 @@ export class EstudioResumenComponent {
       const post = this.describir(this.postestEfectivo().resumen, ind);
       const diferencia = pre.media !== null && post.media !== null ? post.media - pre.media : null;
       const mejora = diferencia === null ? null : ind.sentido === 'bajar' ? diferencia < 0 : diferencia > 0;
-      return { ind, pre, post, diferencia, mejora };
+      const cambioPct = diferencia !== null && pre.media ? (100 * diferencia) / pre.media : null;
+      return { ind, pre, post, diferencia, mejora, cambioPct };
     }),
   );
 
   constructor() {
-    let pendientes = 4;
+    let pendientes = 6;
     const listo = () => {
       pendientes -= 1;
       if (pendientes === 0) this.cargando.set(false);
     };
     for (const fase of ['PRETEST', 'POSTEST'] as Fase[]) {
-      const destino = fase === 'PRETEST' ? this.pretest : this.postest;
-      this.estudioService.recoleccion(fase).subscribe({
-        next: (resumen) => {
-          destino.set({ resumen, aviso: null });
+      for (const [fuente, destino] of [['LOCAL', this.local[fase]], ['SERVIDOR', this.servidor[fase]]] as const) {
+        this.estudioService.recoleccion(fase, fuente).subscribe({
+          next: (resumen) => {
+            destino.set({ resumen, aviso: null, origen: fuente });
+            listo();
+          },
+          error: (e: HttpErrorResponse) => {
+            destino.set({ resumen: null, aviso: (e.error as ErrorResponse | undefined)?.message ?? 'Sin datos de esta etapa.' });
+            listo();
+          },
+        });
+      }
+      this.estudioService.lineaBase(fase).subscribe({
+        next: (sesiones) => {
+          this.lineaBase[fase].set(sesiones);
           listo();
         },
-        error: (e: HttpErrorResponse) => {
-          destino.set({ resumen: null, aviso: (e.error as ErrorResponse | undefined)?.message ?? 'Sin datos de esta etapa.' });
-          listo();
-        },
+        error: () => listo(),
       });
     }
-    // El pretest se recolecto a mano antes del sistema: si el sistema no tiene
-    // datos de esa etapa, se usa la linea base cargada desde el instrumento.
-    this.estudioService.lineaBase().subscribe({
-      next: (sesiones) => {
-        this.lineaBase.set(sesiones);
-        listo();
-      },
-      error: () => listo(),
-    });
-    this.estudioService.lineaBase('POSTEST').subscribe({
-      next: (sesiones) => {
-        this.postestImportado.set(sesiones);
-        listo();
-      },
-      error: () => listo(),
-    });
   }
 
-  /** Postest importado del instrumento: solo se usa si el sistema no tiene datos de esa etapa. */
-  protected readonly postestImportado = signal<LineaBaseSesion[]>([]);
-  protected readonly postestEfectivo = computed<Etapa>(() => this.etapaDesde(this.postest(), this.postestImportado(), 'POSTEST'));
-
-  protected readonly lineaBase = signal<LineaBaseSesion[]>([]);
-
-  /** Pretest efectivo: el del sistema si tiene datos; si no, la linea base. */
-  protected readonly pretestEfectivo = computed<Etapa>(() => this.etapaDesde(this.pretest(), this.lineaBase(), 'PRETEST'));
-
-  /** Lo que midio el sistema si tiene datos; si no, las sesiones cargadas del instrumento (con su fuente). */
-  private etapaDesde(sistema: Etapa, base: LineaBaseSesion[], fase: Fase): Etapa {
-    if ((sistema.resumen && this.conDatos(sistema.resumen) > 0) || base.length === 0) {
-      return sistema;
-    }
+  /**
+   * Lo que midio esta instalacion si tiene datos; si no, lo calculado desde
+   * los eventos del servidor de la fundacion; si tampoco, las sesiones
+   * cargadas del instrumento.
+   */
+  private etapaEfectiva(fase: Fase): Etapa {
+    const local = this.local[fase]();
+    if (local.resumen && this.conDatos(local.resumen) > 0) return local;
+    const servidor = this.servidor[fase]();
+    if (servidor.resumen && this.conDatos(servidor.resumen) > 0) return servidor;
+    const base = this.lineaBase[fase]();
+    if (base.length === 0) return local.resumen ? local : { resumen: null, aviso: local.aviso ?? servidor.aviso };
     const sesiones: SesionRecoleccion[] = base.map((s) => ({
       numero: s.numero,
       fecha: s.fecha,
@@ -137,7 +143,7 @@ export class EstudioResumenComponent {
       hasta: base[base.length - 1].fecha,
       sesiones,
     } as unknown as ResumenRecoleccion;
-    return { resumen, aviso: null, fuente: base[0].fuente };
+    return { resumen, aviso: null, origen: 'LINEA_BASE' };
   }
 
   protected numero(v: number | null, decimales = 2): string {
@@ -155,13 +161,14 @@ export class EstudioResumenComponent {
   protected descargar(fase: Fase): void {
     this.descargando.set(fase);
     this.errorDescarga.set(null);
-    this.estudioService.exportarRecoleccion(fase).subscribe({
+    const origen = (fase === 'PRETEST' ? this.pretestEfectivo() : this.postestEfectivo()).origen;
+    this.estudioService.exportarRecoleccion(fase, origen === 'LOCAL' ? 'LOCAL' : 'SERVIDOR').subscribe({
       next: (blob) => {
         descargarBlob(blob, `recoleccion-${fase.toLowerCase()}.xlsx`);
         this.descargando.set(null);
       },
       error: () => {
-        this.errorDescarga.set('No se pudo generar el Excel. Revise que la etapa tenga fechas configuradas.');
+        this.errorDescarga.set('No se pudo generar el Excel de esta etapa.');
         this.descargando.set(null);
       },
     });

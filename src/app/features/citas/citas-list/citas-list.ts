@@ -104,7 +104,7 @@ export class CitasListComponent {
 
   protected readonly columnas: ColumnaTabla<Cita>[] = [
     { encabezado: 'Fecha', valor: (c) => new Date(c.fecha).toLocaleDateString('es-PE') },
-    { encabezado: 'Hora', valor: (c) => c.hora },
+    { encabezado: 'Hora', valor: (c) => c.hora?.slice(0, 5) ?? '—' },
     { encabezado: 'Tipo de consulta', valor: (c) => c.tipoConsulta },
     { encabezado: 'Paciente', valor: (c) => c.pacienteNombre ?? this.nombresPacientes().get(c.pacienteId) ?? 'Paciente no disponible' },
     { encabezado: 'Medico', valor: (c) => c.medicoNombre ?? (c.medicoId ? 'Médico no disponible' : 'Sin médico asignado') },

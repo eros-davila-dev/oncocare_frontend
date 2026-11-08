@@ -32,6 +32,8 @@ import {
 } from '../../core/models/estudio.model';
 import { Pagina } from '../../core/models/pagina.model';
 
+export type FuenteRecoleccion = 'LOCAL' | 'SERVIDOR';
+
 export interface FiltroIndicadores {
   fase?: Fase;
   desde?: string;
@@ -66,13 +68,14 @@ export class EstudioService {
 
   // --- Recoleccion por sesion (tesis v8) --------------------------------------
 
-  recoleccion(fase: Fase): Observable<ResumenRecoleccion> {
-    return this.http.get<ResumenRecoleccion>(`${this.base}/recoleccion`, { params: { fase } });
+  /** fuente: LOCAL = lo que mide esta instalacion; SERVIDOR = eventos importados del servidor de la fundacion. */
+  recoleccion(fase: Fase, fuente: FuenteRecoleccion = 'LOCAL'): Observable<ResumenRecoleccion> {
+    return this.http.get<ResumenRecoleccion>(`${this.base}/recoleccion`, { params: { fase, fuente } });
   }
 
   /** Fichas de una sesion; sin fecha, las de todas las sesiones de la fase. */
-  detalleRecoleccion(fase: Fase, fecha?: string): Observable<DetalleRecoleccion> {
-    const params: Record<string, string> = { fase };
+  detalleRecoleccion(fase: Fase, fecha?: string, fuente: FuenteRecoleccion = 'LOCAL'): Observable<DetalleRecoleccion> {
+    const params: Record<string, string> = { fase, fuente };
     if (fecha) params['fecha'] = fecha;
     return this.http.get<DetalleRecoleccion>(`${this.base}/recoleccion/detalle`, { params });
   }
@@ -103,8 +106,8 @@ export class EstudioService {
     return this.http.post<{ eventosPorHoja: Record<string, number>; total: number }>(`${this.base}/eventos-importados`, datos);
   }
 
-  exportarRecoleccion(fase: Fase): Observable<Blob> {
-    return this.http.get(`${this.base}/recoleccion/exportar.xlsx`, { params: { fase }, responseType: 'blob' });
+  exportarRecoleccion(fase: Fase, fuente: FuenteRecoleccion = 'LOCAL'): Observable<Blob> {
+    return this.http.get(`${this.base}/recoleccion/exportar.xlsx`, { params: { fase, fuente }, responseType: 'blob' });
   }
 
   // --- Exportaciones (anonimizadas, quedan en la auditoria) -------------------

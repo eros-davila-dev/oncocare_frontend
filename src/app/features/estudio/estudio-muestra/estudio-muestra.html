@@ -41,9 +41,8 @@
     <div>
       <h2 id="titulo-linea-base" class="font-display text-lg font-bold">Línea base del pretest</h2>
       <p class="max-w-3xl text-sm text-muted-foreground">
-        El pretest se recolectó a mano antes del sistema. Suba el instrumento (.xlsx): se lee la hoja
-        <strong>SPSS_Independientes</strong> y se guardan solo las filas de pretest, con su fuente. El postest nunca se carga
-        desde una planilla: lo mide el sistema.
+        El pretest se recolectó a mano antes del sistema, con el instrumento validado por la fundación. Al subir el instrumento
+        (.xlsx) se lee la hoja <strong>SPSS_Independientes</strong> y se guardan solo las filas de pretest, con su fuente.
       </p>
     </div>
     <label class="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-4 text-sm font-semibold hover:bg-muted">
@@ -68,9 +67,9 @@
             <tr class="border-t border-border">
               <td class="px-3 py-2 font-semibold">{{ s.numero }}</td>
               <td class="px-3 py-2">{{ diaSemana(s.fecha) }} {{ fechaCorta(s.fecha) }}</td>
-              <td class="px-3 py-2 text-right tabular-nums">{{ s.tprMin ?? '—' }}</td>
-              <td class="px-3 py-2 text-right tabular-nums">{{ s.taPct ?? '—' }}</td>
-              <td class="px-3 py-2 text-right tabular-nums">{{ s.ncaPct ?? '—' }}</td>
+              <td class="px-3 py-2 text-right tabular-nums">{{ dosDecimales(s.tprMin) }}</td>
+              <td class="px-3 py-2 text-right tabular-nums">{{ dosDecimales(s.taPct) }}</td>
+              <td class="px-3 py-2 text-right tabular-nums">{{ dosDecimales(s.ncaPct) }}</td>
             </tr>
           }
         </tbody>
@@ -87,9 +86,8 @@
     <div>
       <h2 id="titulo-postest-importado" class="font-display text-lg font-bold">Postest medido en el servidor de la fundación</h2>
       <p class="max-w-3xl text-sm text-muted-foreground">
-        Valores por sesión del postest (hoja <strong>SPSS_Independientes</strong>) extraídos del servidor de la fundación, donde
-        funcionó el sistema. Se importan a esta instalación local con su origen y sin crear pacientes ni eventos. Si esta
-        instalación llega a medir el postest, se usa lo medido.
+        El postest lo midió el sistema en el servidor de la fundación, donde funcionó durante setiembre. Sus valores por sesión
+        (hoja <strong>SPSS_Independientes</strong>) se importan a esta instalación con su origen, sin crear pacientes.
       </p>
     </div>
     <label class="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-4 text-sm font-semibold hover:bg-muted">
@@ -114,9 +112,9 @@
             <tr class="border-t border-border">
               <td class="px-3 py-2 font-semibold">{{ s.numero }}</td>
               <td class="px-3 py-2">{{ diaSemana(s.fecha) }} {{ fechaCorta(s.fecha) }}</td>
-              <td class="px-3 py-2 text-right tabular-nums">{{ s.tprMin ?? '—' }}</td>
-              <td class="px-3 py-2 text-right tabular-nums">{{ s.taPct ?? '—' }}</td>
-              <td class="px-3 py-2 text-right tabular-nums">{{ s.ncaPct ?? '—' }}</td>
+              <td class="px-3 py-2 text-right tabular-nums">{{ dosDecimales(s.tprMin) }}</td>
+              <td class="px-3 py-2 text-right tabular-nums">{{ dosDecimales(s.taPct) }}</td>
+              <td class="px-3 py-2 text-right tabular-nums">{{ dosDecimales(s.ncaPct) }}</td>
             </tr>
           }
         </tbody>

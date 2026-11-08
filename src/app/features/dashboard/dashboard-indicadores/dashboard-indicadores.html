@@ -61,12 +61,10 @@
   </section>
 
   @if (pacientesDemo() > 0) {
-    <div class="mt-4 flex items-start gap-3 rounded-xl border border-warning/50 bg-warning-soft p-4 text-sm" role="status">
-      <ui-icon name="triangle-alert" [size]="20" clase="mt-0.5 shrink-0 text-warning" />
+    <div class="mt-4 flex items-start gap-3 rounded-xl border border-info/30 bg-info-soft p-4 text-sm" role="status">
+      <ui-icon name="info" [size]="20" clase="mt-0.5 shrink-0 text-primary" />
       <p>
-        <strong>Datos de demostración cargados</strong> ({{ pacientesDemo() }} pacientes ficticios DEMO-NNN). Los registros, citas y
-        consultas de las últimas semanas son aleatorios, sirven solo para probar el sistema y no son resultados de la tesis.
-        Quítelos con <code class="rounded bg-background/70 px-1">docker/demo/quitar-datos-demo.sql</code> antes de recolectar datos reales.
+        <strong>Datos de demostración</strong>: {{ pacientesDemo() }} pacientes ficticios (documento DEMO-NNN) con citas y tratamientos desde octubre, para mostrar el sistema funcionando. No son pacientes de la fundación ni forman parte de los resultados de la tesis, que salen de los datos del estudio (agosto y setiembre). Se quitan con <code class="rounded bg-background/70 px-1">docker/demo/quitar-datos-demo.sql</code>.
       </p>
     </div>
   }
@@ -107,53 +105,16 @@
     @switch (vista()) {
       <!-- ============================== GENERAL ============================== -->
       @case ('General') {
-        <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          @for (k of tarjetas(); track k.vista) {
-            <button
-              type="button"
-              class="group flex h-full flex-col items-stretch justify-start rounded-xl border border-border bg-card p-5 text-left shadow-card transition hover:-translate-y-0.5 hover:border-primary/40"
-              (click)="vista.set(k.vista)"
-            >
-              <span class="flex items-center justify-between gap-2">
-                <span class="text-xs font-bold tracking-wide text-primary">{{ k.titulo }}</span>
-                <span class="grid size-9 place-items-center rounded-lg" [class]="k.colorIcono"><ui-icon [name]="k.icono" [size]="18" /></span>
-              </span>
-              <span class="mt-3 block font-display text-3xl font-bold">
-                {{ k.valor }} <span class="text-base font-semibold">{{ k.unidad }}</span>
-              </span>
-              <span class="mt-1 block text-sm text-muted-foreground">{{ k.detalle }}</span>
-              @if (k.pre !== null || k.post !== null) {
-                <span class="mt-3 flex flex-wrap gap-x-3 gap-y-1 border-t border-border pt-2 text-xs text-muted-foreground">
-                  @if (k.pre !== null) {
-                    <span>Pretest <strong class="text-foreground">{{ numero(k.pre, 2) }}</strong></span>
-                  }
-                  @if (k.post !== null) {
-                    <span>Postest (servidor) <strong class="text-foreground">{{ numero(k.post, 2) }}</strong></span>
-                  }
-                </span>
-              }
-              <span class="mt-auto inline-flex items-center gap-1 pt-3 text-xs font-semibold text-primary">
-                Ver detalle <ui-icon name="arrow-right" [size]="14" clase="transition-transform group-hover:translate-x-0.5" />
-              </span>
-            </button>
-          }
-        </div>
-
-        <p class="mt-3 text-xs text-muted-foreground">
-          El valor grande de cada tarjeta es el resultado de todos los eventos del periodo; «Pretest» y «Postest» son el promedio de las
-          13 sesiones de cada etapa, que es el valor que se analiza en SPSS.
-        </p>
-
         @if (comparacion().length) {
-          <section class="mt-6" aria-labelledby="titulo-comparacion">
-            <h2 id="titulo-comparacion" class="font-display text-lg font-bold">Pretest vs postest</h2>
+          <section class="mt-5 rounded-xl border border-primary/30 bg-primary-soft/40 p-4" aria-labelledby="titulo-comparacion">
+            <h2 id="titulo-comparacion" class="font-display text-lg font-bold">Resultado del estudio: pretest vs postest</h2>
             <p class="text-sm text-muted-foreground">
               Promedio de las 13 sesiones de cada etapa. Pretest: instrumento aplicado a mano y validado por la fundación.
               @if (postestImportado().length) {
                 Postest: medido en el servidor de la fundación e importado a esta instalación.
               }
             </p>
-            <div class="mt-3 overflow-x-auto rounded-xl border border-border">
+            <div class="mt-3 overflow-x-auto rounded-xl border border-border bg-card">
               <table class="w-full border-collapse text-left text-sm">
                 <thead class="bg-muted/70 text-xs text-muted-foreground">
                   <tr>
@@ -189,6 +150,57 @@
           </section>
         }
 
+        <h2 class="mt-6 font-display text-lg font-bold">
+          {{ etapaDelPeriodo() ? 'Indicadores del ' + etapaDelPeriodo()!.toLowerCase() : 'Actividad del periodo' }}
+        </h2>
+        <div class="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          @for (k of tarjetas(); track k.vista) {
+            <button
+              type="button"
+              class="group flex h-full flex-col items-stretch justify-start rounded-xl border border-border bg-card p-5 text-left shadow-card transition hover:-translate-y-0.5 hover:border-primary/40"
+              (click)="vista.set(k.vista)"
+            >
+              <span class="flex items-center justify-between gap-2">
+                <span class="text-xs font-bold tracking-wide text-primary">{{ k.titulo }}</span>
+                <span class="grid size-9 place-items-center rounded-lg" [class]="k.colorIcono"><ui-icon [name]="k.icono" [size]="18" /></span>
+              </span>
+              <span class="mt-3 block font-display text-3xl font-bold">
+                {{ k.valor }} <span class="text-base font-semibold">{{ k.unidad }}</span>
+              </span>
+              @if (k.conjunto) {
+                <span class="mt-1 block text-xs font-semibold text-primary">Promedio de las {{ sesionesEtapa() }} sesiones (valor de la tesis)</span>
+              }
+              <span class="mt-1 block text-sm text-muted-foreground">{{ k.detalle }}</span>
+              @if (k.conjunto) {
+                <span class="mt-1 block text-xs text-muted-foreground">Todos los eventos del periodo juntos: {{ k.conjunto }}</span>
+              }
+              @if (k.pre !== null || k.post !== null) {
+                <span class="mt-3 flex flex-wrap gap-x-3 gap-y-1 border-t border-border pt-2 text-xs text-muted-foreground">
+                  @if (k.pre !== null) {
+                    <span>Pretest <strong class="text-foreground">{{ numero(k.pre, 2) }}</strong></span>
+                  }
+                  @if (k.post !== null) {
+                    <span>Postest (servidor) <strong class="text-foreground">{{ numero(k.post, 2) }}</strong></span>
+                  }
+                </span>
+              }
+              <span class="mt-auto inline-flex items-center gap-1 pt-3 text-xs font-semibold text-primary">
+                Ver detalle <ui-icon name="arrow-right" [size]="14" clase="transition-transform group-hover:translate-x-0.5" />
+              </span>
+            </button>
+          }
+        </div>
+
+        <p class="mt-3 text-xs text-muted-foreground">
+          @if (etapaDelPeriodo()) {
+            El número grande es el promedio de las sesiones de la etapa, el mismo que se analiza en SPSS y se reporta en la tesis.
+          } @else {
+            El número grande es el resultado de todos los eventos del periodo elegido. Para ver los valores de la tesis, pulse «Pretest» o
+            «Postest» arriba.
+          }
+          «Pretest» y «Postest» debajo de cada tarjeta son el promedio de las sesiones de cada etapa.
+        </p>
+
         @if (pendientes().length) {
           <div class="mt-6 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm" role="status">
             <p class="font-semibold text-destructive">Pendiente de revisar</p>
@@ -207,8 +219,12 @@
           <ui-card>
             <p class="text-xs font-bold tracking-wide text-primary">TIEMPO PROMEDIO DE REGISTRO</p>
             <p class="mt-2 font-display text-4xl font-bold" [class.text-muted-foreground]="r.registros.promedioMin == null">
-              {{ numero(r.registros.promedioMin, 2) }} <span class="text-lg font-semibold">min</span>
+              {{ numero(promedioEtapa('tpr') ?? r.registros.promedioMin, 2) }} <span class="text-lg font-semibold">min</span>
             </p>
+            @if (promedioEtapa('tpr') != null) {
+              <p class="mt-1 text-xs font-semibold text-primary">Promedio de las {{ sesionesEtapa() }} sesiones (valor de la tesis)</p>
+              <p class="text-xs text-muted-foreground">Todos los registros juntos: {{ numero(r.registros.promedioMin, 2) }} min</p>
+            }
             <dl class="mt-4 space-y-2 text-sm">
               <div class="flex justify-between gap-3"><dt class="text-muted-foreground">Pacientes registrados por el personal</dt><dd class="font-semibold tabular-nums">{{ r.registros.total }}</dd></div>
               <div class="flex justify-between gap-3"><dt class="text-muted-foreground">Más rápido</dt><dd class="font-semibold tabular-nums">{{ numero(r.registros.minimoMin, 2) }} min</dd></div>
@@ -265,8 +281,12 @@
           <ui-card>
             <p class="text-xs font-bold tracking-wide text-primary">TASA DE AUSENTISMO</p>
             <p class="mt-2 font-display text-4xl font-bold" [class.text-muted-foreground]="r.citas.ausentismoPct == null">
-              {{ numero(r.citas.ausentismoPct) }} <span class="text-lg font-semibold">%</span>
+              {{ numero(promedioEtapa('ta') ?? r.citas.ausentismoPct, 2) }} <span class="text-lg font-semibold">%</span>
             </p>
+            @if (promedioEtapa('ta') != null) {
+              <p class="mt-1 text-xs font-semibold text-primary">Promedio de las {{ sesionesEtapa() }} sesiones (valor de la tesis)</p>
+              <p class="text-xs text-muted-foreground">Todas las citas juntas: {{ numero(r.citas.ausentismoPct, 2) }} %</p>
+            }
             <p class="mt-1 text-sm text-muted-foreground">
               {{ r.citas.noAsistio }} no asistieron de {{ r.citas.atendidas + r.citas.noAsistio }} citas con desenlace
             </p>
@@ -372,12 +392,17 @@
       @case ('Consultas') {
         <div class="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
           <ui-card>
-            <p class="text-xs font-bold tracking-wide text-primary">CONSULTAS ATENDIDAS POR EL ASISTENTE</p>
+            <p class="text-xs font-bold tracking-wide text-primary">NIVEL DE CONSULTAS ATENDIDAS</p>
             <p class="mt-2 font-display text-4xl font-bold" [class.text-muted-foreground]="r.consultas.atendidasAutomaticoPct == null">
-              {{ numero(r.consultas.atendidasAutomaticoPct) }} <span class="text-lg font-semibold">%</span>
+              {{ numero(promedioEtapa('nca') ?? r.consultas.atendidasAutomaticoPct, 2) }} <span class="text-lg font-semibold">%</span>
             </p>
+            @if (promedioEtapa('nca') != null) {
+              <p class="mt-1 text-xs font-semibold text-primary">Promedio de las {{ sesionesEtapa() }} sesiones (valor de la tesis)</p>
+              <p class="text-xs text-muted-foreground">Todas las consultas juntas: {{ numero(r.consultas.atendidasAutomaticoPct, 2) }} %</p>
+            }
             <p class="mt-1 text-sm text-muted-foreground">
-              {{ r.consultas.resueltasPorAsistente }} de {{ r.consultas.cerradas }} resueltas en el primer contacto, sin pasar al personal
+              {{ r.consultas.resueltasPorAsistente }} de {{ r.consultas.cerradas }} resueltas en el primer contacto, sin derivar
+              {{ etapaDelPeriodo() === 'Pretest' ? '(atención presencial)' : etapaDelPeriodo() === 'Postest' ? '(chatbot)' : '' }}
             </p>
             <dl class="mt-4 space-y-2 text-sm">
               <div class="flex justify-between gap-3"><dt class="text-muted-foreground">Recibidas</dt><dd class="font-semibold tabular-nums">{{ r.consultas.total }}</dd></div>
@@ -397,7 +422,7 @@
         }
         <ui-card class="mt-4 block">
           <h2 class="font-display text-base font-bold">¿Sobre qué preguntan?</h2>
-          <p class="text-xs text-muted-foreground">Consultas al asistente por tema.</p>
+          <p class="text-xs text-muted-foreground">Consultas recibidas por tema.</p>
           <app-grafico-barras class="mt-3" titulo="Consultas por tema" [items]="consultasPorTema()" [mostrarPorcentaje]="true" />
         </ui-card>
         @if (puedeVerDetalle && detalle(); as d) {

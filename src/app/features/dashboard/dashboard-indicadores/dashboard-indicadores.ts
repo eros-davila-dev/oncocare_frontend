@@ -146,6 +146,33 @@ export class DashboardIndicadoresComponent {
   protected readonly pretest = computed(() => promedios(this.lineaBase()));
   protected readonly postestDelExcel = computed(() => promedios(this.postestImportado()));
 
+  /**
+   * Etapa del estudio que se esta viendo (periodo exacto de una etapa con los
+   * datos del servidor); null en cualquier otro periodo.
+   */
+  protected readonly etapaDelPeriodo = computed<'Pretest' | 'Postest' | null>(() => {
+    const r = this.resumen();
+    if (!r || this.fuente() !== 'SERVIDOR') return null;
+    const etapa = this.etapasEstudio().find((e) => e.rango.desde === r.desde && e.rango.hasta === r.hasta);
+    return (etapa?.etiqueta as 'Pretest' | 'Postest' | undefined) ?? null;
+  });
+
+  /** Sesiones de la etapa que se esta viendo (13 en la tesis). */
+  protected readonly sesionesEtapa = computed(() =>
+    this.etapaDelPeriodo() === 'Pretest' ? this.lineaBase().length : this.postestImportado().length,
+  );
+
+  /**
+   * Valor de la tesis (promedio de las sesiones) de la etapa que se esta
+   * viendo: es el que se analiza en SPSS y el que se destaca. null si el
+   * periodo no es una etapa del estudio.
+   */
+  protected promedioEtapa(clave: 'tpr' | 'ta' | 'nca'): number | null {
+    const etapa = this.etapaDelPeriodo();
+    if (!etapa) return null;
+    return (etapa === 'Pretest' ? this.pretest() : this.postestDelExcel())[clave];
+  }
+
   /** Pretest vs postest por indicador (promedio de sesiones), para la tabla del resumen. */
   protected readonly comparacion = computed(() => {
     const pre = this.pretest();
@@ -193,7 +220,8 @@ export class DashboardIndicadoresComponent {
         titulo: 'TIEMPO DE REGISTRO',
         icono: 'clock' as const,
         colorIcono: 'bg-primary-soft text-primary',
-        valor: this.numero(r.registros.promedioMin, 2),
+        valor: this.numero(this.promedioEtapa('tpr') ?? r.registros.promedioMin, 2),
+        conjunto: this.promedioEtapa('tpr') == null ? null : `${this.numero(r.registros.promedioMin, 2)} min`,
         unidad: 'min',
         detalle: `${r.registros.total} ${r.registros.total === 1 ? 'paciente registrado' : 'pacientes registrados'} por el personal`,
         pre: pre.tpr,
@@ -204,7 +232,8 @@ export class DashboardIndicadoresComponent {
         titulo: 'AUSENTISMO',
         icono: 'calendar-days' as const,
         colorIcono: 'bg-warning-soft text-warning',
-        valor: this.numero(r.citas.ausentismoPct),
+        valor: this.numero(this.promedioEtapa('ta') ?? r.citas.ausentismoPct, 2),
+        conjunto: this.promedioEtapa('ta') == null ? null : `${this.numero(r.citas.ausentismoPct, 2)} %`,
         unidad: '%',
         detalle: `${r.citas.noAsistio} no asistieron de ${r.citas.atendidas + r.citas.noAsistio} citas con desenlace`,
         pre: pre.ta,
@@ -216,6 +245,7 @@ export class DashboardIndicadoresComponent {
         icono: 'bell' as const,
         colorIcono: 'bg-success-soft text-success',
         valor: String(r.recordatorios.enviados),
+        conjunto: null,
         unidad: 'enviados',
         detalle: `${this.numero(r.recordatorios.coberturaPct)} % de las citas con desenlace recibió recordatorio`,
         pre: null,
@@ -226,9 +256,10 @@ export class DashboardIndicadoresComponent {
         titulo: 'CONSULTAS ATENDIDAS',
         icono: 'bot' as const,
         colorIcono: 'bg-lavender text-secondary-foreground',
-        valor: this.numero(r.consultas.atendidasAutomaticoPct),
+        valor: this.numero(this.promedioEtapa('nca') ?? r.consultas.atendidasAutomaticoPct, 2),
+        conjunto: this.promedioEtapa('nca') == null ? null : `${this.numero(r.consultas.atendidasAutomaticoPct, 2)} %`,
         unidad: '%',
-        detalle: `${r.consultas.resueltasPorAsistente} de ${r.consultas.cerradas} resueltas por el asistente`,
+        detalle: `${r.consultas.resueltasPorAsistente} de ${r.consultas.cerradas} resueltas en el primer contacto, sin derivar`,
         pre: pre.nca,
         post: post.nca,
       },
@@ -267,17 +298,17 @@ export class DashboardIndicadoresComponent {
         subtitulo: 'No asistieron / citas con desenlace × 100 · meta: bajar',
         puntos: serie((d) => d.ausentismoPct),
         unidad: '%',
-        decimales: 1,
+        decimales: 2,
         maximo: 100,
         referencias: refs('ta'),
       },
       {
         clave: 'nca',
-        titulo: 'Consultas atendidas por el asistente',
-        subtitulo: 'Resueltas sin pasar al personal / consultas cerradas × 100 · meta: subir',
+        titulo: 'Consultas atendidas por día',
+        subtitulo: 'Resueltas en el primer contacto, sin derivar / consultas recibidas × 100 · meta: subir',
         puntos: serie((d) => d.atendidasAutomaticoPct),
         unidad: '%',
-        decimales: 1,
+        decimales: 2,
         maximo: 100,
         referencias: refs('nca'),
       },
@@ -434,7 +465,7 @@ export class DashboardIndicadoresComponent {
   protected resultadoConsulta(k: ActividadDetalle['consultas'][number]): string {
     if (!k.resultado) return 'Abierta';
     if (k.derivada || k.resultado === 'ESCALADA') return 'Derivada al personal';
-    if (k.resultado === 'RESUELTA_BOT') return k.reabierta ? 'Resuelta (se reabrió)' : 'Resuelta por el asistente';
+    if (k.resultado === 'RESUELTA_BOT') return k.reabierta ? 'Resuelta (se reabrió)' : 'Resuelta por el chatbot';
     return 'Resuelta por el personal';
   }
 

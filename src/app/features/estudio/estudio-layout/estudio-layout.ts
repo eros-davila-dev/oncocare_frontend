@@ -1,6 +1,8 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { filter, map } from 'rxjs';
 import { DashboardService } from '../../dashboard/dashboard.service';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header';
 import { IconComponent } from '../../../shared/ui/icon/icon';
 import type { NombreIcono } from '../../../shared/ui/icon/icon-data';
@@ -9,14 +11,43 @@ interface SeccionEstudio {
   ruta: string;
   etiqueta: string;
   icono: NombreIcono;
+  /** Para que sirve, en una linea (se muestra bajo las pestanas). */
+  ayuda: string;
 }
 
+// En el orden en que se explica la tesis: resultado, de donde sale cada valor,
+// como se organizo la recoleccion y los datos crudos.
 const SECCIONES: SeccionEstudio[] = [
-  { ruta: 'recoleccion', etiqueta: 'Recolección por sesión', icono: 'calendar-days' },
-  { ruta: 'resumen', etiqueta: 'Resultados', icono: 'chart-column' },
-  { ruta: 'muestra', etiqueta: 'Fases y sesiones', icono: 'users' },
-  { ruta: 'fichas', etiqueta: 'Fichas de recolección', icono: 'file-spreadsheet' },
-  { ruta: 'datos', etiqueta: 'Revisión de datos', icono: 'search' },
+  {
+    ruta: 'resumen',
+    etiqueta: '1. Resultados',
+    icono: 'chart-column',
+    ayuda: 'Pretest vs postest: los estadísticos de cada indicador que se reportan en la tesis.',
+  },
+  {
+    ruta: 'recoleccion',
+    etiqueta: '2. Recolección por sesión',
+    icono: 'calendar-days',
+    ayuda: 'El valor de cada una de las 13 sesiones por etapa y las fichas con cada paciente.',
+  },
+  {
+    ruta: 'muestra',
+    etiqueta: '3. Fases y sesiones',
+    icono: 'users',
+    ayuda: 'Fechas de cada etapa y archivos del instrumento cargados al sistema.',
+  },
+  {
+    ruta: 'fichas',
+    etiqueta: '4. Fichas de recolección',
+    icono: 'file-spreadsheet',
+    ayuda: 'Captura manual de las fichas del Anexo 2.',
+  },
+  {
+    ruta: 'datos',
+    etiqueta: '5. Datos de esta instalación',
+    icono: 'search',
+    ayuda: 'Mediciones hechas en esta instalación (incluye pruebas); no son los datos de la tesis.',
+  },
 ];
 
 /**
@@ -31,16 +62,14 @@ const SECCIONES: SeccionEstudio[] = [
   template: `
     <ui-page-header
       eyebrow="Investigación"
-      titulo="Recolección del estudio"
-      descripcion="TPR, tasa de ausentismo (TA) y NCA por sesión: 13 sesiones de pretest y 13 de postest (lunes, miércoles y viernes)."
+      titulo="Estudio de la tesis"
+      descripcion="Tiempo de registro (TPR), tasa de ausentismo (TA) y nivel de consultas atendidas (NCA): 13 sesiones de pretest (agosto, proceso manual) y 13 de postest (setiembre, con el sistema), los lunes, miércoles y viernes."
     />
     @if (pacientesDemo() > 0) {
-      <div class="mt-4 flex items-start gap-3 rounded-xl border border-warning/50 bg-warning-soft p-4 text-sm" role="status">
-        <ui-icon name="triangle-alert" [size]="20" clase="mt-0.5 shrink-0 text-warning" />
+      <div class="mt-4 flex items-start gap-3 rounded-xl border border-info/30 bg-info-soft p-4 text-sm" role="status">
+        <ui-icon name="info" [size]="20" clase="mt-0.5 shrink-0 text-primary" />
         <p>
-          <strong>Datos de demostración cargados</strong> ({{ pacientesDemo() }} pacientes ficticios DEMO-NNN). Los registros, citas y
-          consultas de las últimas semanas son aleatorios, sirven solo para probar el sistema y no son resultados de la tesis.
-          Quítelos con <code class="rounded bg-background/70 px-1">docker/demo/quitar-datos-demo.sql</code> antes de recolectar datos reales.
+          <strong>Datos de demostración</strong>: {{ pacientesDemo() }} pacientes ficticios (documento DEMO-NNN) con citas y tratamientos desde octubre, para mostrar el sistema funcionando. No son pacientes de la fundación ni forman parte de los resultados de la tesis, que salen de los datos del estudio (agosto y setiembre). Se quitan con <code class="rounded bg-background/70 px-1">docker/demo/quitar-datos-demo.sql</code>.
         </p>
       </div>
     }
@@ -57,6 +86,11 @@ const SECCIONES: SeccionEstudio[] = [
         </a>
       }
     </nav>
+    @if (ayuda()) {
+      <p class="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+        <ui-icon name="info" [size]="16" clase="shrink-0 text-primary" /> {{ ayuda() }}
+      </p>
+    }
     <div class="mt-6">
       <router-outlet />
     </div>
@@ -64,6 +98,16 @@ const SECCIONES: SeccionEstudio[] = [
 })
 export class EstudioLayoutComponent {
   protected readonly secciones = SECCIONES;
+  private readonly router = inject(Router);
+  private readonly url = toSignal(
+    this.router.events.pipe(
+      filter((e) => e instanceof NavigationEnd),
+      map(() => this.router.url),
+    ),
+    { initialValue: this.router.url },
+  );
+  /** Para que sirve la pestana abierta. */
+  protected readonly ayuda = computed(() => SECCIONES.find((s) => this.url().includes(`/estudio/${s.ruta}`))?.ayuda ?? null);
   /** Datos de demostracion activos: contaminarian la recoleccion si se configuran fases en esas fechas. */
   protected readonly pacientesDemo = signal(0);
 
